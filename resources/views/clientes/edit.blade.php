@@ -68,69 +68,46 @@
 
                 <div>
                     <label class="block mb-2 text-sm text-gray-400">
-                        Email
+                        Concesionario asignado
                     </label>
 
-                    <input type="email" name="email" value="{{ old('email', $cliente->email) }}"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('email') border-red-500 @enderror">
-                    @error('email')
+                    <select name="concesionario_id"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('concesionario_id') border-red-500 @enderror">
+                        <option value="">Sin asignar</option>
+                        @foreach($concesionarios as $c)
+                            <option value="{{ $c->id }}" @selected((int) old('concesionario_id', $cliente->concesionario_id) === $c->id)>{{ $c->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @error('concesionario_id')
                         <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
                     <label class="block mb-2 text-sm text-gray-400">
-                        Ciudad
+                        ¿Cómo se enteró?
                     </label>
 
-                    <input type="text" name="ciudad" value="{{ old('ciudad', $cliente->ciudad) }}"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    @error('ciudad')
+                    <select name="medio_entero"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('medio_entero') border-red-500 @enderror">
+                        <option value="">Sin especificar</option>
+                        @foreach($medios as $medio)
+                            <option value="{{ $medio }}" @selected(old('medio_entero', $cliente->medio_entero) === $medio)>{{ $medio }}</option>
+                        @endforeach
+                    </select>
+                    @error('medio_entero')
                         <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div>
-                    <label class="block mb-2 text-sm text-gray-400">
-                        Vehículo de interés
+                <div class="flex items-center gap-3 md:pt-8">
+                    <input type="checkbox" name="cita" id="cita" value="1" @checked(old('cita', $cliente->cita))
+                        class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-blue-500">
+                    <label for="cita" class="text-sm text-gray-400">
+                        ¿Tiene cita agendada?
                     </label>
-
-                    <input type="text" name="vehiculo_interes" value="{{ old('vehiculo_interes', $cliente->vehiculo_interes) }}"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    @error('vehiculo_interes')
-                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
-                <div>
-                    <label class="block mb-2 text-sm text-gray-400">
-                        Presupuesto
-                    </label>
-
-                    <input type="number" name="presupuesto" value="{{ old('presupuesto', $cliente->presupuesto) }}"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" step="0.01">
-                    @error('presupuesto')
-                        <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-            </div>
-
-            <div class="mt-6">
-                <label class="block mb-2 text-sm text-gray-400">
-                    Estado
-                </label>
-
-                <select name="estado" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="Nuevo" @selected(old('estado', $cliente->estado) === 'Nuevo')>Nuevo</option>
-                    <option value="Contactado" @selected(old('estado', $cliente->estado) === 'Contactado')>Contactado</option>
-                    <option value="Negociacion" @selected(old('estado', $cliente->estado) === 'Negociacion')>Negociación</option>
-                    <option value="Vendido" @selected(old('estado', $cliente->estado) === 'Vendido')>Vendido</option>
-                    <option value="Perdido" @selected(old('estado', $cliente->estado) === 'Perdido')>Perdido</option>
-                </select>
-                @error('estado')
-                    <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                @enderror
             </div>
 
             <div class="mt-6">

@@ -40,59 +40,31 @@
                     </div>
 
                     <div>
-                        <p class="text-gray-400 text-sm">Email</p>
-                        <p class="text-white">{{ $cliente->email ?? 'No registrado' }}</p>
-                    </div>
-
-                    <div>
                         <p class="text-gray-400 text-sm">Teléfono</p>
                         <p class="text-white">{{ $cliente->telefono ?? 'No registrado' }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-400 text-sm">Ciudad</p>
-                        <p class="text-white">{{ $cliente->ciudad ?? 'No registrado' }}</p>
+                        <p class="text-gray-400 text-sm">¿Cómo se enteró?</p>
+                        <p class="text-white">{{ $cliente->medio_entero ?? 'No especificado' }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Información de compra -->
+            <!-- Información de gestión -->
             <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-6">Información de Compra</h2>
+                <h2 class="text-xl font-semibold mb-6">Gestión</h2>
 
                 <div class="space-y-4">
                     <div>
-                        <p class="text-gray-400 text-sm">Vehículo de Interés</p>
-                        <p class="text-white font-medium">{{ $cliente->vehiculo_interes ?? 'No especificado' }}</p>
+                        <p class="text-gray-400 text-sm">Concesionario asignado</p>
+                        <p class="text-white font-medium">{{ $cliente->concesionario->nombre ?? 'Sin asignar' }}</p>
                     </div>
 
                     <div>
-                        <p class="text-gray-400 text-sm">Presupuesto</p>
-                        <p class="text-white font-medium text-lg">
-                            @if ($cliente->presupuesto)
-                                $ {{ number_format($cliente->presupuesto, 0, ',', '.') }}
-                            @else
-                                No especificado
-                            @endif
-                        </p>
-                    </div>
-
-                    <div>
-                        <p class="text-gray-400 text-sm">Estado</p>
-                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium
-                            @if ($cliente->estado === 'Nuevo')
-                                bg-blue-500/20 text-blue-400
-                            @elseif ($cliente->estado === 'Contactado')
-                                bg-green-500/20 text-green-400
-                            @elseif ($cliente->estado === 'Negociacion')
-                                bg-yellow-500/20 text-yellow-400
-                            @elseif ($cliente->estado === 'Vendido')
-                                bg-emerald-500/20 text-emerald-400
-                            @elseif ($cliente->estado === 'Perdido')
-                                bg-red-500/20 text-red-400
-                            @endif
-                        ">
-                            {{ $cliente->estado }}
+                        <p class="text-gray-400 text-sm">Cita agendada</p>
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium {{ $cliente->cita ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-300' }}">
+                            {{ $cliente->cita ? 'Sí' : 'No' }}
                         </span>
                     </div>
                 </div>

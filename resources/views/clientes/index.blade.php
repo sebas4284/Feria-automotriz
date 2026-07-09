@@ -18,13 +18,8 @@
         return $initials;
     }
 
-    $estadoConfig = [
-        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',   'label' => 'Nuevo'],
-        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',   'label' => 'Contactado'],
-        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400', 'label' => 'Negociación'],
-        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400', 'label' => 'Vendido'],
-        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',     'label' => 'Perdido'],
-    ];
+    $nuevosEsteMes = $clientes->filter(fn($c) => $c->created_at->isCurrentMonth())->count();
+    $totalConCita = $clientes->where('cita', true)->count();
 @endphp
 
 {{-- ===================== VISTA MÓVIL ===================== --}}
@@ -50,71 +45,40 @@
         </div>
     @endif
 
-    {{-- Stats 2×2 --}}
-    <div class="grid grid-cols-2 gap-3">
+    {{-- Stats --}}
+    <div class="grid grid-cols-3 gap-3">
 
         {{-- Total clientes --}}
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-            <div class="flex items-start justify-between mb-3">
-                <div class="w-9 h-9 bg-blue-600/20 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                    </svg>
-                </div>
-                @php $nuevosEsteMes = $clientes->filter(fn($c) => $c->created_at->isCurrentMonth())->count(); @endphp
-                @if($nuevosEsteMes > 0)
-                    <span class="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">+{{ $nuevosEsteMes }}</span>
-                @endif
+            <div class="w-9 h-9 bg-blue-600/20 rounded-xl flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                </svg>
             </div>
-            <p class="text-3xl font-bold">{{ $clientes->count() }}</p>
+            <p class="text-2xl font-bold">{{ $clientes->count() }}</p>
             <p class="text-gray-400 text-xs mt-1">Total clientes</p>
         </div>
 
-        {{-- Leads nuevos --}}
+        {{-- Nuevos este mes --}}
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-            <div class="flex items-start justify-between mb-3">
-                <div class="w-9 h-9 bg-amber-600/20 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-amber-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-                    </svg>
-                </div>
-                @if(($totalLeadsNuevos ?? 0) > 0)
-                    <span class="text-xs font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">+{{ $totalLeadsNuevos ?? 0 }}</span>
-                @endif
+            <div class="w-9 h-9 bg-amber-600/20 rounded-xl flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-amber-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                </svg>
             </div>
-            <p class="text-3xl font-bold">{{ $totalLeadsNuevos ?? 0 }}</p>
-            <p class="text-gray-400 text-xs mt-1">Leads nuevos</p>
+            <p class="text-2xl font-bold">{{ $nuevosEsteMes }}</p>
+            <p class="text-gray-400 text-xs mt-1">Nuevos este mes</p>
         </div>
 
-        {{-- Ventas cerradas --}}
+        {{-- Con cita agendada --}}
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-            <div class="flex items-start justify-between mb-3">
-                <div class="w-9 h-9 bg-green-600/20 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                </div>
-                <span class="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">este mes</span>
+            <div class="w-9 h-9 bg-green-600/20 rounded-xl flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-green-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                </svg>
             </div>
-            <p class="text-3xl font-bold">{{ $totalVentasCerradas ?? 0 }}</p>
-            <p class="text-gray-400 text-xs mt-1">Ventas cerradas</p>
-        </div>
-
-        {{-- Seguimientos urgentes --}}
-        @php $perdidos = $clientes->where('estado', 'Perdido')->count(); @endphp
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-            <div class="flex items-start justify-between mb-3">
-                <div class="w-9 h-9 bg-red-600/20 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                    </svg>
-                </div>
-                @if($perdidos > 0)
-                    <span class="text-xs font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">urgente</span>
-                @endif
-            </div>
-            <p class="text-3xl font-bold">{{ $clientes->whereIn('estado', ['Negociacion'])->count() }}</p>
-            <p class="text-gray-400 text-xs mt-1">Seguimientos</p>
+            <p class="text-2xl font-bold">{{ $totalConCita }}</p>
+            <p class="text-gray-400 text-xs mt-1">Con cita</p>
         </div>
 
     </div>
@@ -148,7 +112,6 @@
                 @php
                     $color    = clienteColor($cliente->nombre, $avatarColors);
                     $initials = clienteInitials($cliente->nombre);
-                    $cfg      = $estadoConfig[$cliente->estado] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $cliente->estado];
                 @endphp
                 <a href="{{ route('clientes.show', $cliente) }}"
                     class="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition active:scale-[.99]">
@@ -158,10 +121,12 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-2">
                             <p class="font-medium text-sm truncate">{{ $cliente->nombre }}</p>
-                            <span class="text-xs {{ $cfg['badge'] }} px-2 py-0.5 rounded-full shrink-0">{{ $cfg['label'] }}</span>
+                            @if($cliente->cita)
+                                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full shrink-0">Con cita</span>
+                            @endif
                         </div>
                         <div class="flex items-center justify-between gap-2 mt-0.5">
-                            <p class="text-xs text-gray-500 truncate">{{ $cliente->vehiculo_interes ?: $cliente->email }}</p>
+                            <p class="text-xs text-gray-500 truncate">{{ $cliente->concesionario->nombre ?? 'Sin asignar' }}</p>
                             <p class="text-xs text-gray-600 shrink-0">{{ $cliente->updated_at->diffForHumans(null, true, true) }}</p>
                         </div>
                     </div>
@@ -198,15 +163,6 @@
                     </svg>
                 </div>
                 <span class="text-sm font-medium text-gray-200">Ver vehículos</span>
-            </a>
-            <a href="{{ route('leads.index') }}"
-                class="flex items-center gap-3 bg-gray-900 border border-gray-800 hover:border-blue-500/40 rounded-2xl px-4 py-3.5 transition">
-                <div class="w-8 h-8 bg-purple-600/20 rounded-xl flex items-center justify-center shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-purple-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-                    </svg>
-                </div>
-                <span class="text-sm font-medium text-gray-200">Ver leads</span>
             </a>
             <a href="{{ route('ventas.index') }}"
                 class="flex items-center gap-3 bg-gray-900 border border-gray-800 hover:border-blue-500/40 rounded-2xl px-4 py-3.5 transition">
@@ -257,28 +213,28 @@
 
         <div class="bg-[#0f172a]/40 border border-slate-800/60 rounded-xl p-5 backdrop-blur-sm">
             <div class="flex items-start space-x-4">
-                <div class="text-green-500 pt-1">
+                <div class="text-amber-500 pt-1">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10">
                         <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm0 14.25a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0-2.25a2.25 2.25 0 1 0 0-4 2.25 2.25 0 0 0 0 4Z" clip-rule="evenodd" />
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-gray-400 text-sm font-medium leading-none mb-1">Leads Nuevos</p>
-                    <h2 class="text-4xl font-bold text-white tracking-tight mt-2">{{ $totalLeadsNuevos ?? 0 }}</h2>
+                    <p class="text-gray-400 text-sm font-medium leading-none mb-1">Nuevos Este Mes</p>
+                    <h2 class="text-4xl font-bold text-white tracking-tight mt-2">{{ $nuevosEsteMes }}</h2>
                 </div>
             </div>
         </div>
 
         <div class="bg-[#0f172a]/40 border border-slate-800/60 rounded-xl p-5 backdrop-blur-sm">
             <div class="flex items-start space-x-4">
-                <div class="text-yellow-500 pt-1">
+                <div class="text-green-500 pt-1">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10">
-                        <path d="M11.644 3.166a1 1 0 0 1 1.212 0l5.625 4.375a1 1 0 0 1 .375.78v11.429a1 1 0 0 1-1 1H6.144a1 1 0 0 1-1-1V8.32a1 1 0 0 1 .375-.78l5.625-4.375Z" />
+                        <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3a.75.75 0 0 1 1.5 0v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v8.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V11.25Z" clip-rule="evenodd" />
                     </svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-gray-400 text-sm font-medium leading-none mb-1">Ventas Cerradas</p>
-                    <h2 class="text-4xl font-bold text-white tracking-tight mt-2">{{ $totalVentasCerradas ?? 0 }}</h2>
+                    <p class="text-gray-400 text-sm font-medium leading-none mb-1">Con Cita Agendada</p>
+                    <h2 class="text-4xl font-bold text-white tracking-tight mt-2">{{ $totalConCita }}</h2>
                 </div>
             </div>
         </div>
@@ -294,7 +250,7 @@
             </h2>
             <form method="GET" action="{{ route('clientes.index') }}" class="flex gap-2">
                 <input type="text" name="buscar" value="{{ request('buscar') }}"
-                    placeholder="Buscar por nombre, email o teléfono..."
+                    placeholder="Buscar por nombre o teléfono..."
                     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
                 @if(request('buscar'))
                     <a href="{{ route('clientes.index') }}"
@@ -309,26 +265,26 @@
                     <tr>
                         <th class="p-4">Cliente</th>
                         <th class="p-4 hidden sm:table-cell">Teléfono</th>
-                        <th class="p-4 hidden sm:table-cell">Ciudad</th>
-                        <th class="p-4 hidden md:table-cell">Vehículo</th>
-                        <th class="p-4">Estado</th>
+                        <th class="p-4 hidden sm:table-cell">Concesionario</th>
+                        <th class="p-4 hidden md:table-cell">Cita</th>
                         <th class="p-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($clientes as $cliente)
-                        @php $cfg = $estadoConfig[$cliente->estado] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $cliente->estado]; @endphp
                         <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 <div class="font-medium">{{ $cliente->nombre }}</div>
-                                <div class="text-sm text-gray-400">{{ $cliente->email }}</div>
                                 <div class="sm:hidden text-xs text-gray-500 mt-0.5">{{ $cliente->telefono }}</div>
                             </td>
                             <td class="p-4 hidden sm:table-cell">{{ $cliente->telefono }}</td>
-                            <td class="p-4 hidden sm:table-cell">{{ $cliente->ciudad }}</td>
-                            <td class="p-4 hidden md:table-cell">{{ $cliente->vehiculo_interes }}</td>
-                            <td class="p-4">
-                                <span class="text-xs {{ $cfg['badge'] }} px-3 py-1 rounded-full">{{ $cfg['label'] }}</span>
+                            <td class="p-4 hidden sm:table-cell">{{ $cliente->concesionario->nombre ?? 'Sin asignar' }}</td>
+                            <td class="p-4 hidden md:table-cell">
+                                @if($cliente->cita)
+                                    <span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Sí</span>
+                                @else
+                                    <span class="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">No</span>
+                                @endif
                             </td>
                             <td class="p-4">
                                 @include('partials._acciones', [

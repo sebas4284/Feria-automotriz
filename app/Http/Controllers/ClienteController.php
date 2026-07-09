@@ -3,31 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Concesionario;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
 {
+    private const MEDIOS = [
+        'Redes sociales',
+        'Referido',
+        'Feria/Evento',
+        'Publicidad o pagina web',
+        'No se',
+    ];
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Cliente::latest();
+        $this->authorize('viewAny', Cliente::class);
+
+        $query = Cliente::with('concesionario')->visibleTo($request->user())->latest();
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('email', 'like', "%{$buscar}%")
                   ->orWhere('telefono', 'like', "%{$buscar}%");
             });
         }
 
         $clientes = $query->get();
-        $totalLeadsNuevos    = $clientes->where('estado', 'Nuevo')->count();
-        $totalVentasCerradas = $clientes->where('estado', 'Vendido')->count();
 
-        return view('clientes.index', compact('clientes', 'totalLeadsNuevos', 'totalVentasCerradas'));
+        return view('clientes.index', compact('clientes'));
     }
 
     /**
@@ -35,7 +43,12 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        return view('clientes.create');
+        $this->authorize('create', Cliente::class);
+
+        $concesionarios = $this->concesionariosDisponibles();
+        $medios = self::MEDIOS;
+
+        return view('clientes.create', compact('concesionarios', 'medios'));
     }
 
     /**
@@ -43,25 +56,23 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Cliente::class);
+
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:clientes,email',
             'telefono' => 'nullable|string|max:20',
-            'ciudad' => 'nullable|string|max:255',
-            'vehiculo_interes' => 'nullable|string|max:255',
-            'presupuesto' => 'nullable|numeric',
-            'estado' => 'nullable|string',
+            'cita' => 'sometimes|boolean',
+            'concesionario_id' => 'nullable|exists:concesionarios,id',
+            'medio_entero' => 'nullable|in:' . implode(',', self::MEDIOS),
             'observaciones' => 'nullable|string',
         ]);
 
         Cliente::create([
             'nombre' => $request->nombre,
             'telefono' => $request->telefono,
-            'email' => $request->email,
-            'ciudad' => $request->ciudad,
-            'vehiculo_interes' => $request->vehiculo_interes,
-            'presupuesto' => $request->presupuesto,
-            'estado' => $request->estado,
+            'cita' => $request->boolean('cita'),
+            'concesionario_id' => $this->resolveConcesionarioId($request),
+            'medio_entero' => $request->medio_entero,
             'observaciones' => $request->observaciones,
             'user_id' => auth()->id(),
         ]);
@@ -76,6 +87,10 @@ class ClienteController extends Controller
      */
     public function show(Cliente $cliente)
     {
+        $this->authorize('view', $cliente);
+
+        $cliente->load('concesionario');
+
         return view('clientes.show', compact('cliente'));
     }
 
@@ -84,7 +99,12 @@ class ClienteController extends Controller
      */
     public function edit(Cliente $cliente)
     {
-        return view('clientes.edit', compact('cliente'));
+        $this->authorize('update', $cliente);
+
+        $concesionarios = $this->concesionariosDisponibles();
+        $medios = self::MEDIOS;
+
+        return view('clientes.edit', compact('cliente', 'concesionarios', 'medios'));
     }
 
     /**
@@ -92,25 +112,23 @@ class ClienteController extends Controller
      */
     public function update(Request $request, Cliente $cliente)
     {
+        $this->authorize('update', $cliente);
+
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:clientes,email,' . $cliente->id,
             'telefono' => 'nullable|string|max:20',
-            'ciudad' => 'nullable|string|max:255',
-            'vehiculo_interes' => 'nullable|string|max:255',
-            'presupuesto' => 'nullable|numeric',
-            'estado' => 'nullable|string',
+            'cita' => 'sometimes|boolean',
+            'concesionario_id' => 'nullable|exists:concesionarios,id',
+            'medio_entero' => 'nullable|in:' . implode(',', self::MEDIOS),
             'observaciones' => 'nullable|string',
         ]);
 
         $cliente->update([
             'nombre' => $request->nombre,
             'telefono' => $request->telefono,
-            'email' => $request->email,
-            'ciudad' => $request->ciudad,
-            'vehiculo_interes' => $request->vehiculo_interes,
-            'presupuesto' => $request->presupuesto,
-            'estado' => $request->estado,
+            'cita' => $request->boolean('cita'),
+            'concesionario_id' => $this->resolveConcesionarioId($request),
+            'medio_entero' => $request->medio_entero,
             'observaciones' => $request->observaciones,
         ]);
 
@@ -124,10 +142,28 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
+        $this->authorize('delete', $cliente);
+
         $cliente->delete();
 
         return redirect()
             ->route('clientes.index')
             ->with('success', 'Cliente eliminado correctamente');
+    }
+
+    private function concesionariosDisponibles()
+    {
+        $user = auth()->user();
+
+        return $user->isAdmin()
+            ? Concesionario::where('activo', true)->orderBy('nombre')->get()
+            : Concesionario::where('id', $user->concesionario_id)->get();
+    }
+
+    private function resolveConcesionarioId(Request $request): ?int
+    {
+        $user = $request->user();
+
+        return $user->isAdmin() ? $request->concesionario_id : $user->concesionario_id;
     }
 }
