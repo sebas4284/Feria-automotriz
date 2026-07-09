@@ -16,6 +16,10 @@ use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
 
+Route::get('/', function () {
+    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
+});
+
 Route::get(
     '/dashboard',
     [DashboardController::class, 'index']

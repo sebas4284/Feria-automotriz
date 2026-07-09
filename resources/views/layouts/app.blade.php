@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>AutoFeria CRM</title>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -48,7 +53,9 @@
             <div class="flex flex-col h-full">
 
             <div class="p-5 border-b border-gray-800 flex items-center justify-between shrink-0">
-                <h1 class="text-xl font-bold text-blue-500">AutoFeria CRM</h1>
+                <a href="/">
+                    <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-8 w-auto">
+                </a>
             </div>
 
             <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -64,29 +71,6 @@
                 @endforeach
             </nav>
 
-            <div class="p-4 border-t border-gray-800 shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="relative shrink-0">
-                        <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </div>
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full"></span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium truncate">{{ Auth::user()->name }}</p>
-                        <p class="text-xs text-green-400">En línea</p>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="text-gray-400 hover:text-red-400 transition p-1" title="Cerrar sesión">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
             </div>
         </aside>
 
@@ -97,7 +81,9 @@
             <header class="lg:hidden bg-gray-900 border-b border-gray-800 px-4 py-3 sticky top-0 z-30">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <h1 class="text-lg font-bold text-blue-500">AutoFeria CRM</h1>
+                        <a href="/">
+                            <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-6 w-auto">
+                        </a>
                     </div>
                     <div class="flex items-center gap-2">
                         <div class="relative">
@@ -111,6 +97,14 @@
                         <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm select-none">
                             {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                         </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 text-gray-400 hover:text-red-400 transition" title="Cerrar sesión">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                                </svg>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </header>
