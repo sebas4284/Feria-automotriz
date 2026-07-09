@@ -4,24 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use App\Models\Vehiculo;
-use App\Models\Lead;
 use App\Models\Venta;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
 {
+    $user = $request->user();
+
     // KPIs
 
-    $totalClientes = Cliente::count();
+    $totalClientes = Cliente::visibleTo($user)->count();
 
     $totalVehiculos = Vehiculo::count();
 
-    $totalLeads = Lead::count();
+    $totalVentas = Venta::visibleTo($user)->count();
 
-    $totalVentas = Venta::count();
-
-    $ingresosMes = Venta::whereMonth(
+    $ingresosMes = Venta::visibleTo($user)->whereMonth(
         'fecha_venta',
         now()->month
     )->whereYear(
@@ -29,35 +29,13 @@ class DashboardController extends Controller
         now()->year
     )->sum('valor');
 
-    // Pipeline
-
-    $nuevos = Lead::where('estado', 'Nuevo')->latest()->take(10)->get();
-
-    $contactados = Lead::where('estado', 'Contactado')->latest()->take(10)->get();
-
-    $interesados = Lead::where('estado', 'Interesado')->latest()->take(10)->get();
-
-    $citas = Lead::where('estado', 'Cita')->latest()->take(10)->get();
-
-    $negociaciones = Lead::where('estado', 'Negociacion')->latest()->take(10)->get();
-
-    $vendidos = Lead::where('estado', 'Vendido')->latest()->take(10)->get();
-
     return view(
         'dashboard',
         compact(
             'totalClientes',
             'totalVehiculos',
-            'totalLeads',
             'totalVentas',
-            'ingresosMes',
-
-            'nuevos',
-            'contactados',
-            'interesados',
-            'citas',
-            'negociaciones',
-            'vendidos'
+            'ingresosMes'
         )
     );
 }

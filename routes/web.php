@@ -9,13 +9,12 @@ use App\Models\Cliente;
 use App\Models\Vehiculo;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\ConcesionarioController;
-use App\Http\Controllers\LeadController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\MetaWebhookController;
-
-// Webhook Meta Lead Ads — sin middleware auth ni CSRF (ver bootstrap/app.php)
-Route::get('/webhook/meta', [MetaWebhookController::class, 'verify'])->name('webhook.meta.verify');
-Route::post('/webhook/meta', [MetaWebhookController::class, 'handle'])->name('webhook.meta.handle');
+use App\Http\Controllers\LeadController;
+use App\Http\Controllers\AsesorComercialController;
+use App\Http\Controllers\RifaController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\EstadisticasController;
 
 Route::get(
     '/dashboard',
@@ -25,21 +24,47 @@ Route::get(
 Route::resource(
     'concesionarios',
     ConcesionarioController::class
-)->middleware('auth');
-Route::resource(
-    'leads',
-    LeadController::class
-);
+)->middleware(['auth', 'role:admin']);
 
 Route::resource('ventas', VentaController::class)
     ->middleware('auth');
 
+//Asesores comerciales
+Route::resource('asesores', AsesorComercialController::class)
+    ->parameters(['asesores' => 'asesor'])
+    ->middleware('auth');
+
+//Rifa / Experiencia
+Route::get('/rifa', [RifaController::class, 'index'])
+    ->name('rifa.index')
+    ->middleware(['auth', 'role:admin']);
+
 //Clientes
 Route::resource('clientes', ClienteController::class)
     ->middleware('auth');
-//Vehiculos    
+//Vehiculos
 Route::resource('vehiculos', VehiculoController::class)
-    ->middleware('auth');    
+    ->middleware('auth');
+
+//Leads
+Route::resource('leads', LeadController::class)
+    ->only(['index', 'show', 'edit', 'update', 'destroy'])
+    ->middleware('auth');
+
+Route::patch('leads/{lead}/reassign', [LeadController::class, 'reassign'])
+    ->name('leads.reassign')
+    ->middleware('auth');
+
+//Usuarios (administración de cuentas)
+Route::resource('usuarios', UserController::class)
+    ->except(['show'])
+    ->middleware(['auth', 'role:admin']);
+
+//Estadísticas
+Route::get('/estadisticas', [EstadisticasController::class, 'index'])
+    ->name('estadisticas.index')
+    ->middleware('auth');
+
 //Autenticación
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

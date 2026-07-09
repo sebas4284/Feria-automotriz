@@ -2,154 +2,70 @@
 
 @section('content')
 
-<div class="max-w-5xl mx-auto">
+<div class="max-w-4xl mx-auto">
 
-    <h1 class="text-3xl font-bold mb-8">
-        Gestionar Lead
-    </h1>
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-bold">Editar Lead</h1>
+            <p class="text-gray-400 mt-1 text-sm">{{ $lead->full_name ?: 'Sin nombre' }}</p>
+        </div>
+        <a href="{{ route('leads.show', $lead) }}"
+            class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl transition text-sm">
+            Volver
+        </a>
+    </div>
 
-    <form
-        method="POST"
-        action="{{ route('leads.update', $lead) }}"
-        class="bg-gray-900 border border-gray-800 rounded-3xl p-8">
+    @if ($errors->any())
+        <div class="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4">
+            <p class="text-red-400 font-semibold mb-2">Errores:</p>
+            <ul class="text-red-400 text-sm list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        @csrf
-        @method('PUT')
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <div>
-
-                <label class="block text-sm text-gray-400 mb-2">
-                    Nombre
-                </label>
-
-                <input
-                    type="text"
-                    value="{{ $lead->nombre }}"
-                    readonly
-                    class="w-full bg-gray-800 rounded-xl p-3">
-
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-300">Datos de Meta (solo lectura)</h2>
+            <div class="space-y-3 text-sm">
+                <div><p class="text-gray-500">Nombre</p><p class="text-white">{{ $lead->full_name ?: '—' }}</p></div>
+                <div><p class="text-gray-500">Email</p><p class="text-white">{{ $lead->email ?: '—' }}</p></div>
+                <div><p class="text-gray-500">Teléfono</p><p class="text-white">{{ $lead->phone_number ?: '—' }}</p></div>
+                <div><p class="text-gray-500">Campaña</p><p class="text-white">{{ $lead->campaign_name ?: '—' }}</p></div>
             </div>
-
-            <div>
-
-                <label class="block text-sm text-gray-400 mb-2">
-                    Teléfono
-                </label>
-
-                <input
-                    type="text"
-                    value="{{ $lead->telefono }}"
-                    readonly
-                    class="w-full bg-gray-800 rounded-xl p-3">
-
-            </div>
-
-            <div>
-
-                <label class="block text-sm text-gray-400 mb-2">
-                    Estado
-                </label>
-
-                <select
-                    name="estado"
-                    class="w-full bg-gray-800 rounded-xl p-3">
-
-                    <option {{ $lead->estado == 'Nuevo' ? 'selected' : '' }}>
-                        Nuevo
-                    </option>
-
-                    <option {{ $lead->estado == 'Contactado' ? 'selected' : '' }}>
-                        Contactado
-                    </option>
-
-                    <option {{ $lead->estado == 'Interesado' ? 'selected' : '' }}>
-                        Interesado
-                    </option>
-
-                    <option {{ $lead->estado == 'Cita' ? 'selected' : '' }}>
-                        Cita
-                    </option>
-
-                    <option {{ $lead->estado == 'Negociacion' ? 'selected' : '' }}>
-                        Negociacion
-                    </option>
-
-                    <option {{ $lead->estado == 'Vendido' ? 'selected' : '' }}>
-                        Vendido
-                    </option>
-
-                    <option {{ $lead->estado == 'Perdido' ? 'selected' : '' }}>
-                        Perdido
-                    </option>
-
-                </select>
-
-            </div>
-
-            <div>
-
-                <label class="block text-sm text-gray-400 mb-2">
-                    Concesionario
-                </label>
-
-                <select
-                    name="concesionario_id"
-                    class="w-full bg-gray-800 rounded-xl p-3">
-
-                    @foreach($concesionarios as $concesionario)
-
-                        <option
-                            value="{{ $concesionario->id }}"
-                            {{ $lead->concesionario_id == $concesionario->id ? 'selected' : '' }}>
-
-                            {{ $concesionario->nombre }}
-
-                        </option>
-
-                    @endforeach
-
-                </select>
-
-            </div>
-
         </div>
 
-        <div class="mt-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <h2 class="text-lg font-semibold mb-4">Gestión interna</h2>
+            <form method="POST" action="{{ route('leads.update', $lead) }}">
+                @csrf
+                @method('PUT')
 
-            <label class="block text-sm text-gray-400 mb-2">
-                Observación
-            </label>
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm text-gray-400">Estado de gestión</label>
+                    <select name="estado_gestion" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+                        @foreach(['Nuevo', 'Contactado', 'Negociacion', 'Vendido', 'Perdido'] as $estado)
+                            <option value="{{ $estado }}" @selected(old('estado_gestion', $lead->estado_gestion) === $estado)>{{ $estado }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <textarea
-                name="observacion"
-                rows="5"
-                class="w-full bg-gray-800 rounded-xl p-3">{{ $lead->observacion }}</textarea>
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm text-gray-400">Observaciones</label>
+                    <textarea name="observaciones" rows="5"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">{{ old('observaciones', $lead->observaciones) }}</textarea>
+                </div>
 
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition">
+                    Guardar Cambios
+                </button>
+            </form>
         </div>
 
-        <div class="mt-8 flex gap-4">
-
-            <button
-                type="submit"
-                class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl">
-
-                Guardar Gestión
-
-            </button>
-
-            <a
-                href="{{ route('leads.index') }}"
-                class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl">
-
-                Cancelar
-
-            </a>
-
-        </div>
-
-    </form>
+    </div>
 
 </div>
 

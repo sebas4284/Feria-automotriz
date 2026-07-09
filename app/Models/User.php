@@ -23,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'concesionario_id',
+        'rol',
     ];
 
     /**
@@ -53,4 +55,14 @@ class User extends Authenticatable
         Concesionario::class
     );
 }
+
+    public function isAdmin(): bool
+    {
+        return $this->rol === 'admin';
+    }
+
+    public function isConcesionario(): bool
+    {
+        return $this->rol === 'concesionario';
+    }
 }
