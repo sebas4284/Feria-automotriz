@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class LeadReassignment extends Model
+{
+    protected $fillable = [
+        'lead_id',
+        'from_concesionario_id',
+        'to_concesionario_id',
+        'reassigned_by',
+        'motivo',
+    ];
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
+    public function fromConcesionario()
+    {
+        return $this->belongsTo(Concesionario::class, 'from_concesionario_id');
+    }
+
+    public function toConcesionario()
+    {
+        return $this->belongsTo(Concesionario::class, 'to_concesionario_id');
+    }
+
+    public function reassignedBy()
+    {
+        return $this->belongsTo(User::class, 'reassigned_by');
+    }
+}

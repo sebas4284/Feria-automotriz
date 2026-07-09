@@ -3,206 +3,189 @@
 @section('content')
 
 @php
-    $estadoLeadConfig = [
-        'Nuevo'      => ['badge' => 'bg-blue-500/20 text-blue-400',    'dot' => 'bg-blue-400'],
-        'Contactado' => ['badge' => 'bg-teal-500/20 text-teal-400',    'dot' => 'bg-teal-400'],
-        'Interesado' => ['badge' => 'bg-purple-500/20 text-purple-400','dot' => 'bg-purple-400'],
-        'Cita'       => ['badge' => 'bg-yellow-500/20 text-yellow-400','dot' => 'bg-yellow-400'],
-        'Negociacion'=> ['badge' => 'bg-orange-500/20 text-orange-400','dot' => 'bg-orange-400'],
-        'Vendido'    => ['badge' => 'bg-emerald-500/20 text-emerald-400','dot' => 'bg-emerald-400'],
-        'Perdido'    => ['badge' => 'bg-red-500/20 text-red-400',      'dot' => 'bg-red-400'],
-        'Reasignado' => ['badge' => 'bg-gray-500/20 text-gray-400',    'dot' => 'bg-gray-400'],
+    $estadoConfig = [
+        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',   'label' => 'Nuevo'],
+        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',   'label' => 'Contactado'],
+        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400', 'label' => 'Negociación'],
+        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400', 'label' => 'Vendido'],
+        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',     'label' => 'Perdido'],
     ];
-
-    $avatarColors = ['bg-blue-600','bg-purple-600','bg-green-600','bg-amber-600','bg-red-600','bg-teal-600','bg-pink-600','bg-indigo-600'];
-
-    function leadColor($nombre, $colors) {
-        return $colors[abs(crc32($nombre)) % count($colors)];
-    }
-
-    function leadInitials($nombre) {
-        $words = array_filter(explode(' ', $nombre));
-        $initials = '';
-        foreach (array_slice(array_values($words), 0, 2) as $w) {
-            $initials .= strtoupper($w[0]);
-        }
-        return $initials;
-    }
 @endphp
 
-{{-- ===================== VISTA MÓVIL ===================== --}}
-<div class="lg:hidden space-y-5">
+<div>
 
-    {{-- Encabezado --}}
-    <div class="flex items-start justify-between">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold">Leads</h1>
-            <p class="text-gray-400 text-sm mt-0.5">Gestión de oportunidades</p>
+            <h1 class="text-2xl lg:text-3xl font-bold">Leads</h1>
+            <p class="text-gray-400 mt-1 text-sm">Leads capturados desde Meta Ads (sincronizados desde el sheet)</p>
         </div>
-        <a href="{{ route('leads.create') }}"
-            class="w-11 h-11 bg-blue-600 hover:bg-blue-700 rounded-2xl flex items-center justify-center transition shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-        </a>
     </div>
 
-    {{-- Contadores por estado (scroll horizontal) --}}
-    <div class="flex gap-2 overflow-x-auto pb-1">
-        @foreach($leads->groupBy('estado') as $estado => $grupo)
-            @php $cfg = $estadoLeadConfig[$estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400', 'dot' => 'bg-gray-400']; @endphp
-            <div class="flex-shrink-0 bg-gray-900 border border-gray-800 rounded-2xl px-3 py-2.5 text-center min-w-[80px]">
-                <p class="text-lg font-bold {{ explode(' ', $cfg['badge'])[1] }}">{{ $grupo->count() }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 whitespace-nowrap">{{ $estado }}</p>
-            </div>
-        @endforeach
-    </div>
-
-    {{-- Lista de leads --}}
-    <div class="space-y-2">
-        @forelse($leads as $lead)
-            @php
-                $cfg      = $estadoLeadConfig[$lead->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400', 'dot' => 'bg-gray-400'];
-                $color    = leadColor($lead->nombre, $avatarColors);
-                $initials = leadInitials($lead->nombre);
-
-                if (!$lead->ultima_gestion) {
-                    $gestionClass = 'text-red-400';
-                    $gestionLabel = 'Sin gestionar';
-                } elseif (\Carbon\Carbon::parse($lead->ultima_gestion)->diffInDays(now()) >= 3) {
-                    $gestionClass = 'text-yellow-400';
-                    $gestionLabel = \Carbon\Carbon::parse($lead->ultima_gestion)->diffForHumans();
-                } else {
-                    $gestionClass = 'text-gray-500';
-                    $gestionLabel = \Carbon\Carbon::parse($lead->ultima_gestion)->diffForHumans();
-                }
-            @endphp
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
-                <div class="flex items-center gap-3">
-                    <div class="{{ $color }} w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
-                        {{ $initials }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2">
-                            <p class="font-medium text-sm truncate">{{ $lead->nombre }}</p>
-                            <span class="text-xs {{ $cfg['badge'] }} px-2 py-0.5 rounded-full shrink-0">{{ $lead->estado }}</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-2 mt-0.5">
-                            <p class="text-xs text-gray-500 truncate">{{ $lead->vehiculo_interes ?: $lead->telefono }}</p>
-                            <p class="text-xs {{ $gestionClass }} shrink-0">{{ $gestionLabel }}</p>
-                        </div>
-                        @if($lead->concesionario)
-                            <p class="text-xs text-gray-600 mt-0.5 truncate">{{ $lead->concesionario->nombre }}</p>
-                        @endif
-                    </div>
-                </div>
-                {{-- Acciones compactas --}}
-                <div class="flex gap-2 mt-3 pt-3 border-t border-gray-800">
-                    <a href="{{ route('leads.show', $lead) }}"
-                        class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                        Ver
-                    </a>
-                    <a href="{{ route('leads.edit', $lead) }}"
-                        class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-                        </svg>
-                        Gestionar
-                    </a>
-                    @if($lead->reasignaciones > 0)
-                        <span class="flex items-center px-3 py-1.5 rounded-xl bg-yellow-500/10 text-yellow-400 text-xs font-semibold">
-                            {{ $lead->reasignaciones }}✕
-                        </span>
-                    @endif
-                </div>
-            </div>
-        @empty
-            <div class="text-center py-12 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-10 h-10 mx-auto mb-3 text-gray-700">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-                </svg>
-                No hay leads registrados
-            </div>
-        @endforelse
-    </div>
-
-</div>
-
-{{-- ===================== VISTA DESKTOP ===================== --}}
-<div class="hidden lg:block">
-
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold">Leads</h1>
-            <p class="text-gray-400">Gestión de oportunidades</p>
+    @if(session('success'))
+        <div class="mb-6 bg-green-500/10 border border-green-500/50 rounded-xl p-4 text-green-400">
+            {{ session('success') }}
         </div>
-        @include('partials._boton-crear', ['href' => route('leads.create'), 'texto' => 'Nuevo Lead'])
+    @endif
+
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Total leads</p>
+            <p class="text-2xl lg:text-4xl font-bold">{{ $leads->count() }}</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Nuevos</p>
+            <p class="text-2xl lg:text-4xl font-bold text-blue-400">{{ $totalNuevos }}</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Vencidos ({{ config('leads.staleness_hours') }}h)</p>
+            <p class="text-2xl lg:text-4xl font-bold text-red-400">{{ $totalVencidos }}</p>
+        </div>
     </div>
 
-    <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
-        <table class="w-full">
-            <thead class="bg-gray-800">
-                <tr>
-                    <th class="p-4 text-left">Nombre</th>
-                    <th class="p-4 text-left hidden sm:table-cell">Vehículo</th>
-                    <th class="p-4 text-left hidden sm:table-cell">Concesionario</th>
-                    <th class="p-4 text-left">Estado</th>
-                    <th class="p-4 text-left hidden md:table-cell">Última Gestión</th>
-                    <th class="p-4 text-left hidden md:table-cell">Reasignaciones</th>
-                    <th class="p-4 text-left">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($leads as $lead)
-                    @php $cfg = $estadoLeadConfig[$lead->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400', 'dot' => 'bg-gray-400']; @endphp
-                    <tr class="border-t border-gray-800 hover:bg-gray-800/40">
-                        <td class="p-4">
-                            <div class="font-medium">{{ $lead->nombre }}</div>
-                            <div class="text-xs text-gray-500 mt-0.5">{{ $lead->telefono }}</div>
-                            <div class="sm:hidden text-xs text-gray-500 mt-0.5">{{ $lead->concesionario?->nombre ?? 'Sin asignar' }}</div>
-                        </td>
-                        <td class="p-4 hidden sm:table-cell">{{ $lead->vehiculo_interes }}</td>
-                        <td class="p-4 hidden sm:table-cell">{{ $lead->concesionario?->nombre ?? 'Sin asignar' }}</td>
-                        <td class="p-4">
-                            <span class="text-xs {{ $cfg['badge'] }} px-3 py-1 rounded-full">{{ $lead->estado }}</span>
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            @if(!$lead->ultima_gestion)
-                                <span class="text-red-400 font-semibold text-sm">Nunca gestionado</span>
-                            @elseif(\Carbon\Carbon::parse($lead->ultima_gestion)->diffInDays(now()) >= 3)
-                                <span class="text-yellow-400 font-semibold text-sm">{{ \Carbon\Carbon::parse($lead->ultima_gestion)->diffForHumans() }}</span>
-                            @else
-                                <span class="text-green-400 text-sm">{{ \Carbon\Carbon::parse($lead->ultima_gestion)->diffForHumans() }}</span>
-                            @endif
-                        </td>
-                        <td class="p-4 hidden md:table-cell">
-                            @if($lead->reasignaciones > 0)
-                                <span class="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-semibold">{{ $lead->reasignaciones }}</span>
-                            @else
-                                <span class="text-gray-400">0</span>
-                            @endif
-                        </td>
-                        <td class="p-4">
-                            @include('partials._acciones', [
-                                'modelo'      => $lead,
-                                'ruta'        => 'leads',
-                                'label'       => 'lead',
-                                'labelEditar' => 'Gestionar',
-                                'sinEliminar' => true,
-                            ])
-                        </td>
-                    </tr>
-                @empty
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+
+        <div class="p-5 border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar')])) }}"
+                    class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') !== 'vencido' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
+                    Todos
+                </a>
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'vencido'])) }}"
+                    class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'vencido' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
+                    Vencidos
+                </a>
+            </div>
+            <form method="GET" action="{{ route('leads.index') }}" class="flex gap-2">
+                @if(request('filtro'))
+                    <input type="hidden" name="filtro" value="{{ request('filtro') }}">
+                @endif
+                <input type="text" name="buscar" value="{{ request('buscar') }}"
+                    placeholder="Buscar por nombre, email o teléfono..."
+                    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
+                @if(request('buscar'))
+                    <a href="{{ route('leads.index', array_filter(['filtro' => request('filtro')])) }}"
+                        class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
-                        <td colspan="7" class="text-center p-8 text-gray-400">No hay leads registrados</td>
+                        <th class="p-4">Nombre</th>
+                        <th class="p-4 hidden sm:table-cell">Actividad económica</th>
+                        <th class="p-4 hidden sm:table-cell">Monto interés a aprobar</th>
+                        <th class="p-4 hidden md:table-cell">Email</th>
+                        <th class="p-4 hidden md:table-cell">Teléfono</th>
+                        <th class="p-4 hidden md:table-cell">Estado (Meta)</th>
+                        <th class="p-4">Concesionario</th>
+                        <th class="p-4">Estado</th>
+                        <th class="p-4">Acciones</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($leads as $lead)
+                        @php $cfg = $estadoConfig[$lead->estado_gestion] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $lead->estado_gestion]; @endphp
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                            <td class="p-4">
+                                <div class="font-medium">{{ $lead->full_name ?: 'Sin nombre' }}</div>
+                                <div class="text-sm text-gray-400 md:hidden">{{ $lead->email }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5 md:hidden">{{ $lead->phone_number }}</div>
+                            </td>
+                            <td class="p-4 hidden sm:table-cell">{{ $lead->actividad_economica ?: '—' }}</td>
+                            <td class="p-4 hidden sm:table-cell">{{ $lead->monto_interes_aprobar ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell">{{ $lead->email ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell">{{ $lead->phone_number ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell">{{ $lead->meta_lead_status ?: '—' }}</td>
+                            <td class="p-4">
+                                {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
+                            </td>
+                            <td class="p-4">
+                                <span class="text-xs {{ $cfg['badge'] }} px-3 py-1 rounded-full">{{ $cfg['label'] }}</span>
+                                @if($lead->vencido)
+                                    <span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full ml-1">Vencido</span>
+                                @endif
+                            </td>
+                            <td class="p-4">
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('leads.show', $lead) }}"
+                                        title="Ver"
+                                        class="p-2.5 sm:p-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                    </a>
+
+                                    @can('update', $lead)
+                                        <a href="{{ route('leads.edit', $lead) }}"
+                                            title="Editar"
+                                            class="p-2.5 sm:p-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 hover:text-blue-300 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                                            </svg>
+                                        </a>
+                                    @endcan
+
+                                    @can('reassign', $lead)
+                                        <details class="relative">
+                                            <summary class="list-none cursor-pointer p-2.5 sm:p-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 hover:text-amber-300 transition" title="Reasignar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                </svg>
+                                            </summary>
+                                            <div class="absolute right-0 z-20 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-xl">
+                                                <form method="POST" action="{{ route('leads.reassign', $lead) }}" class="space-y-3">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <div>
+                                                        <label class="text-xs text-gray-400">Nuevo concesionario</label>
+                                                        <select name="to_concesionario_id" required
+                                                            class="w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                                                            @foreach($concesionarios as $c)
+                                                                <option value="{{ $c->id }}" @selected($c->id === $lead->concesionario_id)>{{ $c->nombre }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="text-xs text-gray-400">Motivo (opcional)</label>
+                                                        <textarea name="motivo" rows="2"
+                                                            class="w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"></textarea>
+                                                    </div>
+                                                    <button type="submit"
+                                                        class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-1.5 text-sm font-medium transition">
+                                                        Reasignar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    @endcan
+
+                                    @can('delete', $lead)
+                                        <form method="POST" action="{{ route('leads.destroy', $lead) }}" onsubmit="return confirm('¿Eliminar este lead?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" title="Eliminar"
+                                                class="p-2.5 sm:p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-gray-500">No hay leads registrados</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
     </div>
 
 </div>

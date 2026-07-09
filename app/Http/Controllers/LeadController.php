@@ -2,122 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lead;
 use App\Models\Concesionario;
+use App\Models\Lead;
+use App\Services\LeadAssignmentService;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $leads = Lead::with('concesionario')
-            ->latest()
-            ->get();
+        $query = Lead::with('concesionario')->visibleTo($request->user())->latest('created_time');
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function ($q) use ($buscar) {
+                $q->where('full_name', 'like', "%{$buscar}%")
+                  ->orWhere('email', 'like', "%{$buscar}%")
+                  ->orWhere('phone_number', 'like', "%{$buscar}%");
+            });
+        }
+
+        if ($request->query('filtro') === 'vencido') {
+            $query->vencido();
+        }
+
+        $leads = $query->get();
+
+        $totalNuevos = $leads->where('estado_gestion', 'Nuevo')->count();
+        $totalVencidos = $leads->filter(fn (Lead $lead) => $lead->vencido)->count();
+
+        $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 
         return view(
             'leads.index',
-            compact('leads')
+            compact('leads', 'totalNuevos', 'totalVencidos', 'concesionarios')
         );
     }
 
-    public function create()
-    {
-        return view('leads.create');
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required',
-            'telefono' => 'required'
-        ]);
-
-        $concesionarios = Concesionario::where('activo', true)->get();
-
-        $pool = [];
-
-        foreach ($concesionarios as $concesionario) {
-
-            for ($i = 0; $i < $concesionario->peso_asignacion; $i++) {
-
-                $pool[] = $concesionario;
-
-            }
-        }
-
-        $concesionarioAsignado = $pool[array_rand($pool)];
-
-        Lead::create([
-
-            'nombre' => $request->nombre,
-
-            'telefono' => $request->telefono,
-
-            'email' => $request->email,
-
-            'ciudad' => $request->ciudad,
-
-            'vehiculo_interes' => $request->vehiculo_interes,
-
-            'estado' => 'Nuevo',
-
-            'concesionario_id' => $concesionarioAsignado->id,
-
-            'fecha_asignacion' => now(),
-
-            'reasignaciones' => 0
-
-        ]);
-
-        return redirect()
-            ->route('leads.index')
-            ->with(
-                'success',
-                'Lead asignado a ' . $concesionarioAsignado->nombre
-            );
-    }
     public function show(Lead $lead)
     {
-        return view(
-            'leads.show',
-            compact('lead')
-        );
+        $this->authorize('view', $lead);
+
+        $lead->load(['concesionario', 'reassignments.fromConcesionario', 'reassignments.toConcesionario', 'reassignments.reassignedBy']);
+
+        $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
+
+        return view('leads.show', compact('lead', 'concesionarios'));
     }
+
     public function edit(Lead $lead)
     {
-        $concesionarios = Concesionario::where('activo', true)->get();
+        $this->authorize('update', $lead);
 
-        return view(
-            'leads.edit',
-            compact(
-                'lead',
-                'concesionarios'
-            )
-        );
+        return view('leads.edit', compact('lead'));
     }
+
     public function update(Request $request, Lead $lead)
     {
-        $concesionarioAnterior = $lead->concesionario_id;
+        $this->authorize('update', $lead);
 
-        $lead->estado = $request->estado;
-        $lead->observacion = $request->observacion;
-        $lead->ultima_gestion = now();
+        $validated = $request->validate([
+            'estado_gestion' => 'required|in:Nuevo,Contactado,Negociacion,Vendido,Perdido',
+            'observaciones' => 'nullable|string',
+        ]);
 
-        if ($concesionarioAnterior != $request->concesionario_id) {
+        $lead->update($validated);
 
-            $lead->concesionario_id = $request->concesionario_id;
+        return redirect()->route('leads.show', $lead)->with('success', 'Lead actualizado correctamente');
+    }
 
-            $lead->reasignaciones += 1;
+    public function destroy(Lead $lead)
+    {
+        $this->authorize('delete', $lead);
 
-            $lead->fecha_asignacion = now();
+        $lead->delete();
 
-            $lead->estado = 'Reasignado';
-        }
+        return redirect()->route('leads.index')->with('success', 'Lead eliminado correctamente');
+    }
 
-        $lead->save();
+    public function reassign(Request $request, Lead $lead, LeadAssignmentService $service)
+    {
+        $this->authorize('reassign', $lead);
 
-        return redirect()
-            ->route('leads.index')
-            ->with('success', 'Lead actualizado correctamente');
+        $data = $request->validate([
+            'to_concesionario_id' => 'required|exists:concesionarios,id',
+            'motivo' => 'nullable|string|max:500',
+        ]);
+
+        $to = Concesionario::where('activo', true)->findOrFail($data['to_concesionario_id']);
+
+        $service->reassign($lead, $to, $request->user(), $data['motivo'] ?? null);
+
+        return back()->with('success', 'Lead reasignado correctamente');
     }
 }
