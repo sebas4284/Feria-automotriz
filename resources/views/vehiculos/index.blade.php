@@ -239,9 +239,11 @@
                             </td>
                             <td class="p-4">
                                 @include('partials._acciones', [
-                                    'modelo' => $vehiculo,
-                                    'ruta'   => 'vehiculos',
-                                    'label'  => 'vehículo',
+                                    'modelo'      => $vehiculo,
+                                    'ruta'        => 'vehiculos',
+                                    'label'       => 'vehículo',
+                                    'sinEditar'   => auth()->user()->cannot('update', $vehiculo),
+                                    'sinEliminar' => auth()->user()->cannot('delete', $vehiculo),
                                 ])
                             </td>
                         </tr>

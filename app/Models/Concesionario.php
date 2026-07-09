@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Vehiculo;
-use App\Models\Lead;
 
 class Concesionario extends Model
 {
@@ -29,10 +28,5 @@ protected $casts = [
     public function vehiculos()
 {
     return $this->hasMany(Vehiculo::class);
-}
-
-public function leads()
-{
-    return $this->hasMany(Lead::class);
 }
 }

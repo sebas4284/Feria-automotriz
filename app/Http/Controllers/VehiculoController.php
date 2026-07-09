@@ -56,7 +56,9 @@ class VehiculoController extends Controller
 
     public function create()
     {
-        $concesionarios = Concesionario::where('activo', 1)->get();
+        $this->authorize('create', Vehiculo::class);
+
+        $concesionarios = $this->concesionariosDisponibles();
 
         return view(
             'vehiculos.create',
@@ -66,6 +68,8 @@ class VehiculoController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Vehiculo::class);
+
         $request->validate([
 
             'concesionario_id' => 'nullable|exists:concesionarios,id',
@@ -119,7 +123,10 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
         ]);
 
-        Vehiculo::create($request->all());
+        $data = $request->all();
+        $data['concesionario_id'] = $this->resolveConcesionarioId($request);
+
+        Vehiculo::create($data);
 
         return redirect()
             ->route('vehiculos.index')
@@ -141,9 +148,9 @@ class VehiculoController extends Controller
      */
     public function edit(Vehiculo $vehiculo)
     {
-        $concesionarios = Concesionario::query()
-    ->where('activo', true)
-    ->get();
+        $this->authorize('update', $vehiculo);
+
+        $concesionarios = $this->concesionariosDisponibles();
 
         return view(
             'vehiculos.edit',
@@ -159,6 +166,8 @@ class VehiculoController extends Controller
      */
     public function update(Request $request, Vehiculo $vehiculo)
     {
+        $this->authorize('update', $vehiculo);
+
         $request->validate([
 
             'concesionario_id' => 'nullable|exists:concesionarios,id',
@@ -212,7 +221,10 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
         ]);
 
-        $vehiculo->update($request->all());
+        $data = $request->all();
+        $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
+
+        $vehiculo->update($data);
 
         return redirect()
             ->route('vehiculos.show', $vehiculo)
@@ -227,10 +239,32 @@ class VehiculoController extends Controller
      */
     public function destroy(Vehiculo $vehiculo)
     {
+        $this->authorize('delete', $vehiculo);
+
         $vehiculo->delete();
 
         return redirect()
             ->route('vehiculos.index')
             ->with('success', 'Vehículo eliminado correctamente');
+    }
+
+    private function concesionariosDisponibles()
+    {
+        $user = auth()->user();
+
+        return $user->isAdmin()
+            ? Concesionario::where('activo', true)->get()
+            : Concesionario::where('id', $user->concesionario_id)->get();
+    }
+
+    private function resolveConcesionarioId(Request $request, ?Vehiculo $vehiculo = null): ?int
+    {
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            return $request->concesionario_id;
+        }
+
+        return $vehiculo ? $vehiculo->concesionario_id : $user->concesionario_id;
     }
 }

@@ -16,10 +16,12 @@
     </div>
 
     <div class="flex gap-2 shrink-0">
-        <a href="{{ route('vehiculos.edit', $vehiculo) }}"
-            class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2.5 rounded-xl text-sm font-medium transition">
-            Editar
-        </a>
+        @can('update', $vehiculo)
+            <a href="{{ route('vehiculos.edit', $vehiculo) }}"
+                class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2.5 rounded-xl text-sm font-medium transition">
+                Editar
+            </a>
+        @endcan
         <a href="{{ route('vehiculos.index') }}"
             class="bg-gray-700 hover:bg-gray-600 px-4 py-2.5 rounded-xl text-sm transition">
             Volver

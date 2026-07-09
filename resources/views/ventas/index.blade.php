@@ -19,10 +19,16 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div class="bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 text-green-400 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
     {{-- Resumen del mes --}}
     @php
-        $totalMes   = $ventas->filter(fn($v) => \Carbon\Carbon::parse($v->fecha_venta)->isCurrentMonth())->count();
-        $ingresosMes = $ventas->filter(fn($v) => \Carbon\Carbon::parse($v->fecha_venta)->isCurrentMonth())->sum('valor');
+        $totalMes   = $ventas->filter(fn($v) => $v->fecha_venta?->isCurrentMonth())->count();
+        $ingresosMes = $ventas->filter(fn($v) => $v->fecha_venta?->isCurrentMonth())->sum('valor');
         $totalIngresosAll = $ventas->sum('valor');
     @endphp
 
@@ -67,26 +73,43 @@
 
         <div class="space-y-2">
             @forelse($ventas as $venta)
-                <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
-                    <div class="flex items-center justify-between gap-2 mb-2">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <div class="w-8 h-8 bg-emerald-600/20 rounded-xl flex items-center justify-center shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-emerald-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
+                    <a href="{{ route('ventas.show', $venta) }}" class="block">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="w-8 h-8 bg-emerald-600/20 rounded-xl flex items-center justify-center shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-emerald-400">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                                <p class="font-medium text-sm truncate">{{ $venta->comprador->nombre ?? '—' }}</p>
                             </div>
-                            <p class="font-medium text-sm truncate">{{ $venta->cliente->nombre }}</p>
+                            <p class="text-emerald-400 font-bold text-sm shrink-0">$ {{ number_format($venta->valor, 0, ',', '.') }}</p>
                         </div>
-                        <p class="text-emerald-400 font-bold text-sm shrink-0">$ {{ number_format($venta->valor, 0, ',', '.') }}</p>
-                    </div>
-                    <div class="flex items-center justify-between pl-10">
-                        <p class="text-xs text-gray-400">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</p>
-                        <div class="flex items-center gap-2">
-                            @if($venta->forma_pago)
-                                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{{ $venta->forma_pago }}</span>
-                            @endif
-                            <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($venta->fecha_venta)->format('d/m/Y') }}</p>
+                        <div class="flex items-center justify-between pl-10">
+                            <p class="text-xs text-gray-400">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</p>
+                            <div class="flex items-center gap-2">
+                                @if($venta->forma_pago)
+                                    <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{{ $venta->forma_pago }}</span>
+                                @endif
+                                <p class="text-xs text-gray-600">{{ $venta->fecha_venta?->format('d/m/Y') }}</p>
+                            </div>
                         </div>
+                    </a>
+                    <div class="flex gap-2 pt-3 mt-3 border-t border-gray-800">
+                        <a href="{{ route('ventas.edit', $venta) }}"
+                            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs transition">
+                            Editar
+                        </a>
+                        <form action="{{ route('ventas.destroy', $venta) }}" method="POST"
+                            onsubmit="return confirm('¿Eliminar esta venta?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs transition">
+                                Eliminar
+                            </button>
+                        </form>
                     </div>
                 </div>
             @empty
@@ -117,23 +140,31 @@
         <table class="w-full">
             <thead class="bg-gray-800">
                 <tr>
-                    <th class="p-4 text-left">Cliente</th>
+                    <th class="p-4 text-left">Comprador</th>
                     <th class="p-4 text-left">Vehículo</th>
                     <th class="p-4 text-left">Valor</th>
                     <th class="p-4 text-left">Fecha</th>
+                    <th class="p-4 text-left">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($ventas as $venta)
                     <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
-                        <td class="p-4">{{ $venta->cliente->nombre }}</td>
+                        <td class="p-4">{{ $venta->comprador->nombre ?? '—' }}</td>
                         <td class="p-4">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</td>
                         <td class="p-4 text-emerald-400 font-bold">$ {{ number_format($venta->valor, 0, ',', '.') }}</td>
-                        <td class="p-4 text-gray-400">{{ \Carbon\Carbon::parse($venta->fecha_venta)->format('d/m/Y') }}</td>
+                        <td class="p-4 text-gray-400">{{ $venta->fecha_venta?->format('d/m/Y') }}</td>
+                        <td class="p-4">
+                            @include('partials._acciones', [
+                                'modelo' => $venta,
+                                'ruta'   => 'ventas',
+                                'label'  => 'venta',
+                            ])
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="text-center p-8 text-gray-400">No hay ventas registradas</td>
+                        <td colspan="5" class="text-center p-8 text-gray-400">No hay ventas registradas</td>
                     </tr>
                 @endforelse
             </tbody>

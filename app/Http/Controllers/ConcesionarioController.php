@@ -38,6 +38,11 @@ class ConcesionarioController extends Controller
             );
     }
 
+    public function show(Concesionario $concesionario)
+    {
+        return view('concesionarios.show', compact('concesionario'));
+    }
+
     public function edit(Concesionario $concesionario)
 {
     return view(

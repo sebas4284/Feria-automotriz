@@ -71,6 +71,10 @@
                 </div>
 
                 <div class="flex gap-2 pt-3 border-t border-gray-800">
+                    <a href="{{ route('concesionarios.show', $concesionario) }}"
+                        class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs transition">
+                        Ver
+                    </a>
                     <a href="{{ route('concesionarios.edit', $concesionario) }}"
                         class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs transition">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
@@ -151,7 +155,6 @@
                                 'modelo'   => $concesionario,
                                 'ruta'     => 'concesionarios',
                                 'label'    => 'concesionario',
-                                'sinVer'   => true,
                             ])
                         </td>
                     </tr>

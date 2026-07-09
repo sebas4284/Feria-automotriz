@@ -4,6 +4,7 @@
     $ruta          — prefijo de ruta (ej: 'clientes', 'vehiculos')
     $label         — nombre para el confirm de eliminar (ej: 'cliente')
     $sinVer        — (opcional) omite el botón Ver
+    $sinEditar     — (opcional) omite el botón Editar
     $sinEliminar   — (opcional) omite el botón Eliminar
     $labelEditar   — (opcional) tooltip del botón editar (default: 'Editar')
 --}}
@@ -21,6 +22,7 @@
     </a>
     @endunless
 
+    @unless($sinEditar ?? false)
     <a href="{{ route($ruta . '.edit', $modelo) }}"
         title="{{ $labelEditar ?? 'Editar' }}"
         class="p-2.5 sm:p-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 hover:text-blue-300 transition">
@@ -28,6 +30,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
         </svg>
     </a>
+    @endunless
 
     @unless($sinEliminar ?? false)
     <form action="{{ route($ruta . '.destroy', $modelo) }}" method="POST" class="inline">
