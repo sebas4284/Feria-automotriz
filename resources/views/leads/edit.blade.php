@@ -33,7 +33,7 @@
             <div class="space-y-3 text-sm">
                 <div><p class="text-gray-500">Nombre</p><p class="text-white">{{ $lead->full_name ?: '—' }}</p></div>
                 <div><p class="text-gray-500">Email</p><p class="text-white">{{ $lead->email ?: '—' }}</p></div>
-                <div><p class="text-gray-500">Teléfono</p><p class="text-white">{{ $lead->phone_number ?: '—' }}</p></div>
+                <div><p class="text-gray-500">Teléfono</p><p>@if($lead->phone_number)<a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300 hover:underline">{{ $lead->phone_number }}</a>@else<span class="text-white">—</span>@endif</p></div>
                 <div><p class="text-gray-500">Campaña</p><p class="text-white">{{ $lead->campaign_name ?: '—' }}</p></div>
             </div>
         </div>

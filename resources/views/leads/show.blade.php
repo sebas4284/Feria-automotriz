@@ -65,7 +65,11 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Teléfono</p>
-                    <p class="text-white">{{ $lead->phone_number ?? 'No registrado' }}</p>
+                    @if($lead->phone_number)
+                        <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300 hover:underline font-medium">{{ $lead->phone_number }}</a>
+                    @else
+                        <p class="text-white">No registrado</p>
+                    @endif
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Actividad económica</p>

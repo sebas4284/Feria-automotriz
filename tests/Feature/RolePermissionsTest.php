@@ -300,6 +300,7 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($user)->get('/clientes')->assertForbidden();
         $this->actingAs($user)->get('/ventas')->assertForbidden();
         $this->actingAs($user)->get('/estadisticas')->assertForbidden();
+        $this->actingAs($user)->get('/asesores')->assertForbidden();
     }
 
     public function test_concesionario_can_assign_lead_to_own_asesor(): void

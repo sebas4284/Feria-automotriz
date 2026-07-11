@@ -91,12 +91,22 @@
                             <td class="p-4">
                                 <div class="font-medium">{{ $lead->full_name ?: 'Sin nombre' }}</div>
                                 <div class="text-sm text-gray-400 md:hidden">{{ $lead->email }}</div>
-                                <div class="text-xs text-gray-500 mt-0.5 md:hidden">{{ $lead->phone_number }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5 md:hidden">
+                                    @if($lead->phone_number)
+                                        <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300">{{ $lead->phone_number }}</a>
+                                    @endif
+                                </div>
                             </td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->actividad_economica ?: '—' }}</td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->monto_interes_aprobar ?: '—' }}</td>
                             <td class="p-4 hidden md:table-cell">{{ $lead->email ?: '—' }}</td>
-                            <td class="p-4 hidden md:table-cell">{{ $lead->phone_number ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell">
+                                @if($lead->phone_number)
+                                    <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300 hover:underline">{{ $lead->phone_number }}</a>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="p-4 hidden md:table-cell">{{ $lead->meta_lead_status ?: '—' }}</td>
                             <td class="p-4">
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}

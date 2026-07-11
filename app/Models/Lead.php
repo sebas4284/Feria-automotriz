@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\ScopedToConcesionario;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
@@ -76,5 +77,24 @@ class Lead extends Model
         return $this->estado_gestion === 'Nuevo'
             && $this->assigned_at !== null
             && $this->assigned_at->lt(now()->subHours((int) config('leads.staleness_hours')));
+    }
+
+    protected function phoneNumber(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? ltrim(preg_replace('/^p:\s*/i', '', $value)) : $value,
+            set: fn (?string $value) => $value ? ltrim(preg_replace('/^p:\s*/i', '', $value)) : $value,
+        );
+    }
+
+    protected function whatsappUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $digits = preg_replace('/\D/', '', $this->phone_number ?? '');
+
+                return $digits ? "https://wa.me/{$digits}" : null;
+            },
+        );
     }
 }

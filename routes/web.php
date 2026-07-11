@@ -37,7 +37,7 @@ Route::resource('ventas', VentaController::class)
 //Asesores comerciales
 Route::resource('asesores', AsesorComercialController::class)
     ->parameters(['asesores' => 'asesor'])
-    ->middleware(['auth', 'role:admin,concesionario,asesor']);
+    ->middleware(['auth', 'role:admin,concesionario']);
 
 //Rifa / Experiencia
 Route::get('/rifa', [RifaController::class, 'index'])
