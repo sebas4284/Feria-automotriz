@@ -33,7 +33,7 @@
             <p class="text-2xl lg:text-4xl font-bold">{{ $leads->count() }}</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
-            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Nuevos</p>
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Nuevos hoy</p>
             <p class="text-2xl lg:text-4xl font-bold text-blue-400">{{ $totalNuevos }}</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
@@ -102,9 +102,10 @@
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
                             </td>
                             <td class="p-4">
-                                <span class="text-xs {{ $cfg['badge'] }} px-3 py-1 rounded-full">{{ $cfg['label'] }}</span>
                                 @if($lead->vencido)
-                                    <span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full ml-1">Vencido</span>
+                                    <span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">Vencido</span>
+                                @else
+                                    <span class="text-xs {{ $cfg['badge'] }} px-3 py-1 rounded-full">{{ $cfg['label'] }}</span>
                                 @endif
                             </td>
                             <td class="p-4">
@@ -158,6 +159,40 @@
                                                         Reasignar
                                                     </button>
                                                 </form>
+                                            </div>
+                                        </details>
+                                    @endcan
+
+                                    @can('assignAsesor', $lead)
+                                        @php $asesoresLead = $asesoresPorConcesionario->get($lead->concesionario_id, collect()); @endphp
+                                        <details class="relative">
+                                            <summary class="list-none cursor-pointer p-2.5 sm:p-1.5 rounded-lg bg-teal-600/20 hover:bg-teal-600/40 text-teal-400 hover:text-teal-300 transition" title="Asignar asesor">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                            </summary>
+                                            <div class="absolute right-0 z-20 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-xl">
+                                                @if($asesoresLead->isEmpty())
+                                                    <p class="text-xs text-gray-500">Este concesionario no tiene asesores registrados todavía.</p>
+                                                @else
+                                                    <form method="POST" action="{{ route('leads.assign-asesor', $lead) }}" class="space-y-3">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <div>
+                                                            <label class="text-xs text-gray-400">Asesor</label>
+                                                            <select name="asesor_comercial_id" required
+                                                                class="w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                                                                @foreach($asesoresLead as $a)
+                                                                    <option value="{{ $a->id }}" @selected($a->id === $lead->asesor_comercial_id)>{{ $a->nombre }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <button type="submit"
+                                                            class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-1.5 text-sm font-medium transition">
+                                                            Asignar
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </details>
                                     @endcan

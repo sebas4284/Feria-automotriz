@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\AsesorComercial;
 use App\Models\Cliente;
 use App\Models\Concesionario;
 use App\Models\Lead;
+use App\Models\Turno;
 use App\Models\User;
 use App\Models\Vehiculo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,6 +24,14 @@ class RolePermissionsTest extends TestCase
         ]);
     }
 
+    private function makeAsesorUser(AsesorComercial $asesor): User
+    {
+        return User::factory()->create([
+            'rol' => 'asesor',
+            'asesor_comercial_id' => $asesor->id,
+        ]);
+    }
+
     public function test_concesionario_only_sees_own_leads_in_index(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
@@ -36,6 +46,24 @@ class RolePermissionsTest extends TestCase
         $response->assertOk();
         $response->assertSee($leadA->full_name);
         $response->assertDontSee($leadB->full_name);
+    }
+
+    public function test_nuevos_hoy_counts_leads_created_today_regardless_of_estado(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = $this->makeUser('admin');
+
+        Lead::create(['meta_lead_id' => 'hoy1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'created_time' => now()]);
+        Lead::create(['meta_lead_id' => 'hoy2', 'estado_gestion' => 'Contactado', 'concesionario_id' => $conc->id, 'created_time' => now()]);
+        Lead::create(['meta_lead_id' => 'ayer1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'created_time' => now()->subDay()]);
+
+        $response = $this->actingAs($admin)->get('/leads');
+
+        $response->assertOk();
+        $response->assertSee('Nuevos hoy');
+
+        // 2 leads de hoy (uno Nuevo, otro Contactado) deben contar; el de ayer no.
+        $response->assertViewHas('totalNuevos', 2);
     }
 
     public function test_concesionario_cannot_view_lead_of_another_dealer_directly(): void
@@ -209,5 +237,236 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($admin)->delete("/ventas/{$venta->id}")->assertRedirect(route('ventas.index'));
 
         $this->assertEquals('Disponible', $vehiculo->fresh()->estado);
+    }
+
+    public function test_asesor_only_sees_leads_assigned_to_them(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $otroAsesor = AsesorComercial::create(['cedula' => '2', 'nombre' => 'Asesor Dos', 'concesionario_id' => $conc->id]);
+        $user = $this->makeAsesorUser($asesor);
+
+        $leadAsignado = Lead::create(['meta_lead_id' => 'l1', 'full_name' => 'Lead Asignado', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'asesor_comercial_id' => $asesor->id]);
+        $leadOtro = Lead::create(['meta_lead_id' => 'l2', 'full_name' => 'Lead De Otro Asesor', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'asesor_comercial_id' => $otroAsesor->id]);
+
+        $response = $this->actingAs($user)->get('/leads');
+        $response->assertOk();
+        $response->assertSee('Lead Asignado');
+        $response->assertDontSee('Lead De Otro Asesor');
+
+        $this->actingAs($user)->get("/leads/{$leadOtro->id}")->assertForbidden();
+        $this->actingAs($user)->get("/leads/{$leadAsignado->id}")->assertOk();
+    }
+
+    public function test_asesor_can_manage_own_assigned_lead(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeAsesorUser($asesor);
+        $lead = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'asesor_comercial_id' => $asesor->id]);
+
+        $this->actingAs($user)
+            ->put("/leads/{$lead->id}", ['estado_gestion' => 'Contactado', 'observaciones' => 'Llamado hoy'])
+            ->assertRedirect(route('leads.show', $lead));
+
+        $this->assertEquals('Contactado', $lead->fresh()->estado_gestion);
+    }
+
+    public function test_asesor_sees_all_vehiculos_but_cannot_create_or_edit(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $concA->id]);
+        $user = $this->makeAsesorUser($asesor);
+
+        $vehA = Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id]);
+        $vehB = Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id]);
+
+        $response = $this->actingAs($user)->get('/vehiculos');
+        $response->assertOk();
+        $response->assertSee('AAA111');
+        $response->assertSee('BBB222');
+
+        $this->actingAs($user)->get('/vehiculos/create')->assertForbidden();
+        $this->actingAs($user)->get("/vehiculos/{$vehA->id}/edit")->assertForbidden();
+    }
+
+    public function test_asesor_cannot_access_clientes_ventas_or_estadisticas(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeAsesorUser($asesor);
+
+        $this->actingAs($user)->get('/clientes')->assertForbidden();
+        $this->actingAs($user)->get('/ventas')->assertForbidden();
+        $this->actingAs($user)->get('/estadisticas')->assertForbidden();
+    }
+
+    public function test_concesionario_can_assign_lead_to_own_asesor(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeUser('concesionario', $conc);
+        $lead = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id]);
+
+        $this->actingAs($user)
+            ->patch("/leads/{$lead->id}/assign-asesor", ['asesor_comercial_id' => $asesor->id])
+            ->assertRedirect();
+
+        $this->assertEquals($asesor->id, $lead->fresh()->asesor_comercial_id);
+    }
+
+    public function test_concesionario_cannot_assign_lead_to_asesor_of_another_dealer(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorB = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor De B', 'concesionario_id' => $concB->id]);
+        $userA = $this->makeUser('concesionario', $concA);
+        $leadA = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $concA->id]);
+
+        $this->actingAs($userA)
+            ->patch("/leads/{$leadA->id}/assign-asesor", ['asesor_comercial_id' => $asesorB->id])
+            ->assertNotFound();
+
+        $this->assertNull($leadA->fresh()->asesor_comercial_id);
+    }
+
+    public function test_asesor_cannot_assign_leads(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeAsesorUser($asesor);
+        $lead = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'asesor_comercial_id' => $asesor->id]);
+
+        $this->actingAs($user)
+            ->patch("/leads/{$lead->id}/assign-asesor", ['asesor_comercial_id' => $asesor->id])
+            ->assertForbidden();
+    }
+
+    public function test_concesionario_and_asesor_cannot_access_turnos(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorComercial = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $userConc = $this->makeUser('concesionario', $conc);
+        $userAsesor = $this->makeAsesorUser($asesorComercial);
+
+        $this->actingAs($userConc)->get('/turnos')->assertForbidden();
+        $this->actingAs($userAsesor)->get('/turnos')->assertForbidden();
+    }
+
+    public function test_admin_can_check_in_and_check_out_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($admin)->get('/turnos')->assertOk();
+
+        $this->actingAs($admin)->post("/turnos/{$conc->id}/check-in")->assertRedirect();
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $conc->id]);
+
+        $this->actingAs($admin)->delete("/turnos/{$conc->id}/check-in")->assertRedirect();
+        $this->assertDatabaseMissing('turnos', ['concesionario_id' => $conc->id]);
+    }
+
+    public function test_cliente_sin_cita_is_auto_assigned_via_turno_and_rotates(): void
+    {
+        $admin = $this->makeUser('admin');
+        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $this->actingAs($admin)->post('/clientes', [
+            'nombre' => 'Walk-in Uno',
+            'cita' => '0',
+        ])->assertRedirect(route('clientes.index'));
+
+        $this->actingAs($admin)->post('/clientes', [
+            'nombre' => 'Walk-in Dos',
+            'cita' => '0',
+        ])->assertRedirect(route('clientes.index'));
+
+        $primero = Cliente::where('nombre', 'Walk-in Uno')->first();
+        $segundo = Cliente::where('nombre', 'Walk-in Dos')->first();
+
+        $this->assertEquals($a->id, $primero->concesionario_id);
+        $this->assertEquals($b->id, $segundo->concesionario_id);
+    }
+
+    public function test_cliente_con_cita_ignores_turno_queue(): void
+    {
+        $admin = $this->makeUser('admin');
+        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+
+        $this->actingAs($admin)->post('/clientes', [
+            'nombre' => 'Con Cita',
+            'cita' => '1',
+            'concesionario_id' => $b->id,
+        ])->assertRedirect(route('clientes.index'));
+
+        $cliente = Cliente::where('nombre', 'Con Cita')->first();
+
+        $this->assertEquals($b->id, $cliente->concesionario_id);
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'ultima_asignacion_at' => null]);
+    }
+
+    public function test_staff_can_view_rifa_and_turnos_but_not_operate_turnos(): void
+    {
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($staff)->get('/rifa')->assertOk();
+        $this->actingAs($staff)->get('/turnos')->assertOk();
+
+        $this->actingAs($staff)->post("/turnos/{$conc->id}/check-in")->assertForbidden();
+        $this->actingAs($staff)->delete("/turnos/{$conc->id}/check-in")->assertForbidden();
+    }
+
+    public function test_staff_cannot_access_anything_else(): void
+    {
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($staff)->get('/clientes')->assertForbidden();
+        $this->actingAs($staff)->get('/ventas')->assertForbidden();
+        $this->actingAs($staff)->get('/leads')->assertForbidden();
+        $this->actingAs($staff)->get('/vehiculos')->assertForbidden();
+        $this->actingAs($staff)->get('/asesores')->assertForbidden();
+        $this->actingAs($staff)->get('/estadisticas')->assertForbidden();
+        $this->actingAs($staff)->get('/concesionarios')->assertForbidden();
+        $this->actingAs($staff)->get('/usuarios')->assertForbidden();
+    }
+
+    public function test_turnos_screen_shows_todays_walkin_clients_and_their_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $a = Concesionario::create(['nombre' => 'Dealer Uno', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()]);
+
+        Cliente::create(['nombre' => 'Walk-in Visible', 'cita' => false, 'concesionario_id' => $a->id]);
+
+        $response = $this->actingAs($admin)->get('/turnos');
+
+        $response->assertOk();
+        $response->assertSee('Walk-in Visible');
+        $response->assertSee('Dealer Uno');
+    }
+
+    public function test_admin_can_operate_turnos_and_staff_view_reflects_it(): void
+    {
+        $admin = $this->makeUser('admin');
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($admin)->post("/turnos/{$conc->id}/check-in")->assertRedirect();
+
+        $response = $this->actingAs($staff)->get('/turnos');
+        $response->assertOk();
+        $response->assertSee('A');
     }
 }

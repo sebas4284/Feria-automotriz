@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AsesorComercial;
 use App\Models\Concesionario;
 use App\Models\Lead;
 use App\Services\LeadAssignmentService;
@@ -28,14 +29,18 @@ class LeadController extends Controller
 
         $leads = $query->get();
 
-        $totalNuevos = $leads->where('estado_gestion', 'Nuevo')->count();
+        $totalNuevos = $leads->filter(
+            fn (Lead $lead) => ($lead->created_time ?? $lead->created_at)?->isToday()
+        )->count();
         $totalVencidos = $leads->filter(fn (Lead $lead) => $lead->vencido)->count();
 
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 
+        $asesoresPorConcesionario = AsesorComercial::orderBy('nombre')->get()->groupBy('concesionario_id');
+
         return view(
             'leads.index',
-            compact('leads', 'totalNuevos', 'totalVencidos', 'concesionarios')
+            compact('leads', 'totalNuevos', 'totalVencidos', 'concesionarios', 'asesoresPorConcesionario')
         );
     }
 
@@ -43,11 +48,15 @@ class LeadController extends Controller
     {
         $this->authorize('view', $lead);
 
-        $lead->load(['concesionario', 'reassignments.fromConcesionario', 'reassignments.toConcesionario', 'reassignments.reassignedBy']);
+        $lead->load(['concesionario', 'asesorComercial', 'reassignments.fromConcesionario', 'reassignments.toConcesionario', 'reassignments.reassignedBy']);
 
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 
-        return view('leads.show', compact('lead', 'concesionarios'));
+        $asesores = $lead->concesionario_id
+            ? AsesorComercial::where('concesionario_id', $lead->concesionario_id)->orderBy('nombre')->get()
+            : collect();
+
+        return view('leads.show', compact('lead', 'concesionarios', 'asesores'));
     }
 
     public function edit(Lead $lead)
@@ -94,5 +103,21 @@ class LeadController extends Controller
         $service->reassign($lead, $to, $request->user(), $data['motivo'] ?? null);
 
         return back()->with('success', 'Lead reasignado correctamente');
+    }
+
+    public function assignAsesor(Request $request, Lead $lead)
+    {
+        $this->authorize('assignAsesor', $lead);
+
+        $data = $request->validate([
+            'asesor_comercial_id' => 'required|exists:asesores_comerciales,id',
+        ]);
+
+        $asesor = AsesorComercial::where('concesionario_id', $lead->concesionario_id)
+            ->findOrFail($data['asesor_comercial_id']);
+
+        $lead->update(['asesor_comercial_id' => $asesor->id]);
+
+        return back()->with('success', 'Lead asignado a ' . $asesor->nombre);
     }
 }
