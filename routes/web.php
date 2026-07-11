@@ -16,6 +16,7 @@ use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
 use App\Http\Controllers\TurnoController;
+use App\Http\Controllers\PushSubscriptionController;
 
 Route::get('/', function () {
     return redirect()->route(auth()->check() ? 'dashboard' : 'login');
@@ -92,6 +93,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+//Notificaciones push
+Route::middleware('auth')->group(function () {
+    Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+    Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 });
 
 require __DIR__.'/auth.php';

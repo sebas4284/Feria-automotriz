@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Log;
 
 class LeadSheetImporter
 {
-    public function __construct(private LeadAssignmentService $assignmentService)
-    {
+    public function __construct(
+        private LeadAssignmentService $assignmentService,
+        private LeadNotifier $notifier,
+    ) {
     }
 
     /**
@@ -48,6 +50,8 @@ class LeadSheetImporter
                     'concesionario_id' => $concesionario->id,
                     'assigned_at' => now(),
                 ]);
+
+                $this->notifier->notifyConcesionario($concesionario, $lead);
             } else {
                 $stats['unassigned']++;
                 Log::warning("Lead {$metaId} importado sin concesionario activo disponible para asignar.");

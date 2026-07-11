@@ -6,6 +6,7 @@ use App\Models\AsesorComercial;
 use App\Models\Concesionario;
 use App\Models\Lead;
 use App\Services\LeadAssignmentService;
+use App\Services\LeadNotifier;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
@@ -89,7 +90,7 @@ class LeadController extends Controller
         return redirect()->route('leads.index')->with('success', 'Lead eliminado correctamente');
     }
 
-    public function reassign(Request $request, Lead $lead, LeadAssignmentService $service)
+    public function reassign(Request $request, Lead $lead, LeadAssignmentService $service, LeadNotifier $notifier)
     {
         $this->authorize('reassign', $lead);
 
@@ -102,10 +103,12 @@ class LeadController extends Controller
 
         $service->reassign($lead, $to, $request->user(), $data['motivo'] ?? null);
 
+        $notifier->notifyConcesionario($to, $lead->fresh());
+
         return back()->with('success', 'Lead reasignado correctamente');
     }
 
-    public function assignAsesor(Request $request, Lead $lead)
+    public function assignAsesor(Request $request, Lead $lead, LeadNotifier $notifier)
     {
         $this->authorize('assignAsesor', $lead);
 
@@ -117,6 +120,8 @@ class LeadController extends Controller
             ->findOrFail($data['asesor_comercial_id']);
 
         $lead->update(['asesor_comercial_id' => $asesor->id]);
+
+        $notifier->notifyAsesor($asesor, $lead->fresh());
 
         return back()->with('success', 'Lead asignado a ' . $asesor->nombre);
     }
