@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use App\Models\Concesionario;
+use App\Services\TurnoAssignmentService;
 use Illuminate\Http\Request;
 
 class ClienteController extends Controller
@@ -54,7 +55,7 @@ class ClienteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, TurnoAssignmentService $turnos)
     {
         $this->authorize('create', Cliente::class);
 
@@ -67,11 +68,24 @@ class ClienteController extends Controller
             'observaciones' => 'nullable|string',
         ]);
 
+        $tieneCita = $request->boolean('cita');
+
+        if ($tieneCita) {
+            $concesionarioId = $this->resolveConcesionarioId($request);
+        } else {
+            $concesionario = $turnos->nextConcesionario();
+            $concesionarioId = $concesionario?->id;
+
+            if ($concesionario) {
+                $turnos->registrarAsignacion($concesionario);
+            }
+        }
+
         Cliente::create([
             'nombre' => $request->nombre,
             'telefono' => $request->telefono,
-            'cita' => $request->boolean('cita'),
-            'concesionario_id' => $this->resolveConcesionarioId($request),
+            'cita' => $tieneCita,
+            'concesionario_id' => $concesionarioId,
             'medio_entero' => $request->medio_entero,
             'observaciones' => $request->observaciones,
             'user_id' => auth()->id(),

@@ -34,7 +34,8 @@
         @endif
 
         <form action="{{ route('clientes.store') }}" method="POST"
-            class="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+            class="bg-gray-900 border border-gray-800 rounded-2xl p-8"
+            x-data="{ cita: {{ old('cita') ? 'true' : 'false' }} }">
 
             @csrf
 
@@ -65,7 +66,7 @@
                     @enderror
                 </div>
 
-                <div>
+                <div x-show="cita">
                     <label class="block mb-2 text-sm text-gray-400">
                         Concesionario asignado
                     </label>
@@ -80,6 +81,15 @@
                     @error('concesionario_id')
                         <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
+                </div>
+
+                <div x-show="!cita" x-cloak>
+                    <label class="block mb-2 text-sm text-gray-400">
+                        Concesionario asignado
+                    </label>
+                    <p class="text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3">
+                        Se asignará automáticamente según el turno del concesionario que llegó primero.
+                    </p>
                 </div>
 
                 <div>
@@ -100,7 +110,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 md:pt-8">
-                    <input type="checkbox" name="cita" id="cita" value="1" @checked(old('cita'))
+                    <input type="checkbox" name="cita" id="cita" value="1" x-model="cita"
                         class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-blue-500">
                     <label for="cita" class="text-sm text-gray-400">
                         ¿Tiene cita agendada?

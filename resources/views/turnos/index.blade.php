@@ -1,0 +1,216 @@
+@extends('layouts.app')
+
+@section('content')
+
+@php
+    $posiciones = $enFila->values()->mapWithKeys(fn($c, $i) => [$c->id => $i + 1]);
+@endphp
+
+{{-- ===================== VISTA MÓVIL ===================== --}}
+<div class="lg:hidden space-y-5">
+
+    <div>
+        <h1 class="text-2xl font-bold">Turnos</h1>
+        <p class="text-gray-400 text-sm mt-0.5">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+    </div>
+
+    @if(session('success'))
+        <div class="bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 text-green-400 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if($siguiente)
+        <div class="bg-blue-500/10 border border-blue-500/40 rounded-2xl px-4 py-3">
+            <p class="text-xs text-blue-400">Siguiente en turno</p>
+            <p class="font-semibold">{{ $siguiente->nombre }}</p>
+        </div>
+    @else
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-gray-500">
+            Ningún concesionario ha marcado llegada hoy. Los clientes sin cita quedarán sin asignar hasta que alguien llegue.
+        </div>
+    @endif
+
+    <div class="space-y-2">
+        @foreach($concesionarios as $c)
+            @php $turno = $turnosHoy->get($c->id); @endphp
+            <div class="bg-gray-900 border {{ $siguiente && $siguiente->id === $c->id ? 'border-blue-500' : 'border-gray-800' }} rounded-2xl px-4 py-3.5">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-sm truncate">{{ $c->nombre }}</p>
+                        @if($turno)
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                Turno #{{ $posiciones[$c->id] ?? '—' }} · llegó {{ $turno->llegada_at->format('H:i') }}
+                            </p>
+                        @else
+                            <p class="text-xs text-gray-600 mt-0.5">No ha llegado</p>
+                        @endif
+                    </div>
+
+                    @if(auth()->user()->isAdmin())
+                        @if($turno)
+                            <form action="{{ route('turnos.check-out', $c) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                    class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition shrink-0">
+                                    Quitar
+                                </button>
+                            </form>
+                        @else
+                            <form action="{{ route('turnos.check-in', $c) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-medium transition shrink-0">
+                                    Marcar llegada
+                                </button>
+                            </form>
+                        @endif
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <div>
+        <h2 class="text-base font-semibold text-gray-200 mb-3">Clientes sin cita de hoy</h2>
+        <div class="space-y-2">
+            @forelse($clientesHoy as $cliente)
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <p class="font-medium text-sm truncate">{{ $cliente->nombre }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ $cliente->created_at->format('H:i') }}</p>
+                    </div>
+                    <span class="text-xs {{ $cliente->concesionario ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-400' }} px-2 py-0.5 rounded-full shrink-0">
+                        {{ $cliente->concesionario->nombre ?? 'Sin asignar' }}
+                    </span>
+                </div>
+            @empty
+                <div class="text-center py-8 text-gray-500 text-sm">
+                    Todavía no ha llegado ningún cliente sin cita hoy
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+</div>
+
+{{-- ===================== VISTA DESKTOP ===================== --}}
+<div class="hidden lg:block">
+
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Turnos</h1>
+        <p class="text-gray-400">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+    </div>
+
+    @if(session('success'))
+        <div class="mb-6 bg-green-500/10 border border-green-500/50 rounded-xl p-4 text-green-400">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if($siguiente)
+        <div class="mb-6 bg-blue-500/10 border border-blue-500/40 rounded-xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs text-blue-400">Siguiente en turno para el próximo cliente sin cita</p>
+                <p class="text-lg font-semibold">{{ $siguiente->nombre }}</p>
+            </div>
+        </div>
+    @else
+        <div class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 text-gray-500">
+            Ningún concesionario ha marcado llegada hoy. Los clientes sin cita quedarán sin asignar hasta que alguien llegue.
+        </div>
+    @endif
+
+    <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-800">
+                <tr>
+                    <th class="p-4 text-left">Concesionario</th>
+                    <th class="p-4 text-left">Estado</th>
+                    <th class="p-4 text-left">Turno</th>
+                    <th class="p-4 text-left">Llegada</th>
+                    <th class="p-4 text-left">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($concesionarios as $c)
+                    @php $turno = $turnosHoy->get($c->id); @endphp
+                    <tr class="border-t border-gray-800 {{ $siguiente && $siguiente->id === $c->id ? 'bg-blue-500/5' : '' }} hover:bg-gray-800/40 transition">
+                        <td class="p-4 font-medium">{{ $c->nombre }}</td>
+                        <td class="p-4">
+                            @if($turno)
+                                <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">En fila</span>
+                            @else
+                                <span class="text-xs bg-gray-700 text-gray-400 px-3 py-1 rounded-full">No ha llegado</span>
+                            @endif
+                        </td>
+                        <td class="p-4">{{ $turno ? '#' . ($posiciones[$c->id] ?? '—') : '—' }}</td>
+                        <td class="p-4">{{ $turno?->llegada_at->format('H:i') ?? '—' }}</td>
+                        <td class="p-4">
+                            @if(auth()->user()->isAdmin())
+                                @if($turno)
+                                    <form action="{{ route('turnos.check-out', $c) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                            class="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 text-xs font-medium transition">
+                                            Quitar de la fila
+                                        </button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('turnos.check-in', $c) }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium transition">
+                                            Marcar llegada
+                                        </button>
+                                    </form>
+                                @endif
+                            @else
+                                <span class="text-gray-600">—</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-4">Clientes sin cita de hoy</h2>
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-800">
+                    <tr>
+                        <th class="p-4 text-left">Cliente</th>
+                        <th class="p-4 text-left">Hora</th>
+                        <th class="p-4 text-left">Concesionario asignado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($clientesHoy as $cliente)
+                        <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
+                            <td class="p-4 font-medium">{{ $cliente->nombre }}</td>
+                            <td class="p-4">{{ $cliente->created_at->format('H:i') }}</td>
+                            <td class="p-4">
+                                <span class="text-xs {{ $cliente->concesionario ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-400' }} px-3 py-1 rounded-full">
+                                    {{ $cliente->concesionario->nombre ?? 'Sin asignar' }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-gray-500">Todavía no ha llegado ningún cliente sin cita hoy</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    setTimeout(() => window.location.reload(), 15000);
+</script>
+
+@endsection

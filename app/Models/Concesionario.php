@@ -29,4 +29,9 @@ protected $casts = [
 {
     return $this->hasMany(Vehiculo::class);
 }
+
+    public function turnos()
+    {
+        return $this->hasMany(Turno::class);
+    }
 }
