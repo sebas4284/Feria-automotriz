@@ -44,7 +44,7 @@
                 </div>
                 <p class="text-xs text-gray-500">{{ $usuario->email }}</p>
                 <p class="text-xs text-gray-500 mt-0.5">
-                    {{ $usuario->concesionario->nombre ?? $usuario->asesorComercial->nombre ?? 'Sin asignar' }}
+                    {{ $usuario->concesionario->nombre ?? $usuario->asesorComercial?->concesionario?->nombre ?? 'Sin asignar' }}
                 </p>
 
                 <div class="flex gap-2 pt-3 mt-3 border-t border-gray-800">
@@ -111,7 +111,7 @@
                                 {{ $rolConfig[$usuario->rol]['label'] }}
                             </span>
                         </td>
-                        <td class="p-4 hidden md:table-cell">{{ $usuario->concesionario->nombre ?? $usuario->asesorComercial->nombre ?? '—' }}</td>
+                        <td class="p-4 hidden md:table-cell">{{ $usuario->concesionario->nombre ?? $usuario->asesorComercial?->concesionario?->nombre ?? '—' }}</td>
                         <td class="p-4">
                             @include('partials._acciones', [
                                 'modelo'   => $usuario,

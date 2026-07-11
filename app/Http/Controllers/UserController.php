@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $usuarios = User::with(['concesionario', 'asesorComercial'])->latest()->get();
+        $usuarios = User::with(['concesionario', 'asesorComercial.concesionario'])->latest()->get();
 
         return view('usuarios.index', compact('usuarios'));
     }

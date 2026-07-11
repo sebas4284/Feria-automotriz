@@ -194,6 +194,19 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($admin)->get('/usuarios/create')->assertOk();
     }
 
+    public function test_usuarios_index_shows_asesors_dealership_not_their_own_name(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'VF Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorComercial = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Natalia Saenz', 'concesionario_id' => $conc->id]);
+        $this->makeAsesorUser($asesorComercial);
+
+        $response = $this->actingAs($admin)->get('/usuarios');
+
+        $response->assertOk();
+        $response->assertSee('VF Motors');
+    }
+
     public function test_estadisticas_accessible_to_both_roles(): void
     {
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
