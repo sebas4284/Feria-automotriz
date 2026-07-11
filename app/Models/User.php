@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'concesionario_id',
+        'asesor_comercial_id',
         'rol',
     ];
 
@@ -56,6 +57,11 @@ class User extends Authenticatable
     );
 }
 
+    public function asesorComercial()
+    {
+        return $this->belongsTo(AsesorComercial::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->rol === 'admin';
@@ -64,5 +70,15 @@ class User extends Authenticatable
     public function isConcesionario(): bool
     {
         return $this->rol === 'concesionario';
+    }
+
+    public function isAsesor(): bool
+    {
+        return $this->rol === 'asesor';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->rol === 'staff';
     }
 }

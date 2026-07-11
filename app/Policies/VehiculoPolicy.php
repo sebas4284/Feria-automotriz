@@ -19,7 +19,7 @@ class VehiculoPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->isAdmin() || $user->isConcesionario();
     }
 
     public function update(User $user, Vehiculo $vehiculo): bool

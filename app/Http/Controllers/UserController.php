@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AsesorComercial;
 use App\Models\Concesionario;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $usuarios = User::with('concesionario')->latest()->get();
+        $usuarios = User::with(['concesionario', 'asesorComercial'])->latest()->get();
 
         return view('usuarios.index', compact('usuarios'));
     }
@@ -19,8 +20,9 @@ class UserController extends Controller
     public function create()
     {
         $concesionarios = Concesionario::orderBy('nombre')->get();
+        $asesoresComerciales = AsesorComercial::orderBy('nombre')->get();
 
-        return view('usuarios.create', compact('concesionarios'));
+        return view('usuarios.create', compact('concesionarios', 'asesoresComerciales'));
     }
 
     public function store(Request $request)
@@ -29,8 +31,9 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'rol' => 'required|in:admin,concesionario',
+            'rol' => 'required|in:admin,concesionario,asesor,staff',
             'concesionario_id' => 'nullable|required_if:rol,concesionario|exists:concesionarios,id',
+            'asesor_comercial_id' => 'nullable|required_if:rol,asesor|exists:asesores_comerciales,id',
         ]);
 
         User::create([
@@ -38,7 +41,8 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'rol' => $validated['rol'],
-            'concesionario_id' => $validated['rol'] === 'admin' ? null : $validated['concesionario_id'],
+            'concesionario_id' => $validated['rol'] === 'concesionario' ? $validated['concesionario_id'] : null,
+            'asesor_comercial_id' => $validated['rol'] === 'asesor' ? $validated['asesor_comercial_id'] : null,
         ]);
 
         return redirect()
@@ -49,8 +53,9 @@ class UserController extends Controller
     public function edit(User $usuario)
     {
         $concesionarios = Concesionario::orderBy('nombre')->get();
+        $asesoresComerciales = AsesorComercial::orderBy('nombre')->get();
 
-        return view('usuarios.edit', compact('usuario', 'concesionarios'));
+        return view('usuarios.edit', compact('usuario', 'concesionarios', 'asesoresComerciales'));
     }
 
     public function update(Request $request, User $usuario)
@@ -59,15 +64,17 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $usuario->id,
             'password' => 'nullable|string|min:8',
-            'rol' => 'required|in:admin,concesionario',
+            'rol' => 'required|in:admin,concesionario,asesor,staff',
             'concesionario_id' => 'nullable|required_if:rol,concesionario|exists:concesionarios,id',
+            'asesor_comercial_id' => 'nullable|required_if:rol,asesor|exists:asesores_comerciales,id',
         ]);
 
         $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'rol' => $validated['rol'],
-            'concesionario_id' => $validated['rol'] === 'admin' ? null : $validated['concesionario_id'],
+            'concesionario_id' => $validated['rol'] === 'concesionario' ? $validated['concesionario_id'] : null,
+            'asesor_comercial_id' => $validated['rol'] === 'asesor' ? $validated['asesor_comercial_id'] : null,
         ];
 
         if (! empty($validated['password'])) {

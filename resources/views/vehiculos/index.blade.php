@@ -19,12 +19,14 @@
             <h1 class="text-2xl font-bold">Vehículos</h1>
             <p class="text-gray-400 text-sm mt-0.5">Inventario de vehículos</p>
         </div>
-        <a href="{{ route('vehiculos.create') }}"
-            class="w-11 h-11 bg-blue-600 hover:bg-blue-700 rounded-2xl flex items-center justify-center transition shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-        </a>
+        @can('create', App\Models\Vehiculo::class)
+            <a href="{{ route('vehiculos.create') }}"
+                class="w-11 h-11 bg-blue-600 hover:bg-blue-700 rounded-2xl flex items-center justify-center transition shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+            </a>
+        @endcan
     </div>
 
     {{-- Contadores por estado --}}
@@ -145,7 +147,9 @@
             <h1 class="text-3xl font-bold">Vehículos</h1>
             <p class="text-gray-400 mt-1">Inventario de vehículos</p>
         </div>
-        @include('partials._boton-crear', ['href' => route('vehiculos.create'), 'texto' => 'Nuevo Vehículo'])
+        @can('create', App\Models\Vehiculo::class)
+            @include('partials._boton-crear', ['href' => route('vehiculos.create'), 'texto' => 'Nuevo Vehículo'])
+        @endcan
     </div>
 
     {{-- Panel de filtros desktop --}}

@@ -13,11 +13,20 @@ trait ScopedToConcesionario
             return $query;
         }
 
+        if ($user->isAsesor() && $this->asesorColumn()) {
+            return $query->where($this->asesorColumn(), $user->asesor_comercial_id);
+        }
+
         return $query->where($this->concesionarioColumn(), $user->concesionario_id);
     }
 
     public function concesionarioColumn(): string
     {
         return 'concesionario_id';
+    }
+
+    public function asesorColumn(): ?string
+    {
+        return null;
     }
 }

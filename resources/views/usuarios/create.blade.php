@@ -47,6 +47,8 @@
                     <select name="rol" x-model="rol"
                         class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-blue-500">
                         <option value="concesionario" @selected(old('rol', 'concesionario') === 'concesionario')>Concesionario</option>
+                        <option value="asesor" @selected(old('rol') === 'asesor')>Asesor</option>
+                        <option value="staff" @selected(old('rol') === 'staff')>Staff (Rifa y Turnos)</option>
                         <option value="admin" @selected(old('rol') === 'admin')>Admin</option>
                     </select>
                 </div>
@@ -60,6 +62,18 @@
                             <option value="{{ $c->id }}" @selected((int) old('concesionario_id') === $c->id)>{{ $c->nombre }}</option>
                         @endforeach
                     </select>
+                </div>
+
+                <div x-show="rol === 'asesor'">
+                    <label class="block text-sm text-gray-400 mb-2">Asesor comercial</label>
+                    <select name="asesor_comercial_id"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-blue-500">
+                        <option value="">Selecciona uno</option>
+                        @foreach($asesoresComerciales as $a)
+                            <option value="{{ $a->id }}" @selected((int) old('asesor_comercial_id') === $a->id)>{{ $a->nombre }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2">El asesor debe existir primero en la sección Asesores.</p>
                 </div>
 
             </div>

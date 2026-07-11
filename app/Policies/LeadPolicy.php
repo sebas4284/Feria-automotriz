@@ -14,7 +14,15 @@ class LeadPolicy
 
     public function view(User $user, Lead $lead): bool
     {
-        return $user->isAdmin() || $lead->concesionario_id === $user->concesionario_id;
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isAsesor()) {
+            return $lead->asesor_comercial_id === $user->asesor_comercial_id;
+        }
+
+        return $lead->concesionario_id === $user->concesionario_id;
     }
 
     public function update(User $user, Lead $lead): bool
@@ -30,5 +38,14 @@ class LeadPolicy
     public function reassign(User $user, Lead $lead): bool
     {
         return $user->isAdmin();
+    }
+
+    public function assignAsesor(User $user, Lead $lead): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->isConcesionario() && $lead->concesionario_id === $user->concesionario_id;
     }
 }

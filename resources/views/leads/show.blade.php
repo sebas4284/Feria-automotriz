@@ -87,18 +87,23 @@
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Estado</p>
-                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium {{ $cfg['badge'] }}">
-                        {{ $cfg['label'] }}
-                    </span>
                     @if($lead->vencido)
-                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 ml-1">
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
                             Vencido
+                        </span>
+                    @else
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium {{ $cfg['badge'] }}">
+                            {{ $cfg['label'] }}
                         </span>
                     @endif
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Asignado desde</p>
                     <p class="text-white">{{ $lead->assigned_at?->format('d/m/Y H:i') ?? 'Sin asignar' }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Asesor asignado</p>
+                    <p class="text-white font-medium">{{ $lead->asesorComercial->nombre ?? 'Sin asignar' }}</p>
                 </div>
                 <div>
                     <p class="text-gray-400 text-sm">Estado en Meta (informativo)</p>
@@ -125,6 +130,33 @@
                 <div><p class="text-gray-400">Fecha del lead (Meta)</p><p class="text-white">{{ $lead->created_time?->format('d/m/Y H:i') ?? '—' }}</p></div>
             </div>
         </div>
+
+        @can('assignAsesor', $lead)
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4">Asignar asesor</h2>
+                @if($asesores->isEmpty())
+                    <p class="text-gray-500 text-sm">Este concesionario todavía no tiene asesores registrados. Agrega uno en la sección Asesores antes de poder asignar este lead.</p>
+                @else
+                    <form method="POST" action="{{ route('leads.assign-asesor', $lead) }}" class="flex flex-wrap gap-3 items-end">
+                        @csrf
+                        @method('PATCH')
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="text-xs text-gray-400">Asesor</label>
+                            <select name="asesor_comercial_id" required
+                                class="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                                @foreach($asesores as $a)
+                                    <option value="{{ $a->id }}" @selected($a->id === $lead->asesor_comercial_id)>{{ $a->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition">
+                            Asignar
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endcan
 
         @can('reassign', $lead)
             <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 md:col-span-2">

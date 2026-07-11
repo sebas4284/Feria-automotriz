@@ -31,6 +31,7 @@ class Lead extends Model
         'meta_lead_status',
         'raw_payload',
         'concesionario_id',
+        'asesor_comercial_id',
         'estado_gestion',
         'assigned_at',
         'observaciones',
@@ -48,9 +49,19 @@ class Lead extends Model
         return $this->belongsTo(Concesionario::class);
     }
 
+    public function asesorComercial()
+    {
+        return $this->belongsTo(AsesorComercial::class);
+    }
+
     public function reassignments()
     {
         return $this->hasMany(LeadReassignment::class);
+    }
+
+    public function asesorColumn(): ?string
+    {
+        return 'asesor_comercial_id';
     }
 
     public function scopeVencido(Builder $query): Builder

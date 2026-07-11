@@ -2,6 +2,15 @@
 
 @section('content')
 
+@php
+    $rolConfig = [
+        'admin'         => ['badge' => 'bg-purple-500/20 text-purple-400', 'label' => 'Admin'],
+        'concesionario' => ['badge' => 'bg-blue-500/20 text-blue-400',     'label' => 'Concesionario'],
+        'asesor'        => ['badge' => 'bg-teal-500/20 text-teal-400',     'label' => 'Asesor'],
+        'staff'         => ['badge' => 'bg-amber-500/20 text-amber-400',   'label' => 'Staff'],
+    ];
+@endphp
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -29,12 +38,14 @@
             <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
                 <div class="flex items-center justify-between gap-2 mb-1">
                     <p class="font-semibold text-sm truncate">{{ $usuario->name }}</p>
-                    <span class="text-xs {{ $usuario->rol === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400' }} px-2 py-0.5 rounded-full shrink-0">
-                        {{ $usuario->rol === 'admin' ? 'Admin' : 'Concesionario' }}
+                    <span class="text-xs {{ $rolConfig[$usuario->rol]['badge'] }} px-2 py-0.5 rounded-full shrink-0">
+                        {{ $rolConfig[$usuario->rol]['label'] }}
                     </span>
                 </div>
                 <p class="text-xs text-gray-500">{{ $usuario->email }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">{{ $usuario->concesionario->nombre ?? 'Sin concesionario' }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    {{ $usuario->concesionario->nombre ?? $usuario->asesorComercial->nombre ?? 'Sin asignar' }}
+                </p>
 
                 <div class="flex gap-2 pt-3 mt-3 border-t border-gray-800">
                     <a href="{{ route('usuarios.edit', $usuario) }}"
@@ -96,11 +107,11 @@
                         </td>
                         <td class="p-4 hidden sm:table-cell">{{ $usuario->email }}</td>
                         <td class="p-4">
-                            <span class="text-xs {{ $usuario->rol === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400' }} px-3 py-1 rounded-full">
-                                {{ $usuario->rol === 'admin' ? 'Admin' : 'Concesionario' }}
+                            <span class="text-xs {{ $rolConfig[$usuario->rol]['badge'] }} px-3 py-1 rounded-full">
+                                {{ $rolConfig[$usuario->rol]['label'] }}
                             </span>
                         </td>
-                        <td class="p-4 hidden md:table-cell">{{ $usuario->concesionario->nombre ?? '—' }}</td>
+                        <td class="p-4 hidden md:table-cell">{{ $usuario->concesionario->nombre ?? $usuario->asesorComercial->nombre ?? '—' }}</td>
                         <td class="p-4">
                             @include('partials._acciones', [
                                 'modelo'   => $usuario,
