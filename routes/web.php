@@ -15,6 +15,7 @@ use App\Http\Controllers\AsesorComercialController;
 use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
+use App\Http\Controllers\TurnoController;
 
 Route::get('/', function () {
     return redirect()->route(auth()->check() ? 'dashboard' : 'login');
@@ -31,33 +32,50 @@ Route::resource(
 )->middleware(['auth', 'role:admin']);
 
 Route::resource('ventas', VentaController::class)
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario']);
 
 //Asesores comerciales
 Route::resource('asesores', AsesorComercialController::class)
     ->parameters(['asesores' => 'asesor'])
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
 //Rifa / Experiencia
 Route::get('/rifa', [RifaController::class, 'index'])
     ->name('rifa.index')
+    ->middleware(['auth', 'role:admin,staff']);
+
+//Turnos de llegada de concesionarios
+Route::get('/turnos', [TurnoController::class, 'index'])
+    ->name('turnos.index')
+    ->middleware(['auth', 'role:admin,staff']);
+
+Route::post('/turnos/{concesionario}/check-in', [TurnoController::class, 'checkIn'])
+    ->name('turnos.check-in')
+    ->middleware(['auth', 'role:admin']);
+
+Route::delete('/turnos/{concesionario}/check-in', [TurnoController::class, 'checkOut'])
+    ->name('turnos.check-out')
     ->middleware(['auth', 'role:admin']);
 
 //Clientes
 Route::resource('clientes', ClienteController::class)
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario']);
 //Vehiculos
 Route::resource('vehiculos', VehiculoController::class)
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
 //Leads
 Route::resource('leads', LeadController::class)
     ->only(['index', 'show', 'edit', 'update', 'destroy'])
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
 Route::patch('leads/{lead}/reassign', [LeadController::class, 'reassign'])
     ->name('leads.reassign')
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
+
+Route::patch('leads/{lead}/assign-asesor', [LeadController::class, 'assignAsesor'])
+    ->name('leads.assign-asesor')
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
 //Usuarios (administración de cuentas)
 Route::resource('usuarios', UserController::class)
@@ -67,7 +85,7 @@ Route::resource('usuarios', UserController::class)
 //Estadísticas
 Route::get('/estadisticas', [EstadisticasController::class, 'index'])
     ->name('estadisticas.index')
-    ->middleware('auth');
+    ->middleware(['auth', 'role:admin,concesionario']);
 
 //Autenticación
 Route::middleware('auth')->group(function () {
