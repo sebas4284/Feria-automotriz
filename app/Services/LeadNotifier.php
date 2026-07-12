@@ -15,7 +15,8 @@ class LeadNotifier
     {
         $usuarios = User::where('rol', 'concesionario')
             ->where('concesionario_id', $concesionario->id)
-            ->get();
+            ->get()
+            ->merge($this->admins());
 
         Notification::send($usuarios, new NuevoLeadAsignado($lead));
     }
@@ -24,8 +25,14 @@ class LeadNotifier
     {
         $usuarios = User::where('rol', 'asesor')
             ->where('asesor_comercial_id', $asesor->id)
-            ->get();
+            ->get()
+            ->merge($this->admins());
 
         Notification::send($usuarios, new NuevoLeadAsignado($lead));
+    }
+
+    private function admins(): \Illuminate\Database\Eloquent\Collection
+    {
+        return User::where('rol', 'admin')->get();
     }
 }

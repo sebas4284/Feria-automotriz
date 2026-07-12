@@ -18,13 +18,14 @@ class LeadNotificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_assigning_lead_to_asesor_notifies_that_asesors_user(): void
+    public function test_assigning_lead_to_asesor_notifies_that_asesors_user_and_admins(): void
     {
         Notification::fake();
 
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
         $asesorComercial = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
         $asesorUser = User::factory()->create(['rol' => 'asesor', 'asesor_comercial_id' => $asesorComercial->id]);
+        $admin = User::factory()->create(['rol' => 'admin']);
         $concUser = $this->concUser($conc);
         $lead = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id]);
 
@@ -32,9 +33,10 @@ class LeadNotificationTest extends TestCase
             ->patch("/leads/{$lead->id}/assign-asesor", ['asesor_comercial_id' => $asesorComercial->id]);
 
         Notification::assertSentTo($asesorUser, NuevoLeadAsignado::class);
+        Notification::assertSentTo($admin, NuevoLeadAsignado::class);
     }
 
-    public function test_reassigning_lead_notifies_new_concesionarios_users(): void
+    public function test_reassigning_lead_notifies_new_concesionarios_users_and_admins(): void
     {
         Notification::fake();
 
@@ -48,14 +50,16 @@ class LeadNotificationTest extends TestCase
             ->patch("/leads/{$lead->id}/reassign", ['to_concesionario_id' => $to->id]);
 
         Notification::assertSentTo($toUser, NuevoLeadAsignado::class);
+        Notification::assertSentTo($admin, NuevoLeadAsignado::class);
     }
 
-    public function test_sheet_import_auto_assignment_notifies_concesionarios_user(): void
+    public function test_sheet_import_auto_assignment_notifies_concesionarios_user_and_admins(): void
     {
         Notification::fake();
 
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
         $concUser = $this->concUser($conc);
+        $admin = User::factory()->create(['rol' => 'admin']);
 
         $importer = app(LeadSheetImporter::class);
         $importer->import([
@@ -63,6 +67,7 @@ class LeadNotificationTest extends TestCase
         ]);
 
         Notification::assertSentTo($concUser, NuevoLeadAsignado::class);
+        Notification::assertSentTo($admin, NuevoLeadAsignado::class);
     }
 
     private function concUser(Concesionario $concesionario): User
