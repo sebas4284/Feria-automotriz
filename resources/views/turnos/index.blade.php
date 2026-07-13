@@ -213,4 +213,5 @@
     setTimeout(() => window.location.reload(), 15000);
 </script>
 
+@include('partials._auto-refresh')
 @endsection

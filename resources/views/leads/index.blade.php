@@ -259,4 +259,5 @@
 
 </div>
 
+@include('partials._auto-refresh')
 @endsection
