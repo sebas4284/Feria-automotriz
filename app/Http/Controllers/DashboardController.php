@@ -60,10 +60,13 @@ class DashboardController extends Controller
             ->groupBy('estado_gestion');
 
         $leadsPorPlataforma = Lead::visibleTo($user)
-            ->selectRaw("COALESCE(NULLIF(platform, ''), 'Desconocido') as plataforma, COUNT(*) as total")
-            ->groupByRaw("COALESCE(NULLIF(platform, ''), 'Desconocido')")
-            ->orderByDesc('total')
-            ->get();
+            ->selectRaw('platform, COUNT(*) as total')
+            ->groupBy('platform')
+            ->get()
+            ->groupBy(fn (Lead $row) => $row->platform ?: 'Desconocido')
+            ->map(fn ($rows, $plataforma) => (object) ['plataforma' => $plataforma, 'total' => $rows->sum('total')])
+            ->sortByDesc('total')
+            ->values();
 
         $leadsPorMontoInteres = Lead::visibleTo($user)
             ->whereNotNull('monto_interes_aprobar')
@@ -77,9 +80,9 @@ class DashboardController extends Controller
         $diasDelMes = now()->daysInMonth;
         $conteosPorDia = Lead::visibleTo($user)
             ->whereRaw('COALESCE(created_time, created_at) BETWEEN ? AND ?', [now()->startOfMonth(), now()->endOfMonth()])
-            ->selectRaw('DATE(COALESCE(created_time, created_at)) as dia, COUNT(*) as total')
-            ->groupByRaw('DATE(COALESCE(created_time, created_at))')
-            ->pluck('total', 'dia');
+            ->get(['created_time', 'created_at'])
+            ->groupBy(fn (Lead $lead) => ($lead->created_time ?? $lead->created_at)->format('Y-m-d'))
+            ->map->count();
 
         $leadsPorDia = collect(range(1, $diasDelMes))->mapWithKeys(function (int $dia) use ($conteosPorDia) {
             $fecha = now()->startOfMonth()->addDays($dia - 1)->format('Y-m-d');
