@@ -13,7 +13,7 @@ class LeadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lead::with('concesionario')->visibleTo($request->user())->latest('created_time');
+        $query = Lead::with(['concesionario', 'asesorComercial'])->visibleTo($request->user())->latest('created_time');
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
@@ -26,6 +26,8 @@ class LeadController extends Controller
 
         if ($request->query('filtro') === 'vencido') {
             $query->vencido();
+        } elseif ($request->query('filtro') === 'sin_asesor') {
+            $query->whereNull('asesor_comercial_id');
         }
 
         $leads = $query->get();
@@ -34,6 +36,7 @@ class LeadController extends Controller
             fn (Lead $lead) => ($lead->created_time ?? $lead->created_at)?->isToday()
         )->count();
         $totalVencidos = $leads->filter(fn (Lead $lead) => $lead->vencido)->count();
+        $totalSinAsesor = $leads->whereNull('asesor_comercial_id')->count();
 
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 
@@ -41,7 +44,7 @@ class LeadController extends Controller
 
         return view(
             'leads.index',
-            compact('leads', 'totalNuevos', 'totalVencidos', 'concesionarios', 'asesoresPorConcesionario')
+            compact('leads', 'totalNuevos', 'totalVencidos', 'totalSinAsesor', 'concesionarios', 'asesoresPorConcesionario')
         );
     }
 

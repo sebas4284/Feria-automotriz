@@ -27,7 +27,7 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Total leads</p>
             <p class="text-2xl lg:text-4xl font-bold">{{ $leads->count() }}</p>
@@ -39,6 +39,10 @@
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Vencidos ({{ config('leads.staleness_hours') }}h)</p>
             <p class="text-2xl lg:text-4xl font-bold text-red-400">{{ $totalVencidos }}</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Sin asesor</p>
+            <p class="text-2xl lg:text-4xl font-bold text-teal-400">{{ $totalSinAsesor }}</p>
         </div>
     </div>
 
@@ -53,6 +57,10 @@
                 <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'vencido'])) }}"
                     class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'vencido' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Vencidos
+                </a>
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'sin_asesor'])) }}"
+                    class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'sin_asesor' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
+                    Sin asesor
                 </a>
             </div>
             <form method="GET" action="{{ route('leads.index') }}" class="flex gap-2">
@@ -80,6 +88,7 @@
                         <th class="p-4 hidden md:table-cell">Teléfono</th>
                         <th class="p-4 hidden md:table-cell">Estado (Meta)</th>
                         <th class="p-4">Concesionario</th>
+                        <th class="p-4 hidden lg:table-cell">Asesor</th>
                         <th class="p-4">Estado</th>
                         <th class="p-4">Acciones</th>
                     </tr>
@@ -96,6 +105,13 @@
                                         <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300">{{ $lead->phone_number }}</a>
                                     @endif
                                 </div>
+                                <div class="text-xs mt-0.5 lg:hidden">
+                                    @if($lead->asesorComercial)
+                                        <span class="text-teal-400">Asesor: {{ $lead->asesorComercial->nombre }}</span>
+                                    @else
+                                        <span class="text-gray-600">Sin asesor</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->actividad_economica ?: '—' }}</td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->monto_interes_aprobar ?: '—' }}</td>
@@ -110,6 +126,13 @@
                             <td class="p-4 hidden md:table-cell">{{ $lead->meta_lead_status ?: '—' }}</td>
                             <td class="p-4">
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
+                            </td>
+                            <td class="p-4 hidden lg:table-cell">
+                                @if($lead->asesorComercial)
+                                    <span class="text-xs bg-teal-500/20 text-teal-400 px-3 py-1 rounded-full">{{ $lead->asesorComercial->nombre }}</span>
+                                @else
+                                    <span class="text-xs text-gray-500">Sin asesor</span>
+                                @endif
                             </td>
                             <td class="p-4">
                                 @if($lead->vencido)
@@ -224,7 +247,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="p-8 text-center text-gray-500">No hay leads registrados</td>
+                            <td colspan="10" class="p-8 text-center text-gray-500">No hay leads registrados</td>
                         </tr>
                     @endforelse
                 </tbody>

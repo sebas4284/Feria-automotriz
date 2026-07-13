@@ -97,6 +97,22 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($userA)->delete("/leads/{$lead->id}")->assertForbidden();
     }
 
+    public function test_leads_index_can_be_filtered_by_sin_asesor(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorComercial = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $admin = $this->makeUser('admin');
+
+        Lead::create(['meta_lead_id' => 'con', 'full_name' => 'Lead Con Asesor', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id, 'asesor_comercial_id' => $asesorComercial->id]);
+        Lead::create(['meta_lead_id' => 'sin', 'full_name' => 'Lead Sin Asesor', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $conc->id]);
+
+        $response = $this->actingAs($admin)->get('/leads?filtro=sin_asesor');
+
+        $response->assertOk();
+        $response->assertSee('Lead Sin Asesor');
+        $response->assertDontSee('Lead Con Asesor');
+    }
+
     public function test_admin_sees_all_leads(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
