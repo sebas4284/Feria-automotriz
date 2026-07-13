@@ -4,11 +4,12 @@
 
 @php
     $estadoConfig = [
-        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',   'label' => 'Nuevo'],
-        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',   'label' => 'Contactado'],
-        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400', 'label' => 'Negociación'],
-        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400', 'label' => 'Vendido'],
-        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',     'label' => 'Perdido'],
+        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',    'label' => 'Nuevo'],
+        'Asignado'    => ['badge' => 'bg-purple-500/20 text-purple-400', 'label' => 'Asignado'],
+        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',    'label' => 'Contactado'],
+        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400',  'label' => 'Negociación'],
+        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400',  'label' => 'Vendido'],
+        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',      'label' => 'Perdido'],
     ];
 @endphp
 
@@ -53,7 +54,7 @@
             <p class="text-gray-500 text-xs mb-5">"Vendido" se usa como aproximación de leads convertidos en venta</p>
 
             <div class="space-y-3">
-                @foreach(['Nuevo', 'Contactado', 'Negociacion', 'Vendido', 'Perdido'] as $estado)
+                @foreach(['Nuevo', 'Asignado', 'Contactado', 'Negociacion', 'Vendido', 'Perdido'] as $estado)
                     @php $total = $leadsPorEstado[$estado] ?? 0; @endphp
                     <div class="flex items-center justify-between">
                         <span class="text-xs {{ $estadoConfig[$estado]['badge'] }} px-3 py-1 rounded-full">{{ $estadoConfig[$estado]['label'] }}</span>

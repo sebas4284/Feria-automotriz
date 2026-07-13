@@ -47,7 +47,7 @@
                 <div class="mb-4">
                     <label class="block mb-2 text-sm text-gray-400">Estado de gestión</label>
                     <select name="estado_gestion" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-                        @foreach(['Nuevo', 'Contactado', 'Negociacion', 'Vendido', 'Perdido'] as $estado)
+                        @foreach(['Nuevo', 'Asignado', 'Contactado', 'Negociacion', 'Vendido', 'Perdido'] as $estado)
                             <option value="{{ $estado }}" @selected(old('estado_gestion', $lead->estado_gestion) === $estado)>{{ $estado }}</option>
                         @endforeach
                     </select>

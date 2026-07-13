@@ -67,14 +67,14 @@ class Lead extends Model
 
     public function scopeVencido(Builder $query): Builder
     {
-        return $query->where('estado_gestion', 'Nuevo')
+        return $query->whereIn('estado_gestion', ['Nuevo', 'Asignado'])
             ->whereNotNull('assigned_at')
             ->where('assigned_at', '<', now()->subHours((int) config('leads.staleness_hours')));
     }
 
     public function getVencidoAttribute(): bool
     {
-        return $this->estado_gestion === 'Nuevo'
+        return in_array($this->estado_gestion, ['Nuevo', 'Asignado'], true)
             && $this->assigned_at !== null
             && $this->assigned_at->lt(now()->subHours((int) config('leads.staleness_hours')));
     }

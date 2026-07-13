@@ -4,11 +4,12 @@
 
 @php
     $estadoConfig = [
-        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',   'label' => 'Nuevo'],
-        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',   'label' => 'Contactado'],
-        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400', 'label' => 'Negociación'],
-        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400', 'label' => 'Vendido'],
-        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',     'label' => 'Perdido'],
+        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',    'label' => 'Nuevo'],
+        'Asignado'    => ['badge' => 'bg-purple-500/20 text-purple-400', 'label' => 'Asignado'],
+        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',    'label' => 'Contactado'],
+        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400',  'label' => 'Negociación'],
+        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400',  'label' => 'Vendido'],
+        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',      'label' => 'Perdido'],
     ];
     $cfg = $estadoConfig[$lead->estado_gestion] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $lead->estado_gestion];
 @endphp

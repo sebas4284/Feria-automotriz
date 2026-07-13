@@ -375,6 +375,42 @@ class RolePermissionsTest extends TestCase
             ->assertRedirect();
 
         $this->assertEquals($asesor->id, $lead->fresh()->asesor_comercial_id);
+        $this->assertEquals('Asignado', $lead->fresh()->estado_gestion);
+    }
+
+    public function test_assigning_asesor_does_not_downgrade_a_more_advanced_estado(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeUser('concesionario', $conc);
+        $lead = Lead::create(['meta_lead_id' => 'l1', 'estado_gestion' => 'Contactado', 'concesionario_id' => $conc->id]);
+
+        $this->actingAs($user)
+            ->patch("/leads/{$lead->id}/assign-asesor", ['asesor_comercial_id' => $asesor->id]);
+
+        $this->assertEquals('Contactado', $lead->fresh()->estado_gestion);
+    }
+
+    public function test_reassigning_concesionario_clears_asesor_and_resets_asignado_to_nuevo(): void
+    {
+        $from = Concesionario::create(['nombre' => 'Origen', 'peso_asignacion' => 1, 'activo' => true]);
+        $to = Concesionario::create(['nombre' => 'Destino', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $from->id]);
+        $admin = $this->makeUser('admin');
+        $lead = Lead::create([
+            'meta_lead_id' => 'l1',
+            'estado_gestion' => 'Asignado',
+            'concesionario_id' => $from->id,
+            'asesor_comercial_id' => $asesor->id,
+            'assigned_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->patch("/leads/{$lead->id}/reassign", ['to_concesionario_id' => $to->id]);
+
+        $lead->refresh();
+        $this->assertNull($lead->asesor_comercial_id);
+        $this->assertEquals('Nuevo', $lead->estado_gestion);
     }
 
     public function test_concesionario_cannot_assign_lead_to_asesor_of_another_dealer(): void

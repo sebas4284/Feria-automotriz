@@ -75,7 +75,7 @@ class LeadController extends Controller
         $this->authorize('update', $lead);
 
         $validated = $request->validate([
-            'estado_gestion' => 'required|in:Nuevo,Contactado,Negociacion,Vendido,Perdido',
+            'estado_gestion' => 'required|in:Nuevo,Asignado,Contactado,Negociacion,Vendido,Perdido',
             'observaciones' => 'nullable|string',
         ]);
 
@@ -122,7 +122,10 @@ class LeadController extends Controller
         $asesor = AsesorComercial::where('concesionario_id', $lead->concesionario_id)
             ->findOrFail($data['asesor_comercial_id']);
 
-        $lead->update(['asesor_comercial_id' => $asesor->id]);
+        $lead->update([
+            'asesor_comercial_id' => $asesor->id,
+            'estado_gestion' => $lead->estado_gestion === 'Nuevo' ? 'Asignado' : $lead->estado_gestion,
+        ]);
 
         $notifier->notifyAsesor($asesor, $lead->fresh());
 

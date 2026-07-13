@@ -4,11 +4,12 @@
 
 @php
     $estadoConfig = [
-        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',   'label' => 'Nuevo'],
-        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',   'label' => 'Contactado'],
-        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400', 'label' => 'Negociación'],
-        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400', 'label' => 'Vendido'],
-        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',     'label' => 'Perdido'],
+        'Nuevo'       => ['badge' => 'bg-blue-500/20 text-blue-400',    'label' => 'Nuevo'],
+        'Asignado'    => ['badge' => 'bg-purple-500/20 text-purple-400', 'label' => 'Asignado'],
+        'Contactado'  => ['badge' => 'bg-teal-500/20 text-teal-400',    'label' => 'Contactado'],
+        'Negociacion' => ['badge' => 'bg-amber-500/20 text-amber-400',  'label' => 'Negociación'],
+        'Vendido'     => ['badge' => 'bg-green-500/20 text-green-400',  'label' => 'Vendido'],
+        'Perdido'     => ['badge' => 'bg-red-500/20 text-red-400',      'label' => 'Perdido'],
     ];
 @endphp
 
@@ -124,14 +125,14 @@
                                 @endif
                             </td>
                             <td class="p-4 hidden md:table-cell">{{ $lead->meta_lead_status ?: '—' }}</td>
-                            <td class="p-4">
+                            <td class="p-4 whitespace-nowrap">
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
                             </td>
-                            <td class="p-4 hidden lg:table-cell">
+                            <td class="p-4 hidden lg:table-cell whitespace-nowrap">
                                 @if($lead->asesorComercial)
-                                    <span class="text-xs bg-teal-500/20 text-teal-400 px-3 py-1 rounded-full">{{ $lead->asesorComercial->nombre }}</span>
+                                    <span class="text-teal-400">{{ $lead->asesorComercial->nombre }}</span>
                                 @else
-                                    <span class="text-xs text-gray-500">Sin asesor</span>
+                                    <span class="text-gray-500">Sin asesor</span>
                                 @endif
                             </td>
                             <td class="p-4">

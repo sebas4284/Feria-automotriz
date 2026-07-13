@@ -51,6 +51,8 @@ class LeadAssignmentService
             $lead->update([
                 'concesionario_id' => $to->id,
                 'assigned_at' => now(),
+                'asesor_comercial_id' => null,
+                'estado_gestion' => $lead->estado_gestion === 'Asignado' ? 'Nuevo' : $lead->estado_gestion,
             ]);
         });
     }
