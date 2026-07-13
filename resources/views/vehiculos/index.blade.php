@@ -124,6 +124,9 @@
                         </div>
                         <p class="text-sm text-gray-300 truncate mt-0.5">{{ $vehiculo->marca }} {{ $vehiculo->linea }} {{ $vehiculo->modelo }}</p>
                         <p class="text-xs text-blue-400 font-medium mt-0.5">$ {{ number_format($vehiculo->precio_expocar, 0, ',', '.') }}</p>
+                        @if($vehiculo->numero_llave)
+                            <p class="text-xs text-gray-500 mt-0.5">Llave: {{ $vehiculo->numero_llave }}</p>
+                        @endif
                     </div>
                 </a>
             @empty
@@ -211,6 +214,7 @@
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
                         <th class="p-4">Placa</th>
+                        <th class="p-4 hidden md:table-cell">Llave</th>
                         <th class="p-4 hidden sm:table-cell">Marca</th>
                         <th class="p-4 hidden sm:table-cell">Línea</th>
                         <th class="p-4 hidden md:table-cell">Versión</th>
@@ -232,6 +236,7 @@
                                     <div>{{ $vehiculo->modelo }} · $ {{ number_format($vehiculo->precio_expocar, 0, ',', '.') }}</div>
                                 </div>
                             </td>
+                            <td class="p-4 hidden md:table-cell">{{ $vehiculo->numero_llave ?: '—' }}</td>
                             <td class="p-4 hidden sm:table-cell">{{ $vehiculo->marca }}</td>
                             <td class="p-4 hidden sm:table-cell">{{ $vehiculo->linea }}</td>
                             <td class="p-4 hidden md:table-cell">{{ $vehiculo->version }}</td>

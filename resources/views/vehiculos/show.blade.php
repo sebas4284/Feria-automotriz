@@ -126,6 +126,11 @@
             </p>
 
             <p>
+                <strong>Número de llave:</strong>
+                {{ $vehiculo->numero_llave ?: 'No registrado' }}
+            </p>
+
+            <p>
                 <strong>Marca:</strong>
                 {{ $vehiculo->marca }}
             </p>

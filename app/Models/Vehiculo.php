@@ -13,6 +13,8 @@ class Vehiculo extends Model
 
         'placa',
 
+        'numero_llave',
+
         'marca',
 
         'linea',

@@ -49,6 +49,18 @@
 
 <div>
     <label class="block mb-2 text-sm text-gray-400">
+        Número de llave
+    </label>
+
+    <input
+        type="text"
+        name="numero_llave"
+        value="{{ old('numero_llave', $vehiculo->numero_llave ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
+
+<div>
+    <label class="block mb-2 text-sm text-gray-400">
         Marca
     </label>
 

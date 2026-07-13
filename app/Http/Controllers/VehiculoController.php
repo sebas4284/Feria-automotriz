@@ -76,6 +76,8 @@ class VehiculoController extends Controller
 
             'placa' => 'required|string|max:20|unique:vehiculos,placa',
 
+            'numero_llave' => 'nullable|string|max:50',
+
             'marca' => 'required|string|max:255',
 
             'linea' => 'required|string|max:255',
@@ -173,6 +175,8 @@ class VehiculoController extends Controller
             'concesionario_id' => 'nullable|exists:concesionarios,id',
 
             'placa' => 'required|string|max:20|unique:vehiculos,placa,' . $vehiculo->id,
+
+            'numero_llave' => 'nullable|string|max:50',
 
             'marca' => 'required|string|max:255',
 
