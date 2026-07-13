@@ -65,6 +65,138 @@
 
     </div>
 
+    @unless(auth()->user()->isStaff())
+
+        @php
+            $estadoConfig = [
+                'Nuevo'       => ['border' => 'border-t-blue-500',    'badge' => 'bg-blue-500/20 text-blue-400',    'label' => 'Nuevo'],
+                'Asignado'    => ['border' => 'border-t-purple-500',  'badge' => 'bg-purple-500/20 text-purple-400','label' => 'Asignado'],
+                'Contactado'  => ['border' => 'border-t-teal-500',    'badge' => 'bg-teal-500/20 text-teal-400',    'label' => 'Contactado'],
+                'Negociacion' => ['border' => 'border-t-amber-500',   'badge' => 'bg-amber-500/20 text-amber-400',  'label' => 'Negociación'],
+                'Vendido'     => ['border' => 'border-t-green-500',   'badge' => 'bg-green-500/20 text-green-400',  'label' => 'Vendido'],
+                'Perdido'     => ['border' => 'border-t-red-500',     'badge' => 'bg-red-500/20 text-red-400',      'label' => 'Perdido'],
+            ];
+        @endphp
+
+        {{-- Pipeline de Ventas --}}
+        <div>
+            <h2 class="text-lg font-semibold mb-3">Pipeline de Ventas</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                @foreach($pipeline as $estado => $total)
+                    @php $cfg = $estadoConfig[$estado]; @endphp
+                    <div class="bg-gray-900 border border-gray-800 border-t-4 {{ $cfg['border'] }} rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-gray-800">
+                            <p class="text-sm font-semibold">{{ $cfg['label'] }}</p>
+                            <p class="text-2xl font-bold mt-1">{{ $total }}</p>
+                        </div>
+                        <div class="p-3 space-y-2 max-h-80 overflow-y-auto">
+                            @forelse($leadsRecientesPorEstado->get($estado, collect())->take(5) as $lead)
+                                <a href="{{ route('leads.show', $lead) }}"
+                                    class="block bg-gray-800/60 hover:bg-gray-800 rounded-xl p-3 transition">
+                                    <p class="text-sm font-medium truncate">{{ $lead->full_name ?: 'Sin nombre' }}</p>
+                                    <p class="text-xs text-gray-400 truncate mt-0.5">
+                                        {{ $lead->asesorComercial->nombre ?? $lead->concesionario->nombre ?? 'Sin asignar' }}
+                                    </p>
+                                    @if($lead->monto_interes_aprobar)
+                                        <p class="text-xs text-blue-400 mt-0.5 truncate">{{ $lead->monto_interes_aprobar }}</p>
+                                    @endif
+                                </a>
+                            @empty
+                                <p class="text-xs text-gray-600 text-center py-4">Sin leads</p>
+                            @endforelse
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Leads por día y por red social --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                <h2 class="text-lg font-semibold mb-4">Leads por día (este mes)</h2>
+                <div x-data="{
+                        init() {
+                            new Chart(this.$refs.canvas, {
+                                type: 'line',
+                                data: {
+                                    labels: @json($leadsPorDia->keys()->map(fn ($f) => date('d M', strtotime($f)))),
+                                    datasets: [{
+                                        data: @json($leadsPorDia->values()),
+                                        borderColor: '#3b82f6',
+                                        backgroundColor: 'rgba(59,130,246,0.15)',
+                                        fill: true,
+                                        tension: 0.3,
+                                        pointRadius: 2,
+                                    }],
+                                },
+                                options: {
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+                                        y: { beginAtZero: true, ticks: { color: '#9ca3af', precision: 0 }, grid: { color: '#1f2937' } },
+                                    },
+                                },
+                            });
+                        }
+                    }" class="h-64">
+                    <canvas x-ref="canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                <h2 class="text-lg font-semibold mb-4">Leads por red social</h2>
+                @if($leadsPorPlataforma->isEmpty())
+                    <p class="text-sm text-gray-500 text-center py-8">Sin datos todavía</p>
+                @else
+                    <div x-data="{
+                            init() {
+                                new Chart(this.$refs.canvas, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: @json($leadsPorPlataforma->pluck('plataforma')),
+                                        datasets: [{
+                                            data: @json($leadsPorPlataforma->pluck('total')),
+                                            backgroundColor: ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6'],
+                                            borderColor: '#111827',
+                                        }],
+                                    },
+                                    options: {
+                                        plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db', boxWidth: 12 } } },
+                                    },
+                                });
+                            }
+                        }" class="h-64">
+                        <canvas x-ref="canvas"></canvas>
+                    </div>
+                @endif
+            </div>
+
+        </div>
+
+        {{-- Leads por monto de interés --}}
+        @if($leadsPorMontoInteres->isNotEmpty())
+            @php $maxMonto = $leadsPorMontoInteres->max('total'); @endphp
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                <h2 class="text-lg font-semibold mb-4">Leads por monto de interés</h2>
+                <div class="space-y-3">
+                    @foreach($leadsPorMontoInteres as $fila)
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-300 truncate pr-2">{{ $fila->monto_interes_aprobar }}</span>
+                                <span class="text-gray-400 shrink-0">{{ $fila->total }}</span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: {{ $maxMonto > 0 ? round($fila->total / $maxMonto * 100) : 0 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+    @endunless
+
 </div>
 
 @endsection
