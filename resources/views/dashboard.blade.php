@@ -81,32 +81,34 @@
         {{-- Pipeline de Ventas --}}
         <div>
             <h2 class="text-lg font-semibold mb-3">Pipeline de Ventas</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                @foreach($pipeline as $estado => $total)
-                    @php $cfg = $estadoConfig[$estado]; @endphp
-                    <div class="bg-gray-900 border border-gray-800 border-t-4 {{ $cfg['border'] }} rounded-2xl overflow-hidden">
-                        <div class="p-4 border-b border-gray-800">
-                            <p class="text-sm font-semibold">{{ $cfg['label'] }}</p>
-                            <p class="text-2xl font-bold mt-1">{{ $total }}</p>
+            <div class="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div class="flex gap-4 min-w-max">
+                    @foreach($pipeline as $estado => $total)
+                        @php $cfg = $estadoConfig[$estado]; @endphp
+                        <div class="w-72 shrink-0 bg-gray-900 border border-gray-800 border-t-4 {{ $cfg['border'] }} rounded-2xl overflow-hidden">
+                            <div class="p-4 border-b border-gray-800">
+                                <p class="text-sm font-semibold">{{ $cfg['label'] }}</p>
+                                <p class="text-2xl font-bold mt-1">{{ $total }}</p>
+                            </div>
+                            <div class="p-3 space-y-2 max-h-96 overflow-y-auto">
+                                @forelse($leadsRecientesPorEstado->get($estado, collect())->take(5) as $lead)
+                                    <a href="{{ route('leads.show', $lead) }}"
+                                        class="block bg-gray-800/60 hover:bg-gray-800 rounded-xl p-3 transition">
+                                        <p class="text-sm font-medium truncate">{{ $lead->full_name ?: 'Sin nombre' }}</p>
+                                        <p class="text-xs text-gray-400 truncate mt-0.5">
+                                            {{ $lead->asesorComercial->nombre ?? $lead->concesionario->nombre ?? 'Sin asignar' }}
+                                        </p>
+                                        @if($lead->monto_interes_aprobar)
+                                            <p class="text-xs text-blue-400 mt-0.5 truncate">{{ $lead->monto_interes_aprobar }}</p>
+                                        @endif
+                                    </a>
+                                @empty
+                                    <p class="text-xs text-gray-600 text-center py-4">Sin leads</p>
+                                @endforelse
+                            </div>
                         </div>
-                        <div class="p-3 space-y-2 max-h-80 overflow-y-auto">
-                            @forelse($leadsRecientesPorEstado->get($estado, collect())->take(5) as $lead)
-                                <a href="{{ route('leads.show', $lead) }}"
-                                    class="block bg-gray-800/60 hover:bg-gray-800 rounded-xl p-3 transition">
-                                    <p class="text-sm font-medium truncate">{{ $lead->full_name ?: 'Sin nombre' }}</p>
-                                    <p class="text-xs text-gray-400 truncate mt-0.5">
-                                        {{ $lead->asesorComercial->nombre ?? $lead->concesionario->nombre ?? 'Sin asignar' }}
-                                    </p>
-                                    @if($lead->monto_interes_aprobar)
-                                        <p class="text-xs text-blue-400 mt-0.5 truncate">{{ $lead->monto_interes_aprobar }}</p>
-                                    @endif
-                                </a>
-                            @empty
-                                <p class="text-xs text-gray-600 text-center py-4">Sin leads</p>
-                            @endforelse
-                        </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
 
@@ -131,6 +133,8 @@
                                     }],
                                 },
                                 options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
                                     plugins: { legend: { display: false } },
                                     scales: {
                                         x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
@@ -139,7 +143,7 @@
                                 },
                             });
                         }
-                    }" class="h-64">
+                    }" class="relative h-64">
                     <canvas x-ref="canvas"></canvas>
                 </div>
             </div>
@@ -162,11 +166,13 @@
                                         }],
                                     },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
                                         plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db', boxWidth: 12 } } },
                                     },
                                 });
                             }
-                        }" class="h-64">
+                        }" class="relative h-64">
                         <canvas x-ref="canvas"></canvas>
                     </div>
                 @endif
