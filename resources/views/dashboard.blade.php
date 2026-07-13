@@ -118,32 +118,40 @@
             <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-5">
                 <h2 class="text-lg font-semibold mb-4">Leads por día (este mes)</h2>
                 <div x-data="{
-                        init() {
-                            new Chart(this.$refs.canvas, {
-                                type: 'line',
-                                data: {
-                                    labels: @json($leadsPorDia->keys()->map(fn ($f) => date('d M', strtotime($f)))),
-                                    datasets: [{
-                                        data: @json($leadsPorDia->values()),
-                                        borderColor: '#3b82f6',
-                                        backgroundColor: 'rgba(59,130,246,0.15)',
-                                        fill: true,
-                                        tension: 0.3,
-                                        pointRadius: 2,
-                                    }],
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: { legend: { display: false } },
-                                    scales: {
-                                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
-                                        y: { beginAtZero: true, ticks: { color: '#9ca3af', precision: 0 }, grid: { color: '#1f2937' } },
+                        renderChart() {
+                            if (typeof Chart === 'undefined') {
+                                this.$refs.canvas.replaceWith(document.createTextNode('Chart.js no cargó (window.Chart es undefined)'));
+                                return;
+                            }
+                            try {
+                                new Chart(this.$refs.canvas, {
+                                    type: 'line',
+                                    data: {
+                                        labels: @json($leadsPorDia->keys()->map(fn ($f) => date('d M', strtotime($f)))),
+                                        datasets: [{
+                                            data: @json($leadsPorDia->values()),
+                                            borderColor: '#3b82f6',
+                                            backgroundColor: 'rgba(59,130,246,0.15)',
+                                            fill: true,
+                                            tension: 0.3,
+                                            pointRadius: 2,
+                                        }],
                                     },
-                                },
-                            });
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: { legend: { display: false } },
+                                        scales: {
+                                            x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+                                            y: { beginAtZero: true, ticks: { color: '#9ca3af', precision: 0 }, grid: { color: '#1f2937' } },
+                                        },
+                                    },
+                                });
+                            } catch (e) {
+                                this.$refs.canvas.replaceWith(document.createTextNode('Error al cargar el gráfico: ' + e.message));
+                            }
                         }
-                    }" class="relative h-64">
+                    }" x-init="$nextTick(() => renderChart())" class="relative h-64">
                     <canvas x-ref="canvas"></canvas>
                 </div>
             </div>
@@ -154,25 +162,33 @@
                     <p class="text-sm text-gray-500 text-center py-8">Sin datos todavía</p>
                 @else
                     <div x-data="{
-                            init() {
-                                new Chart(this.$refs.canvas, {
-                                    type: 'doughnut',
-                                    data: {
-                                        labels: @json($leadsPorPlataforma->pluck('plataforma')),
-                                        datasets: [{
-                                            data: @json($leadsPorPlataforma->pluck('total')),
-                                            backgroundColor: ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6'],
-                                            borderColor: '#111827',
-                                        }],
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db', boxWidth: 12 } } },
-                                    },
-                                });
+                            renderChart() {
+                                if (typeof Chart === 'undefined') {
+                                    this.$refs.canvas.replaceWith(document.createTextNode('Chart.js no cargó (window.Chart es undefined)'));
+                                    return;
+                                }
+                                try {
+                                    new Chart(this.$refs.canvas, {
+                                        type: 'doughnut',
+                                        data: {
+                                            labels: @json($leadsPorPlataforma->pluck('plataforma')),
+                                            datasets: [{
+                                                data: @json($leadsPorPlataforma->pluck('total')),
+                                                backgroundColor: ['#3b82f6', '#ec4899', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6'],
+                                                borderColor: '#111827',
+                                            }],
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db', boxWidth: 12 } } },
+                                        },
+                                    });
+                                } catch (e) {
+                                    this.$refs.canvas.replaceWith(document.createTextNode('Error al cargar el gráfico: ' + e.message));
+                                }
                             }
-                        }" class="relative h-64">
+                        }" x-init="$nextTick(() => renderChart())" class="relative h-64">
                         <canvas x-ref="canvas"></canvas>
                     </div>
                 @endif
