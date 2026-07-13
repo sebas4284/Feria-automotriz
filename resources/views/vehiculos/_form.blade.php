@@ -107,6 +107,25 @@
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 
+<div>
+    <label class="block mb-2 text-sm text-gray-400">
+        Foto
+    </label>
+
+    @if(!empty($vehiculo) && $vehiculo->fotoUrl)
+        <img
+            src="{{ $vehiculo->fotoUrl }}"
+            alt="Foto actual del vehículo"
+            class="w-32 h-24 object-cover rounded-xl mb-2 border border-gray-700">
+    @endif
+
+    <input
+        type="file"
+        name="foto"
+        accept="image/*"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white">
+</div>
+
 
 </div>
 

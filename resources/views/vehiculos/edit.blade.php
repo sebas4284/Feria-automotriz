@@ -4,7 +4,6 @@
 
 <div class="max-w-7xl mx-auto">
 
-```
 <div class="flex items-center justify-between mb-8">
 
     <div>
@@ -51,6 +50,7 @@
 <form
     action="{{ route('vehiculos.update', $vehiculo) }}"
     method="POST"
+    enctype="multipart/form-data"
     class="bg-gray-900 border border-gray-800 rounded-3xl p-8">
 
     @csrf
@@ -79,7 +79,6 @@
     </div>
 
 </form>
-```
 
 </div>
 

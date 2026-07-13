@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
+use Illuminate\Support\Facades\Storage;
 
 class VehiculoController extends Controller
 {
@@ -82,6 +83,8 @@ class VehiculoController extends Controller
 
             'numero_llave' => 'nullable|string|max:50',
 
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
+
             'marca' => 'required|string|max:255',
 
             'linea' => 'required|string|max:255',
@@ -129,8 +132,12 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
         ]);
 
-        $data = $request->all();
+        $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
+
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('vehiculos', 'public');
+        }
 
         Vehiculo::create($data);
 
@@ -182,6 +189,8 @@ class VehiculoController extends Controller
 
             'numero_llave' => 'nullable|string|max:50',
 
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
+
             'marca' => 'required|string|max:255',
 
             'linea' => 'required|string|max:255',
@@ -229,8 +238,16 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
         ]);
 
-        $data = $request->all();
+        $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
+
+        if ($request->hasFile('foto')) {
+            if ($vehiculo->foto) {
+                Storage::disk('public')->delete($vehiculo->foto);
+            }
+
+            $data['foto'] = $request->file('foto')->store('vehiculos', 'public');
+        }
 
         $vehiculo->update($data);
 
@@ -248,6 +265,10 @@ class VehiculoController extends Controller
     public function destroy(Vehiculo $vehiculo)
     {
         $this->authorize('delete', $vehiculo);
+
+        if ($vehiculo->foto) {
+            Storage::disk('public')->delete($vehiculo->foto);
+        }
 
         $vehiculo->delete();
 

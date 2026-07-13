@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Concesionario;
 
 class Vehiculo extends Model
@@ -14,6 +15,8 @@ class Vehiculo extends Model
         'placa',
 
         'numero_llave',
+
+        'foto',
 
         'marca',
 
@@ -61,6 +64,11 @@ class Vehiculo extends Model
 
         'estado'
     ];
+    public function getFotoUrlAttribute(): ?string
+    {
+        return $this->foto ? Storage::disk('public')->url($this->foto) : null;
+    }
+
     public function ventas()
     {
         return $this->hasMany(Venta::class);

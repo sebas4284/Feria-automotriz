@@ -30,6 +30,13 @@
 
 </div>
 
+@if($vehiculo->fotoUrl)
+    <div class="mb-8">
+        <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
+            class="w-full max-h-96 object-cover rounded-2xl border border-gray-800">
+    </div>
+@endif
+
 <!-- RESUMEN -->
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

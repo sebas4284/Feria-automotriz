@@ -11,6 +11,7 @@
     <form
         action="{{ route('vehiculos.store') }}"
         method="POST"
+        enctype="multipart/form-data"
         class="bg-gray-900 border border-gray-800 rounded-3xl p-8">
 
         @csrf

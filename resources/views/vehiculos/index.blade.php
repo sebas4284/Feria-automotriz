@@ -117,11 +117,16 @@
                 @php $evcfg = $estadoVehiculo[$vehiculo->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400']; @endphp
                 <a href="{{ route('vehiculos.show', $vehiculo) }}"
                     class="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition active:scale-[.99]">
-                    <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                        </svg>
-                    </div>
+                    @if($vehiculo->fotoUrl)
+                        <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
+                            class="w-10 h-10 object-cover rounded-xl shrink-0">
+                    @else
+                        <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                            </svg>
+                        </div>
+                    @endif
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-2">
                             <p class="font-semibold text-sm font-mono">{{ $vehiculo->placa }}</p>
@@ -223,6 +228,7 @@
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
+                        <th class="p-4">Foto</th>
                         <th class="p-4">Placa</th>
                         <th class="p-4 hidden md:table-cell">Llave</th>
                         <th class="p-4 hidden sm:table-cell">Marca</th>
@@ -239,6 +245,14 @@
                     @forelse($vehiculos as $vehiculo)
                         @php $evcfg = $estadoVehiculo[$vehiculo->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400']; @endphp
                         <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                            <td class="p-4">
+                                @if($vehiculo->fotoUrl)
+                                    <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
+                                        class="w-14 h-10 object-cover rounded-lg">
+                                @else
+                                    <div class="w-14 h-10 bg-gray-800 rounded-lg"></div>
+                                @endif
+                            </td>
                             <td class="p-4">
                                 <div class="font-semibold">{{ $vehiculo->placa }}</div>
                                 <div class="sm:hidden text-xs text-gray-400 mt-0.5 space-y-0.5">
@@ -268,7 +282,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center p-8 text-gray-400">No se encontraron vehículos con los filtros aplicados</td>
+                            <td colspan="11" class="text-center p-8 text-gray-400">No se encontraron vehículos con los filtros aplicados</td>
                         </tr>
                     @endforelse
                 </tbody>
