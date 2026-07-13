@@ -53,6 +53,7 @@ class LeadAssignmentService
                 'assigned_at' => now(),
                 'asesor_comercial_id' => null,
                 'estado_gestion' => $lead->estado_gestion === 'Asignado' ? 'Nuevo' : $lead->estado_gestion,
+                'vencido_notified_at' => null,
             ]);
         });
     }

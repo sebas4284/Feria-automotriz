@@ -6,6 +6,7 @@ use App\Models\AsesorComercial;
 use App\Models\Concesionario;
 use App\Models\Lead;
 use App\Models\User;
+use App\Notifications\LeadVencido;
 use App\Notifications\NuevoLeadAsignado;
 use Illuminate\Support\Facades\Notification;
 
@@ -29,6 +30,11 @@ class LeadNotifier
             ->merge($this->admins());
 
         Notification::send($usuarios, new NuevoLeadAsignado($lead));
+    }
+
+    public function notifyVencido(Lead $lead): void
+    {
+        Notification::send($this->admins(), new LeadVencido($lead));
     }
 
     private function admins(): \Illuminate\Database\Eloquent\Collection

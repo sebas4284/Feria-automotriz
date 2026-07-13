@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('leads:sync-sheet')->everyMinute()->withoutOverlapping();
+Schedule::command('leads:notify-vencidos')->everyMinute()->withoutOverlapping();

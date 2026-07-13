@@ -398,6 +398,7 @@ class RolePermissionsTest extends TestCase
         $lead->refresh();
         $this->assertFalse($lead->vencido);
         $this->assertTrue($lead->assigned_at->gt(now()->subMinute()));
+        $this->assertNull($lead->vencido_notified_at);
     }
 
     public function test_assigning_asesor_does_not_downgrade_a_more_advanced_estado(): void
@@ -425,6 +426,7 @@ class RolePermissionsTest extends TestCase
             'concesionario_id' => $from->id,
             'asesor_comercial_id' => $asesor->id,
             'assigned_at' => now(),
+            'vencido_notified_at' => now(),
         ]);
 
         $this->actingAs($admin)
@@ -433,6 +435,7 @@ class RolePermissionsTest extends TestCase
         $lead->refresh();
         $this->assertNull($lead->asesor_comercial_id);
         $this->assertEquals('Nuevo', $lead->estado_gestion);
+        $this->assertNull($lead->vencido_notified_at);
     }
 
     public function test_concesionario_cannot_assign_lead_to_asesor_of_another_dealer(): void

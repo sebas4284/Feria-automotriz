@@ -35,12 +35,14 @@ class Lead extends Model
         'asesor_comercial_id',
         'estado_gestion',
         'assigned_at',
+        'vencido_notified_at',
         'observaciones',
     ];
 
     protected $casts = [
         'created_time' => 'datetime',
         'assigned_at' => 'datetime',
+        'vencido_notified_at' => 'datetime',
         'is_organic' => 'boolean',
         'raw_payload' => 'array',
     ];
