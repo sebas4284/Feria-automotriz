@@ -2,6 +2,8 @@
 
 @section('content')
 
+<div x-data="liveSearch()">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -22,9 +24,14 @@
         <span class="text-xl font-bold text-amber-400">{{ $ventas->count() }}</span>
     </div>
 
+    <input type="text" x-model="q" placeholder="Buscar por comprador, boleta, cédula o teléfono..."
+        class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+
     <div class="space-y-2">
         @forelse($ventas as $venta)
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
+            <div x-show="matches($el)"
+                data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '')) }}"
+                class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <p class="font-semibold text-sm truncate">{{ $venta->comprador->nombre ?? '—' }}</p>
                     <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full shrink-0">{{ $venta->boleta }}</span>
@@ -53,6 +60,9 @@
                 No hay participantes registrados
             </div>
         @endforelse
+        <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+            Sin resultados para tu búsqueda
+        </div>
     </div>
 
 </div>
@@ -66,6 +76,14 @@
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-semibold">
+                Participantes
+                <span class="text-sm font-normal text-gray-400 ml-2">({{ $ventas->count() }} boletas)</span>
+            </h2>
+            <input type="text" x-model="q" placeholder="Buscar por comprador, boleta, cédula o teléfono..."
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-72 focus:outline-none focus:border-blue-500">
+        </div>
         <table class="w-full">
             <thead class="bg-gray-800">
                 <tr>
@@ -79,7 +97,9 @@
             </thead>
             <tbody>
                 @forelse($ventas as $venta)
-                    <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
+                    <tr x-show="matches($el)"
+                        data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '')) }}"
+                        class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">
                             <span class="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full font-medium">{{ $venta->boleta }}</span>
                         </td>
@@ -94,9 +114,14 @@
                         <td colspan="6" class="p-8 text-center text-gray-500">No hay participantes registrados</td>
                     </tr>
                 @endforelse
+                <tr x-show="q.trim() !== '' && visibleCount === 0">
+                    <td colspan="6" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
+                </tr>
             </tbody>
         </table>
     </div>
+
+</div>
 
 </div>
 

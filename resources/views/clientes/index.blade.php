@@ -22,6 +22,8 @@
     $totalConCita = $clientes->where('cita', true)->count();
 @endphp
 
+<div x-data="liveSearch('{{ addslashes(request('buscar', '')) }}')">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -84,19 +86,17 @@
     </div>
 
     {{-- Búsqueda móvil --}}
-    <form method="GET" action="{{ route('clientes.index') }}" class="flex gap-2">
+    <div class="flex gap-2">
         <div class="flex-1 relative">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 15.803a7.5 7.5 0 0 0 10.607 0Z" />
             </svg>
-            <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar clientes..."
+            <input type="text" x-model="q" placeholder="Buscar clientes..."
                 class="w-full bg-gray-900 border border-gray-800 rounded-2xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
         </div>
-        @if(request('buscar'))
-            <a href="{{ route('clientes.index') }}"
-                class="px-3 py-2.5 text-sm text-gray-400 bg-gray-900 border border-gray-800 rounded-2xl transition hover:text-white">✕</a>
-        @endif
-    </form>
+        <button type="button" x-show="q" @click="q = ''"
+            class="px-3 py-2.5 text-sm text-gray-400 bg-gray-900 border border-gray-800 rounded-2xl transition hover:text-white">✕</button>
+    </div>
 
     {{-- Lista de clientes --}}
     <div>
@@ -113,7 +113,8 @@
                     $color    = clienteColor($cliente->nombre, $avatarColors);
                     $initials = clienteInitials($cliente->nombre);
                 @endphp
-                <a href="{{ route('clientes.show', $cliente) }}"
+                <a href="{{ route('clientes.show', $cliente) }}" x-show="matches($el)"
+                    data-search="{{ mb_strtolower($cliente->nombre.' '.$cliente->telefono) }}"
                     class="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition active:scale-[.99]">
                     <div class="{{ $color }} w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
                         {{ $initials }}
@@ -139,6 +140,9 @@
                     No hay clientes registrados
                 </div>
             @endforelse
+            <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+                Sin resultados para tu búsqueda
+            </div>
         </div>
     </div>
 
@@ -214,15 +218,13 @@
                 Lista de Clientes
                 <span class="text-sm font-normal text-gray-400 ml-1">({{ $clientes->count() }} resultados)</span>
             </h2>
-            <form method="GET" action="{{ route('clientes.index') }}" class="flex gap-2">
-                <input type="text" name="buscar" value="{{ request('buscar') }}"
+            <div class="flex gap-2">
+                <input type="text" x-model="q"
                     placeholder="Buscar por nombre o teléfono..."
                     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
-                @if(request('buscar'))
-                    <a href="{{ route('clientes.index') }}"
-                        class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</a>
-                @endif
-            </form>
+                <button type="button" x-show="q" @click="q = ''"
+                    class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</button>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -238,7 +240,8 @@
                 </thead>
                 <tbody>
                     @foreach($clientes as $cliente)
-                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                        <tr x-show="matches($el)" data-search="{{ mb_strtolower($cliente->nombre.' '.$cliente->telefono) }}"
+                            class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 <div class="font-medium">{{ $cliente->nombre }}</div>
                                 <div class="sm:hidden text-xs text-gray-500 mt-0.5">{{ $cliente->telefono }}</div>
@@ -261,11 +264,16 @@
                             </td>
                         </tr>
                     @endforeach
+                    <tr x-show="q.trim() !== '' && visibleCount === 0">
+                        <td colspan="5" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
     </div>
+
+</div>
 
 </div>
 

@@ -10,6 +10,8 @@
     ];
 @endphp
 
+<div x-data="liveSearch('{{ addslashes(request('placa', '')) }}')">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -71,8 +73,8 @@
         <div x-show="open" x-collapse class="border-t border-gray-800">
             <form method="GET" action="{{ route('vehiculos.index') }}" class="p-4 space-y-3">
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Placa</label>
-                    <input type="text" name="placa" value="{{ request('placa') }}" placeholder="Ej. ABC123"
+                    <label class="block text-xs text-gray-400 mb-1">Buscar (placa, marca, línea...)</label>
+                    <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
                         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -115,7 +117,8 @@
         <div class="space-y-2">
             @forelse($vehiculos as $vehiculo)
                 @php $evcfg = $estadoVehiculo[$vehiculo->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400']; @endphp
-                <a href="{{ route('vehiculos.show', $vehiculo) }}"
+                <a href="{{ route('vehiculos.show', $vehiculo) }}" x-show="matches($el)"
+                    data-search="{{ mb_strtolower($vehiculo->placa.' '.$vehiculo->marca.' '.$vehiculo->linea.' '.$vehiculo->version.' '.$vehiculo->numero_llave) }}"
                     class="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition active:scale-[.99]">
                     @if($vehiculo->fotoUrl)
                         <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
@@ -147,6 +150,9 @@
                     No se encontraron vehículos
                 </div>
             @endforelse
+            <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+                Sin resultados para tu búsqueda
+            </div>
         </div>
     </div>
 
@@ -177,8 +183,8 @@
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
             <div>
-                <label class="block text-xs text-gray-400 mb-1">Placa</label>
-                <input type="text" name="placa" value="{{ request('placa') }}" placeholder="Ej. ABC123"
+                <label class="block text-xs text-gray-400 mb-1">Buscar (placa, marca, línea...)</label>
+                <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
                     class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
             </div>
             <div>
@@ -244,7 +250,8 @@
                 <tbody>
                     @forelse($vehiculos as $vehiculo)
                         @php $evcfg = $estadoVehiculo[$vehiculo->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400']; @endphp
-                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                        <tr x-show="matches($el)" data-search="{{ mb_strtolower($vehiculo->placa.' '.$vehiculo->marca.' '.$vehiculo->linea.' '.$vehiculo->version.' '.$vehiculo->numero_llave) }}"
+                            class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 @if($vehiculo->fotoUrl)
                                     <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
@@ -285,10 +292,15 @@
                             <td colspan="11" class="text-center p-8 text-gray-400">No se encontraron vehículos con los filtros aplicados</td>
                         </tr>
                     @endforelse
+                    <tr x-show="q.trim() !== '' && visibleCount === 0">
+                        <td colspan="11" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+</div>
 
 </div>
 

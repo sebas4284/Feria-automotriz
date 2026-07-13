@@ -11,6 +11,8 @@
     ];
 @endphp
 
+<div x-data="liveSearch()">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -33,9 +35,14 @@
         </div>
     @endif
 
+    <input type="text" x-model="q" placeholder="Buscar por nombre, email, rol o concesionario..."
+        class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+
     <div class="space-y-2">
         @forelse($usuarios as $usuario)
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
+            <div x-show="matches($el)"
+                data-search="{{ mb_strtolower($usuario->name.' '.$usuario->email.' '.$rolConfig[$usuario->rol]['label'].' '.($usuario->concesionario->nombre ?? $usuario->asesorComercial?->concesionario?->nombre ?? '')) }}"
+                class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
                 <div class="flex items-center justify-between gap-2 mb-1">
                     <p class="font-semibold text-sm truncate">{{ $usuario->name }}</p>
                     <span class="text-xs {{ $rolConfig[$usuario->rol]['badge'] }} px-2 py-0.5 rounded-full shrink-0">
@@ -66,6 +73,9 @@
         @empty
             <div class="text-center py-12 text-gray-500">No hay usuarios registrados</div>
         @endforelse
+        <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+            Sin resultados para tu búsqueda
+        </div>
     </div>
 
 </div>
@@ -88,6 +98,14 @@
     @endif
 
     <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-semibold">
+                Lista de Usuarios
+                <span class="text-sm font-normal text-gray-400 ml-2">({{ $usuarios->count() }} resultados)</span>
+            </h2>
+            <input type="text" x-model="q" placeholder="Buscar por nombre, email, rol o concesionario..."
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-72 focus:outline-none focus:border-blue-500">
+        </div>
         <table class="w-full">
             <thead class="bg-gray-800">
                 <tr>
@@ -100,7 +118,9 @@
             </thead>
             <tbody>
                 @foreach($usuarios as $usuario)
-                    <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
+                    <tr x-show="matches($el)"
+                        data-search="{{ mb_strtolower($usuario->name.' '.$usuario->email.' '.$rolConfig[$usuario->rol]['label'].' '.($usuario->concesionario->nombre ?? $usuario->asesorComercial?->concesionario?->nombre ?? '')) }}"
+                        class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">
                             <p class="font-medium">{{ $usuario->name }}</p>
                             <p class="text-xs text-gray-500 sm:hidden mt-0.5">{{ $usuario->email }}</p>
@@ -122,9 +142,14 @@
                         </td>
                     </tr>
                 @endforeach
+                <tr x-show="q.trim() !== '' && visibleCount === 0">
+                    <td colspan="5" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                </tr>
             </tbody>
         </table>
     </div>
+
+</div>
 
 </div>
 

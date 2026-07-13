@@ -2,6 +2,8 @@
 
 @section('content')
 
+<div x-data="liveSearch()">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -71,9 +73,13 @@
             <h2 class="text-base font-semibold text-gray-200">Historial</h2>
         </div>
 
+        <input type="text" x-model="q" placeholder="Buscar por comprador o vehículo..."
+            class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-2.5 text-sm mb-3 focus:outline-none focus:border-blue-500">
+
         <div class="space-y-2">
             @forelse($ventas as $venta)
-                <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
+                <div x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa) }}"
+                    class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
                     <a href="{{ route('ventas.show', $venta) }}" class="block">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <div class="flex items-center gap-2 min-w-0">
@@ -120,6 +126,9 @@
                     No hay ventas registradas
                 </div>
             @endforelse
+            <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+                Sin resultados para tu búsqueda
+            </div>
         </div>
     </div>
 
@@ -137,6 +146,14 @@
     </div>
 
     <div class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800">
+        <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-semibold">
+                Historial de Ventas
+                <span class="text-sm font-normal text-gray-400 ml-2">({{ $ventas->count() }} resultados)</span>
+            </h2>
+            <input type="text" x-model="q" placeholder="Buscar por comprador o vehículo..."
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-72 focus:outline-none focus:border-blue-500">
+        </div>
         <table class="w-full">
             <thead class="bg-gray-800">
                 <tr>
@@ -149,7 +166,8 @@
             </thead>
             <tbody>
                 @forelse($ventas as $venta)
-                    <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
+                    <tr x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa) }}"
+                        class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">{{ $venta->comprador->nombre ?? '—' }}</td>
                         <td class="p-4">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</td>
                         <td class="p-4 text-emerald-400 font-bold">$ {{ number_format($venta->valor, 0, ',', '.') }}</td>
@@ -167,9 +185,14 @@
                         <td colspan="5" class="text-center p-8 text-gray-400">No hay ventas registradas</td>
                     </tr>
                 @endforelse
+                <tr x-show="q.trim() !== '' && visibleCount === 0">
+                    <td colspan="5" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                </tr>
             </tbody>
         </table>
     </div>
+
+</div>
 
 </div>
 

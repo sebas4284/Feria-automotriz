@@ -2,6 +2,8 @@
 
 @section('content')
 
+<div x-data="liveSearch()">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -32,10 +34,15 @@
         <span class="text-xl font-bold text-blue-400">{{ $concesionarios->count() }}</span>
     </div>
 
+    {{-- Búsqueda --}}
+    <input type="text" x-model="q" placeholder="Buscar por nombre, ciudad o responsable..."
+        class="w-full bg-gray-900 border border-gray-800 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+
     {{-- Lista de tarjetas --}}
     <div class="space-y-2">
         @forelse($concesionarios as $concesionario)
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
+            <div x-show="matches($el)" data-search="{{ mb_strtolower($concesionario->nombre.' '.$concesionario->ciudad.' '.$concesionario->responsable) }}"
+                class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-indigo-400">
@@ -104,6 +111,9 @@
                 No hay concesionarios registrados
             </div>
         @endforelse
+        <div x-show="q.trim() !== '' && visibleCount === 0" class="text-center py-12 text-gray-500">
+            Sin resultados para tu búsqueda
+        </div>
     </div>
 
 </div>
@@ -120,6 +130,14 @@
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden">
+        <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-semibold">
+                Lista de Concesionarios
+                <span class="text-sm font-normal text-gray-400 ml-2">({{ $concesionarios->count() }} resultados)</span>
+            </h2>
+            <input type="text" x-model="q" placeholder="Buscar por nombre, ciudad o responsable..."
+                class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-72 focus:outline-none focus:border-blue-500">
+        </div>
         <table class="w-full">
             <thead class="bg-gray-800">
                 <tr>
@@ -133,7 +151,8 @@
             </thead>
             <tbody>
                 @foreach($concesionarios as $concesionario)
-                    <tr class="border-t border-gray-800 hover:bg-gray-800/40 transition">
+                    <tr x-show="matches($el)" data-search="{{ mb_strtolower($concesionario->nombre.' '.$concesionario->ciudad.' '.$concesionario->responsable) }}"
+                        class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">
                             <div>
                                 <p class="font-medium">{{ $concesionario->nombre }}</p>
@@ -159,9 +178,14 @@
                         </td>
                     </tr>
                 @endforeach
+                <tr x-show="q.trim() !== '' && visibleCount === 0">
+                    <td colspan="6" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                </tr>
             </tbody>
         </table>
     </div>
+
+</div>
 
 </div>
 

@@ -13,7 +13,7 @@
     ];
 @endphp
 
-<div>
+<div x-data="liveSearch('{{ addslashes(request('buscar', '')) }}')">
 
     <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
@@ -64,18 +64,13 @@
                     Sin asesor
                 </a>
             </div>
-            <form method="GET" action="{{ route('leads.index') }}" class="flex gap-2">
-                @if(request('filtro'))
-                    <input type="hidden" name="filtro" value="{{ request('filtro') }}">
-                @endif
-                <input type="text" name="buscar" value="{{ request('buscar') }}"
+            <div class="flex gap-2">
+                <input type="text" x-model="q"
                     placeholder="Buscar por nombre, email o teléfono..."
                     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
-                @if(request('buscar'))
-                    <a href="{{ route('leads.index', array_filter(['filtro' => request('filtro')])) }}"
-                        class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</a>
-                @endif
-            </form>
+                <button type="button" x-show="q" @click="q = ''"
+                    class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</button>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -97,7 +92,8 @@
                 <tbody>
                     @forelse($leads as $lead)
                         @php $cfg = $estadoConfig[$lead->estado_gestion] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $lead->estado_gestion]; @endphp
-                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                        <tr x-show="matches($el)" data-search="{{ mb_strtolower($lead->full_name.' '.$lead->email.' '.$lead->phone_number) }}"
+                            class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 <div class="font-medium">{{ $lead->full_name ?: 'Sin nombre' }}</div>
                                 <div class="text-sm text-gray-400 md:hidden">{{ $lead->email }}</div>
@@ -251,6 +247,9 @@
                             <td colspan="10" class="p-8 text-center text-gray-500">No hay leads registrados</td>
                         </tr>
                     @endforelse
+                    <tr x-show="q.trim() !== '' && visibleCount === 0">
+                        <td colspan="10" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
