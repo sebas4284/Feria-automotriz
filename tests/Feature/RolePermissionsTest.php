@@ -378,6 +378,28 @@ class RolePermissionsTest extends TestCase
         $this->assertEquals('Asignado', $lead->fresh()->estado_gestion);
     }
 
+    public function test_assigning_asesor_resets_the_vencido_clock(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = $this->makeUser('concesionario', $conc);
+        $lead = Lead::create([
+            'meta_lead_id' => 'l1',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $conc->id,
+            'assigned_at' => now()->subHours(30),
+        ]);
+
+        $this->assertTrue($lead->fresh()->vencido);
+
+        $this->actingAs($user)
+            ->patch("/leads/{$lead->id}/assign-asesor", ['asesor_comercial_id' => $asesor->id]);
+
+        $lead->refresh();
+        $this->assertFalse($lead->vencido);
+        $this->assertTrue($lead->assigned_at->gt(now()->subMinute()));
+    }
+
     public function test_assigning_asesor_does_not_downgrade_a_more_advanced_estado(): void
     {
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);

@@ -125,6 +125,7 @@ class LeadController extends Controller
         $lead->update([
             'asesor_comercial_id' => $asesor->id,
             'estado_gestion' => $lead->estado_gestion === 'Nuevo' ? 'Asignado' : $lead->estado_gestion,
+            'assigned_at' => now(),
         ]);
 
         $notifier->notifyAsesor($asesor, $lead->fresh());
