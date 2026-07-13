@@ -12,6 +12,10 @@ class VehiculoController extends Controller
     {
         $query = Vehiculo::with('concesionario')->latest();
 
+        if ($request->filled('placa')) {
+            $query->where('placa', 'like', '%' . $request->placa . '%');
+        }
+
         if ($request->filled('marca')) {
             $query->where('marca', $request->marca);
         }

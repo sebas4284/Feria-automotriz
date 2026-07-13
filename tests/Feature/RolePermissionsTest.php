@@ -164,6 +164,37 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($userA)->get("/vehiculos/{$vehB->id}/edit")->assertForbidden();
     }
 
+    public function test_concesionario_creating_vehiculo_gets_own_concesionario_forced(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $userA = $this->makeUser('concesionario', $concA);
+
+        $this->actingAs($userA)->post('/vehiculos', [
+            'concesionario_id' => $concB->id,
+            'placa' => 'CCC333',
+            'marca' => 'M',
+            'linea' => 'L',
+            'modelo' => 2024,
+            'estado' => 'Disponible',
+        ])->assertRedirect(route('vehiculos.index'));
+
+        $this->assertEquals($concA->id, Vehiculo::where('placa', 'CCC333')->first()->concesionario_id);
+    }
+
+    public function test_vehiculos_index_can_be_filtered_by_placa(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible']);
+        Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible']);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?placa=AAA');
+
+        $response->assertOk();
+        $response->assertSee('AAA111');
+        $response->assertDontSee('BBB222');
+    }
+
     public function test_concesionario_only_sees_own_clientes(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);

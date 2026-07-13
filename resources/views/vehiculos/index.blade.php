@@ -59,7 +59,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                 </svg>
                 Filtros
-                @if(request()->hasAny(['marca','estado','concesionario_id']))
+                @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
                 @endif
             </div>
@@ -70,6 +70,11 @@
         </button>
         <div x-show="open" x-collapse class="border-t border-gray-800">
             <form method="GET" action="{{ route('vehiculos.index') }}" class="p-4 space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Placa</label>
+                    <input type="text" name="placa" value="{{ request('placa') }}" placeholder="Ej. ABC123"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Marca</label>
@@ -92,7 +97,7 @@
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-sm font-medium transition">Aplicar</button>
-                    @if(request()->hasAny(['marca','estado','concesionario_id']))
+                    @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
                         <a href="{{ route('vehiculos.index') }}" class="px-4 py-2 bg-gray-800 rounded-xl text-sm text-gray-400 hover:text-white transition">Limpiar</a>
                     @endif
                 </div>
@@ -160,12 +165,17 @@
 
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-base font-semibold text-gray-300">Filtros</h2>
-            @if(request()->hasAny(['marca','estado','concesionario_id']))
+            @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
                 <a href="{{ route('vehiculos.index') }}" class="text-xs text-gray-400 hover:text-white transition">✕ Limpiar filtros</a>
             @endif
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Placa</label>
+                <input type="text" name="placa" value="{{ request('placa') }}" placeholder="Ej. ABC123"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+            </div>
             <div>
                 <label class="block text-xs text-gray-400 mb-1">Marca</label>
                 <select name="marca" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
