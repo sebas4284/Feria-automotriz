@@ -61,8 +61,14 @@ class LeadNotificationTest extends TestCase
         $concUser = $this->concUser($conc);
         $admin = User::factory()->create(['rol' => 'admin']);
 
+        $headers = [
+            'id', 'created_time', 'ad_id', 'ad_name', 'adset_id', 'adset_name', 'campaign_id', 'campaign_name',
+            'form_id', 'form_name', 'is_organic', 'platform', 'actividad_económica', 'monto_de_interés_para_aprobar',
+            'full_name', 'email', 'phone_number', 'lead_status',
+        ];
+
         $importer = app(LeadSheetImporter::class);
-        $importer->import([
+        $importer->import($headers, [
             ['l:import1', '2026-07-11T10:00:00-05:00', '', '', '', '', '', '', '', '', 'true', '', '', '', 'Cliente Prueba', 'test@test.com', '+573000000000', 'CREATED'],
         ]);
 

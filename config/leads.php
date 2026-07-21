@@ -21,7 +21,12 @@ return [
     'sync' => [
         'credentials_path' => env('GOOGLE_SHEETS_CREDENTIALS_PATH'),
         'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
-        'sheet_name' => env('GOOGLE_SHEETS_SHEET_NAME', 'Sheet1'),
+        // Nombres de pestaña separados por "|" (no ",", porque un nombre de pestaña
+        // puede contener comas, ej. "Expocarshow 2026, Julio. NEW (v3)").
+        'sheet_names' => array_filter(array_map(
+            'trim',
+            explode('|', env('GOOGLE_SHEETS_SHEET_NAMES', env('GOOGLE_SHEETS_SHEET_NAME', 'Sheet1')))
+        )),
     ],
 
 ];

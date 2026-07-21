@@ -25,6 +25,7 @@ class Lead extends Model
         'is_organic',
         'platform',
         'actividad_economica',
+        'motivo_busqueda',
         'monto_interes_aprobar',
         'email',
         'full_name',

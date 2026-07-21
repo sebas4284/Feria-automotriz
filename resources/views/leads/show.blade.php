@@ -80,6 +80,12 @@
                     <p class="text-gray-400 text-sm">Monto de interés a aprobar</p>
                     <p class="text-white">{{ $lead->monto_interes_aprobar ?? 'No registrado' }}</p>
                 </div>
+                @if($lead->motivo_busqueda)
+                    <div>
+                        <p class="text-gray-400 text-sm">Motivo de búsqueda</p>
+                        <p class="text-white">{{ $lead->motivo_busqueda }}</p>
+                    </div>
+                @endif
             </div>
         </div>
 
