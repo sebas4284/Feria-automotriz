@@ -31,7 +31,7 @@ class UsuariosSheetImporterTest extends TestCase
         $this->assertSame('asesor', $user->rol);
         $this->assertSame($asesor->id, $user->asesor_comercial_id);
         $this->assertNull($user->concesionario_id);
-        $this->assertTrue($concesionario->activo);
+        $this->assertFalse($concesionario->activo);
     }
 
     public function test_concesionario_row_creates_user_linked_by_concesionario_id(): void

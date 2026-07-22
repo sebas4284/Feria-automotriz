@@ -41,7 +41,7 @@ class UsuariosSheetImporter
         $concesionario = Concesionario::where('nombre', $nombreConcesionario)->first();
 
         if (! $concesionario) {
-            $concesionario = Concesionario::create(['nombre' => $nombreConcesionario, 'activo' => true]);
+            $concesionario = Concesionario::create(['nombre' => $nombreConcesionario, 'activo' => false]);
             $stats['concesionarios_creados']++;
         }
 
