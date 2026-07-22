@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('leads:sync-sheet')->everyMinute()->withoutOverlapping();
 Schedule::command('leads:notify-vencidos')->everyMinute()->withoutOverlapping();
+Schedule::command('usuarios:sync-sheet')->hourly()->withoutOverlapping();

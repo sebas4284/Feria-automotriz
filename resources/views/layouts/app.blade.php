@@ -103,9 +103,10 @@
                                 <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-gray-900"></span>
                             </button>
                         </div>
-                        <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm select-none">
+                        <a href="{{ route('profile.edit') }}" title="Mi perfil"
+                            class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm select-none">
                             {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                        </div>
+                        </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 text-gray-400 hover:text-red-400 transition" title="Cerrar sesión">
@@ -143,12 +144,12 @@
                                 <p class="text-sm font-medium leading-none">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-green-400 mt-0.5">En línea</p>
                             </div>
-                            <div class="relative shrink-0">
+                            <a href="{{ route('profile.edit') }}" title="Mi perfil" class="relative shrink-0">
                                 <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </div>
                                 <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full"></span>
-                            </div>
+                            </a>
                         </div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

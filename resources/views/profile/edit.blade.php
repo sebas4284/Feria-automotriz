@@ -1,29 +1,32 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+@section('content')
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+<div class="max-w-2xl mx-auto space-y-6">
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
+    <div>
+        <h1 class="text-2xl lg:text-3xl font-bold">Mi perfil</h1>
+        <p class="text-gray-400 mt-1 text-sm">Datos de tu cuenta y contraseña</p>
     </div>
-</x-app-layout>
+
+    @if (session('status') === 'must-change-password')
+        <div class="bg-amber-500/10 border border-amber-500/50 rounded-xl p-4 text-amber-400 text-sm">
+            Por seguridad debes cambiar tu contraseña antes de continuar usando el sistema.
+        </div>
+    @endif
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        @include('profile.partials.update-profile-information-form')
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        @include('profile.partials.update-password-form')
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        @include('profile.partials.delete-user-form')
+    </div>
+
+</div>
+
+@endsection

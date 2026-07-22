@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
 
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureUserHasChangedPassword::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'webhook/meta',
         ]);
