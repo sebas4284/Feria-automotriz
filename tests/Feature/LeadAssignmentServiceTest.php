@@ -45,6 +45,34 @@ class LeadAssignmentServiceTest extends TestCase
         $this->assertEqualsWithDelta(10, $totalC, 3);
     }
 
+    public function test_assign_next_does_not_make_new_concesionario_catch_up_on_old_historical_leads(): void
+    {
+        $viejo = Concesionario::create(['nombre' => 'Viejo', 'peso_asignacion' => 10, 'activo' => true]);
+        $nuevo = Concesionario::create(['nombre' => 'Nuevo', 'peso_asignacion' => 5, 'activo' => true]);
+
+        // Histórico del concesionario viejo, fuera de la ventana de reparto: no debe pesar.
+        for ($i = 0; $i < 150; $i++) {
+            $this->makeLead($viejo)->update(['assigned_at' => now()->subDays(30)]);
+        }
+
+        $service = new LeadAssignmentService();
+
+        for ($i = 0; $i < 30; $i++) {
+            $target = $service->assignNext();
+            $this->makeLead($target);
+        }
+
+        $recientesViejo = Lead::where('concesionario_id', $viejo->id)
+            ->where('assigned_at', '>=', now()->subDays(7))->count();
+        $recientesNuevo = Lead::where('concesionario_id', $nuevo->id)
+            ->where('assigned_at', '>=', now()->subDays(7))->count();
+
+        // Con pesos 10 y 5, el viejo debe recibir ~el doble que el nuevo dentro de la ventana,
+        // sin que el histórico de 150 leads fuera de la ventana lo excluya del reparto reciente.
+        $this->assertEqualsWithDelta(20, $recientesViejo, 4);
+        $this->assertEqualsWithDelta(10, $recientesNuevo, 4);
+    }
+
     public function test_assign_next_ignores_inactive_concesionarios(): void
     {
         Concesionario::create(['nombre' => 'Inactivo', 'peso_asignacion' => 5, 'activo' => false]);

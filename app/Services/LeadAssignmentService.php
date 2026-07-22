@@ -24,7 +24,10 @@ class LeadAssignmentService
             return null;
         }
 
+        $ventana = now()->subDays((int) config('leads.assignment_window_days'));
+
         $counts = Lead::whereIn('concesionario_id', $activos->pluck('id'))
+            ->where('assigned_at', '>=', $ventana)
             ->selectRaw('concesionario_id, count(*) as total')
             ->groupBy('concesionario_id')
             ->pluck('total', 'concesionario_id');
