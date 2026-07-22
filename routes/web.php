@@ -19,13 +19,17 @@ use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\PushSubscriptionController;
 
 Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
+    if (! auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return redirect()->route(auth()->user()->isAsesor() ? 'leads.index' : 'dashboard');
 });
 
 Route::get(
     '/dashboard',
     [DashboardController::class, 'index']
-)->middleware('auth')->name('dashboard');
+)->middleware(['auth', 'role:admin,concesionario,staff'])->name('dashboard');
 
 Route::resource(
     'concesionarios',

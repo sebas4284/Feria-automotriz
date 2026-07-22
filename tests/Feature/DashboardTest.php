@@ -20,14 +20,23 @@ class DashboardTest extends TestCase
         ]);
     }
 
-    public function test_dashboard_loads_for_every_role(): void
+    public function test_dashboard_loads_for_every_role_except_asesor(): void
     {
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
 
-        foreach (['admin', 'concesionario', 'asesor', 'staff'] as $rol) {
+        foreach (['admin', 'concesionario', 'staff'] as $rol) {
             $user = $this->makeUser($rol, $conc);
             $this->actingAs($user)->get('/dashboard')->assertOk();
         }
+    }
+
+    public function test_asesor_cannot_access_dashboard(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $conc->id]);
+        $user = User::factory()->create(['rol' => 'asesor', 'asesor_comercial_id' => $asesor->id]);
+
+        $this->actingAs($user)->get('/dashboard')->assertForbidden();
     }
 
     public function test_pipeline_only_counts_leads_visible_to_the_concesionario(): void
