@@ -15,19 +15,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Ventana de reparto automático
-    |--------------------------------------------------------------------------
-    |
-    | Días hacia atrás que cuentan como "reciente" al elegir a qué concesionario
-    | asignar el próximo lead (leads_recientes / peso_asignacion). Evita que un
-    | concesionario recién activado tenga que "alcanzar" el histórico completo
-    | de los demás antes de empezar a recibir su parte proporcional.
-    |
-    */
-    'assignment_window_days' => env('LEADS_ASSIGNMENT_WINDOW_DAYS', 7),
-
-    /*
-    |--------------------------------------------------------------------------
     | Sincronización con Google Sheets
     |--------------------------------------------------------------------------
     */

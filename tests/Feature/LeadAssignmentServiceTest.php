@@ -31,7 +31,7 @@ class LeadAssignmentServiceTest extends TestCase
 
         $service = new LeadAssignmentService();
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 200; $i++) {
             $target = $service->assignNext();
             $this->makeLead($target);
         }
@@ -40,37 +40,37 @@ class LeadAssignmentServiceTest extends TestCase
         $totalB = Lead::where('concesionario_id', $b->id)->count();
         $totalC = Lead::where('concesionario_id', $c->id)->count();
 
-        $this->assertEqualsWithDelta(30, $totalA, 3);
-        $this->assertEqualsWithDelta(10, $totalB, 3);
-        $this->assertEqualsWithDelta(10, $totalC, 3);
+        // Selección aleatoria ponderada: con 200 muestras, un margen de ±25 cubre
+        // ampliamente la varianza esperada (~3 desviaciones estándar) sin ser frágil.
+        $this->assertEqualsWithDelta(120, $totalA, 25);
+        $this->assertEqualsWithDelta(40, $totalB, 20);
+        $this->assertEqualsWithDelta(40, $totalC, 20);
     }
 
-    public function test_assign_next_does_not_make_new_concesionario_catch_up_on_old_historical_leads(): void
+    public function test_new_concesionario_receives_leads_immediately_without_excluding_the_old_one(): void
     {
         $viejo = Concesionario::create(['nombre' => 'Viejo', 'peso_asignacion' => 10, 'activo' => true]);
         $nuevo = Concesionario::create(['nombre' => 'Nuevo', 'peso_asignacion' => 5, 'activo' => true]);
 
-        // Histórico del concesionario viejo, fuera de la ventana de reparto: no debe pesar.
+        // Histórico grande del concesionario viejo: no debe impedir que siga recibiendo leads.
         for ($i = 0; $i < 150; $i++) {
-            $this->makeLead($viejo)->update(['assigned_at' => now()->subDays(30)]);
+            $this->makeLead($viejo);
         }
 
         $service = new LeadAssignmentService();
 
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $target = $service->assignNext();
             $this->makeLead($target);
         }
 
-        $recientesViejo = Lead::where('concesionario_id', $viejo->id)
-            ->where('assigned_at', '>=', now()->subDays(7))->count();
-        $recientesNuevo = Lead::where('concesionario_id', $nuevo->id)
-            ->where('assigned_at', '>=', now()->subDays(7))->count();
+        $nuevosViejo = Lead::where('concesionario_id', $viejo->id)->count() - 150;
+        $nuevosNuevo = Lead::where('concesionario_id', $nuevo->id)->count();
 
-        // Con pesos 10 y 5, el viejo debe recibir ~el doble que el nuevo dentro de la ventana,
-        // sin que el histórico de 150 leads fuera de la ventana lo excluya del reparto reciente.
-        $this->assertEqualsWithDelta(20, $recientesViejo, 4);
-        $this->assertEqualsWithDelta(10, $recientesNuevo, 4);
+        // En una sola tanda de 20, ambos deben recibir leads (nadie acapara el 100%).
+        $this->assertGreaterThan(0, $nuevosViejo);
+        $this->assertGreaterThan(0, $nuevosNuevo);
+        $this->assertSame(20, $nuevosViejo + $nuevosNuevo);
     }
 
     public function test_assign_next_ignores_inactive_concesionarios(): void

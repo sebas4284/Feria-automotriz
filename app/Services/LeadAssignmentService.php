@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\DB;
 class LeadAssignmentService
 {
     /**
-     * Elige el concesionario activo con menor ratio (leads_asignados / peso_asignacion),
-     * de forma que el reparto converja proporcionalmente a los pesos configurados.
+     * Elige un concesionario activo al azar, con probabilidad proporcional a su
+     * peso_asignacion. A diferencia de "dárselo siempre al más atrasado", esto
+     * evita que un concesionario acapare el 100% del reparto mientras se pone
+     * al día con el histórico de los demás: todos reciben leads desde el primer
+     * momento, y la proporción de pesos se cumple en el agregado a largo plazo.
      */
     public function assignNext(): ?Concesionario
     {
@@ -24,20 +27,20 @@ class LeadAssignmentService
             return null;
         }
 
-        $ventana = now()->subDays((int) config('leads.assignment_window_days'));
+        $pesoTotal = $activos->sum('peso_asignacion');
+        $punto = mt_rand(1, $pesoTotal);
 
-        $counts = Lead::whereIn('concesionario_id', $activos->pluck('id'))
-            ->where('assigned_at', '>=', $ventana)
-            ->selectRaw('concesionario_id, count(*) as total')
-            ->groupBy('concesionario_id')
-            ->pluck('total', 'concesionario_id');
+        $acumulado = 0;
 
-        return $activos
-            ->sortBy(fn (Concesionario $c) => [
-                ($counts[$c->id] ?? 0) / $c->peso_asignacion,
-                $c->id,
-            ])
-            ->first();
+        foreach ($activos as $concesionario) {
+            $acumulado += $concesionario->peso_asignacion;
+
+            if ($punto <= $acumulado) {
+                return $concesionario;
+            }
+        }
+
+        return $activos->last();
     }
 
     public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null): void
