@@ -193,60 +193,55 @@
     </div>
 
     {{-- Panel de filtros desktop --}}
-    <form method="GET" action="{{ route('vehiculos.index') }}" class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6">
+    <form method="GET" action="{{ route('vehiculos.index') }}" class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6">
 
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-semibold text-gray-300">Filtros</h2>
-            @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
-                <a href="{{ route('vehiculos.index') }}" class="text-xs text-gray-400 hover:text-white transition">✕ Limpiar filtros</a>
-            @endif
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5">
-            <div>
-                <label class="block text-xs text-gray-400 mb-1">Buscar (placa, marca, línea...)</label>
-                <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
-                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="w-40">
+                <label class="block text-xs text-gray-400 mb-1">Buscar</label>
+                <input type="text" name="placa" x-model="q" placeholder="Placa, marca..."
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
             </div>
-            <div>
+            <div class="w-36">
                 <label class="block text-xs text-gray-400 mb-1">Marca</label>
-                <select name="marca" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                    <option value="">Todas las marcas</option>
+                <select name="marca" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todas</option>
                     @foreach($marcas as $marca)
                         <option value="{{ $marca }}" {{ request('marca') == $marca ? 'selected' : '' }}>{{ $marca }}</option>
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div class="w-36">
                 <label class="block text-xs text-gray-400 mb-1">Estado</label>
-                <select name="estado" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                    <option value="">Todos los estados</option>
+                <select name="estado" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todos</option>
                     <option value="Disponible" {{ request('estado') == 'Disponible' ? 'selected' : '' }}>Disponible</option>
                     <option value="Reservado"  {{ request('estado') == 'Reservado'  ? 'selected' : '' }}>Reservado</option>
                     <option value="Vendido"    {{ request('estado') == 'Vendido'    ? 'selected' : '' }}>Vendido</option>
                 </select>
             </div>
-            <div>
+            <div class="w-40">
                 <label class="block text-xs text-gray-400 mb-1">Ubicación</label>
-                <select name="ubicacion" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <select name="ubicacion" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Todas</option>
                     <option value="Dentro del área" {{ request('ubicacion') == 'Dentro del área' ? 'selected' : '' }}>Dentro del área</option>
                     <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
                 </select>
             </div>
-            <div>
+            <div class="w-44">
                 <label class="block text-xs text-gray-400 mb-1">Concesionario</label>
-                <select name="concesionario_id" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <select name="concesionario_id" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
                     <option value="">Todos</option>
                     @foreach($concesionarios as $c)
                         <option value="{{ $c->id }}" {{ request('concesionario_id') == $c->id ? 'selected' : '' }}>{{ $c->nombre }}</option>
                     @endforeach
                 </select>
             </div>
-        </div>
 
-        <div class="flex justify-end">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl text-sm font-medium transition">Aplicar filtros</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-sm font-medium transition">Aplicar</button>
+
+            @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
+                <a href="{{ route('vehiculos.index') }}" class="text-xs text-gray-400 hover:text-white transition px-1 py-1.5">✕ Limpiar</a>
+            @endif
         </div>
 
     </form>
