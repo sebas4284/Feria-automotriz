@@ -11,36 +11,47 @@ use Illuminate\Support\Facades\DB;
 class LeadAssignmentService
 {
     /**
-     * Elige un concesionario activo al azar, con probabilidad proporcional a su
-     * peso_asignacion. A diferencia de "dárselo siempre al más atrasado", esto
-     * evita que un concesionario acapare el 100% del reparto mientras se pone
-     * al día con el histórico de los demás: todos reciben leads desde el primer
-     * momento, y la proporción de pesos se cumple en el agregado a largo plazo.
+     * Elige el próximo concesionario activo con "smooth weighted round-robin"
+     * (el algoritmo de balanceo de Nginx): cada concesionario acumula su peso
+     * en swrr_current_weight en cada llamada, se elige el de mayor acumulado,
+     * y a ese se le resta el peso total. Esto intercala las asignaciones según
+     * el peso configurado sin la varianza de una selección al azar: todos
+     * reciben leads regularmente y las proporciones se cumplen desde el
+     * principio, no solo en el agregado a largo plazo.
      */
     public function assignNext(): ?Concesionario
     {
-        $activos = Concesionario::where('activo', true)
-            ->where('peso_asignacion', '>', 0)
-            ->get();
+        return DB::transaction(function () {
+            $activos = Concesionario::where('activo', true)
+                ->where('peso_asignacion', '>', 0)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-        if ($activos->isEmpty()) {
-            return null;
-        }
-
-        $pesoTotal = $activos->sum('peso_asignacion');
-        $punto = mt_rand(1, $pesoTotal);
-
-        $acumulado = 0;
-
-        foreach ($activos as $concesionario) {
-            $acumulado += $concesionario->peso_asignacion;
-
-            if ($punto <= $acumulado) {
-                return $concesionario;
+            if ($activos->isEmpty()) {
+                return null;
             }
-        }
 
-        return $activos->last();
+            $pesoTotal = $activos->sum('peso_asignacion');
+
+            $seleccionado = null;
+
+            foreach ($activos as $concesionario) {
+                $concesionario->swrr_current_weight += $concesionario->peso_asignacion;
+
+                if ($seleccionado === null || $concesionario->swrr_current_weight > $seleccionado->swrr_current_weight) {
+                    $seleccionado = $concesionario;
+                }
+            }
+
+            $seleccionado->swrr_current_weight -= $pesoTotal;
+
+            foreach ($activos as $concesionario) {
+                $concesionario->save();
+            }
+
+            return $seleccionado;
+        });
     }
 
     public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null): void

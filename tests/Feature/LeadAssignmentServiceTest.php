@@ -40,11 +40,11 @@ class LeadAssignmentServiceTest extends TestCase
         $totalB = Lead::where('concesionario_id', $b->id)->count();
         $totalC = Lead::where('concesionario_id', $c->id)->count();
 
-        // Selección aleatoria ponderada: con 200 muestras, un margen de ±25 cubre
-        // ampliamente la varianza esperada (~3 desviaciones estándar) sin ser frágil.
-        $this->assertEqualsWithDelta(120, $totalA, 25);
-        $this->assertEqualsWithDelta(40, $totalB, 20);
-        $this->assertEqualsWithDelta(40, $totalC, 20);
+        // Smooth weighted round-robin converge exacto: 200 es múltiplo del peso
+        // total (5), así que las proporciones 3:1:1 se cumplen sin margen.
+        $this->assertSame(120, $totalA);
+        $this->assertSame(40, $totalB);
+        $this->assertSame(40, $totalC);
     }
 
     public function test_new_concesionario_receives_leads_immediately_without_excluding_the_old_one(): void
@@ -52,7 +52,9 @@ class LeadAssignmentServiceTest extends TestCase
         $viejo = Concesionario::create(['nombre' => 'Viejo', 'peso_asignacion' => 10, 'activo' => true]);
         $nuevo = Concesionario::create(['nombre' => 'Nuevo', 'peso_asignacion' => 5, 'activo' => true]);
 
-        // Histórico grande del concesionario viejo: no debe impedir que siga recibiendo leads.
+        // Histórico grande del concesionario viejo: con SWRR el estado del algoritmo
+        // vive en swrr_current_weight, no en el conteo de leads, así que este
+        // histórico no debe influir en nada; solo confirma que ambos siguen recibiendo.
         for ($i = 0; $i < 150; $i++) {
             $this->makeLead($viejo);
         }
