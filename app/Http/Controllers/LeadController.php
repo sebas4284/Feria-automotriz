@@ -7,11 +7,12 @@ use App\Models\Concesionario;
 use App\Models\Lead;
 use App\Services\LeadAssignmentService;
 use App\Services\LeadNotifier;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
-    public function index(Request $request)
+    private function filteredLeadsQuery(Request $request): Builder
     {
         $query = Lead::with(['concesionario', 'asesorComercial'])->visibleTo($request->user())->latest('created_time');
 
@@ -30,13 +31,22 @@ class LeadController extends Controller
             $query->whereNull('asesor_comercial_id');
         }
 
-        $leads = $query->get();
+        if ($request->user()->isAdmin() && $request->filled('concesionario_id')) {
+            $query->where('concesionario_id', $request->concesionario_id);
+        }
 
-        $totalNuevos = $leads->filter(
-            fn (Lead $lead) => ($lead->created_time ?? $lead->created_at)?->isToday()
-        )->count();
-        $totalVencidos = $leads->filter(fn (Lead $lead) => $lead->vencido)->count();
-        $totalSinAsesor = $leads->whereNull('asesor_comercial_id')->count();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $leads = $this->filteredLeadsQuery($request)->paginate(50)->withQueryString();
+
+        $totalNuevos = $this->filteredLeadsQuery($request)
+            ->whereRaw('DATE(COALESCE(created_time, created_at)) = ?', [now()->toDateString()])
+            ->count();
+        $totalVencidos = $this->filteredLeadsQuery($request)->vencido()->count();
+        $totalSinAsesor = $this->filteredLeadsQuery($request)->whereNull('asesor_comercial_id')->count();
 
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 

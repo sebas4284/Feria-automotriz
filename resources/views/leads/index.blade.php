@@ -13,7 +13,7 @@
     ];
 @endphp
 
-<div x-data="liveSearch('{{ addslashes(request('buscar', '')) }}')">
+<div>
 
     <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
@@ -31,7 +31,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Total leads</p>
-            <p class="text-2xl lg:text-4xl font-bold">{{ $leads->count() }}</p>
+            <p class="text-2xl lg:text-4xl font-bold">{{ $leads->total() }}</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Nuevos hoy</p>
@@ -50,26 +50,52 @@
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
 
         <div class="p-5 border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar')])) }}"
+            <div class="flex flex-wrap gap-2 items-center">
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'concesionario_id' => request('concesionario_id')])) }}"
                     class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') !== 'vencido' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Todos
                 </a>
-                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'vencido'])) }}"
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'vencido', 'concesionario_id' => request('concesionario_id')])) }}"
                     class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'vencido' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Vencidos
                 </a>
-                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'sin_asesor'])) }}"
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'sin_asesor', 'concesionario_id' => request('concesionario_id')])) }}"
                     class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'sin_asesor' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Sin asesor
                 </a>
+
+                @if(auth()->user()->isAdmin())
+                    <select onchange="window.location.href = this.value"
+                        class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-1.5 text-sm text-gray-300 focus:outline-none focus:border-blue-500">
+                        <option value="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => request('filtro')])) }}">
+                            Todos los concesionarios
+                        </option>
+                        @foreach($concesionarios as $c)
+                            <option value="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => request('filtro'), 'concesionario_id' => $c->id])) }}"
+                                @selected((string) request('concesionario_id') === (string) $c->id)>
+                                {{ $c->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
             <div class="flex gap-2">
-                <input type="text" x-model="q"
-                    placeholder="Buscar por nombre, email o teléfono..."
-                    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
-                <button type="button" x-show="q" @click="q = ''"
-                    class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</button>
+                <form method="GET" action="{{ route('leads.index') }}" class="flex gap-2">
+                    @if(request('filtro'))
+                        <input type="hidden" name="filtro" value="{{ request('filtro') }}">
+                    @endif
+                    @if(request('concesionario_id'))
+                        <input type="hidden" name="concesionario_id" value="{{ request('concesionario_id') }}">
+                    @endif
+                    <input type="text" name="buscar" value="{{ request('buscar') }}"
+                        oninput="clearTimeout(window.__buscarLeadsTimeout); window.__buscarLeadsTimeout = setTimeout(() => this.form.submit(), 500)"
+                        placeholder="Buscar por nombre, email o teléfono..."
+                        class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-blue-500">
+                    @if(request('buscar'))
+                        <a href="{{ route('leads.index', array_filter(['filtro' => request('filtro'), 'concesionario_id' => request('concesionario_id')])) }}"
+                            class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-xl transition">✕</a>
+                    @endif
+                </form>
             </div>
         </div>
 
@@ -92,8 +118,7 @@
                 <tbody>
                     @forelse($leads as $lead)
                         @php $cfg = $estadoConfig[$lead->estado_gestion] ?? ['badge' => 'bg-gray-700 text-gray-300', 'label' => $lead->estado_gestion]; @endphp
-                        <tr x-show="matches($el)" data-search="{{ mb_strtolower($lead->full_name.' '.$lead->email.' '.$lead->phone_number) }}"
-                            class="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 <div class="font-medium">{{ $lead->full_name ?: 'Sin nombre' }}</div>
                                 <div class="text-sm text-gray-400 md:hidden">{{ $lead->email }}</div>
@@ -244,15 +269,20 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="p-8 text-center text-gray-500">No hay leads registrados</td>
+                            <td colspan="10" class="p-8 text-center text-gray-500">
+                                {{ request()->anyFilled(['buscar', 'filtro', 'concesionario_id']) ? 'Sin resultados para tu búsqueda' : 'No hay leads registrados' }}
+                            </td>
                         </tr>
                     @endforelse
-                    <tr x-show="q.trim() !== '' && visibleCount === 0">
-                        <td colspan="10" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
+
+        @if($leads->hasPages())
+            <div class="p-5 border-t border-gray-800">
+                {{ $leads->links() }}
+            </div>
+        @endif
 
     </div>
 
