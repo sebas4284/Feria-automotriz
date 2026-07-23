@@ -7,6 +7,7 @@ use App\Models\VehiculoCatalogo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class VehiculoController extends Controller
 {
@@ -42,6 +43,10 @@ class VehiculoController extends Controller
             $query->where('estado', $request->estado);
         }
 
+        if ($request->filled('ubicacion')) {
+            $query->where('ubicacion', $request->ubicacion);
+        }
+
         if ($request->filled('concesionario_id')) {
             $query->where('concesionario_id', $request->concesionario_id);
         }
@@ -54,9 +59,20 @@ class VehiculoController extends Controller
         $modeloMin      = (int) (Vehiculo::min('modelo') ?? 2000);
         $modeloMax      = (int) (Vehiculo::max('modelo') ?? now()->year);
 
+        $concesionarioCupo = null;
+        $cupoUsadoActual = null;
+        $user = $request->user();
+        $concesionarioIdCupo = $user->isAdmin() ? $request->concesionario_id : $user->concesionario_id;
+
+        if ($concesionarioIdCupo) {
+            $concesionarioCupo = Concesionario::find($concesionarioIdCupo);
+            $cupoUsadoActual = $this->cupoUsado($concesionarioIdCupo);
+        }
+
         return view('vehiculos.index', compact(
             'vehiculos', 'marcas', 'concesionarios',
-            'precioMin', 'precioMax', 'modeloMin', 'modeloMax'
+            'precioMin', 'precioMax', 'modeloMin', 'modeloMax',
+            'concesionarioCupo', 'cupoUsadoActual'
         ));
     }
 
@@ -132,10 +148,16 @@ class VehiculoController extends Controller
             'precio_expocar' => 'nullable|numeric',
 
             'estado' => 'required|string',
+
+            'ubicacion' => 'required|in:Dentro del área,Fuera del área',
         ]);
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
+
+        if ($data['concesionario_id'] && $request->ubicacion === 'Dentro del área' && $request->estado !== 'Vendido') {
+            $this->validarCupoFeria($data['concesionario_id']);
+        }
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('vehiculos', 'public');
@@ -240,10 +262,16 @@ class VehiculoController extends Controller
             'precio_expocar' => 'nullable|numeric',
 
             'estado' => 'required|string',
+
+            'ubicacion' => 'required|in:Dentro del área,Fuera del área',
         ]);
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
+
+        if ($data['concesionario_id'] && $request->ubicacion === 'Dentro del área' && $request->estado !== 'Vendido') {
+            $this->validarCupoFeria($data['concesionario_id'], $vehiculo->id);
+        }
 
         if ($request->hasFile('foto')) {
             if ($vehiculo->foto) {
@@ -279,6 +307,41 @@ class VehiculoController extends Controller
         return redirect()
             ->route('vehiculos.index')
             ->with('success', 'Vehículo eliminado correctamente');
+    }
+
+    private function cupoUsado(int $concesionarioId, ?int $excluirVehiculoId = null): int
+    {
+        return Vehiculo::where('concesionario_id', $concesionarioId)
+            ->where('ubicacion', 'Dentro del área')
+            ->where('estado', '!=', 'Vendido')
+            ->when($excluirVehiculoId, fn ($q) => $q->where('id', '!=', $excluirVehiculoId))
+            ->count();
+    }
+
+    private function validarCupoFeria(int $concesionarioId, ?int $excluirVehiculoId = null): void
+    {
+        $concesionario = Concesionario::find($concesionarioId);
+
+        if ($concesionario && $concesionario->cupo_feria !== null) {
+            $usado = $this->cupoUsado($concesionarioId, $excluirVehiculoId);
+
+            if ($usado >= $concesionario->cupo_feria) {
+                throw ValidationException::withMessages([
+                    'ubicacion' => "Este concesionario ya alcanzó su cupo de feria ({$usado}/{$concesionario->cupo_feria}).",
+                ]);
+            }
+        }
+
+        $totalGlobal = Vehiculo::where('ubicacion', 'Dentro del área')
+            ->where('estado', '!=', 'Vendido')
+            ->when($excluirVehiculoId, fn ($q) => $q->where('id', '!=', $excluirVehiculoId))
+            ->count();
+
+        if ($totalGlobal >= config('feria.cupo_total')) {
+            throw ValidationException::withMessages([
+                'ubicacion' => 'Se alcanzó el cupo total de la feria (' . config('feria.cupo_total') . ').',
+            ]);
+        }
     }
 
     private function catalogoVehiculos()

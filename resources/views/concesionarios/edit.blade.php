@@ -110,6 +110,21 @@
                     class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-blue-500">
             </div>
 
+            <!-- Cupo feria -->
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">
+                    Cupo Feria
+                </label>
+
+                <input
+                    type="number"
+                    name="cupo_feria"
+                    value="{{ $concesionario->cupo_feria }}"
+                    min="0"
+                    placeholder="Sin límite"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-blue-500">
+            </div>
+
             <!-- Estado -->
             <div>
                 <label class="block text-sm text-gray-400 mb-2">

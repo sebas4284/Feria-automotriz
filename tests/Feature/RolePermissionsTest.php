@@ -193,6 +193,7 @@ class RolePermissionsTest extends TestCase
             'linea' => 'L',
             'modelo' => 2024,
             'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
         ])->assertRedirect(route('vehiculos.index'));
 
         $this->assertEquals($concA->id, Vehiculo::where('placa', 'CCC333')->first()->concesionario_id);

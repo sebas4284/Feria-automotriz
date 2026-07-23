@@ -8,6 +8,17 @@
         Nuevo Vehículo
     </h1>
 
+    @if ($errors->any())
+        <div class="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4">
+            <p class="text-red-400 font-semibold mb-2">Errores:</p>
+            <ul class="text-red-400 text-sm list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form
         action="{{ route('vehiculos.store') }}"
         method="POST"

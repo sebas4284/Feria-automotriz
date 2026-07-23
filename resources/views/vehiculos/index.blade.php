@@ -31,6 +31,19 @@
         @endcan
     </div>
 
+    @if($concesionarioCupo)
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-xs text-gray-500 mb-1">Cupo feria — {{ $concesionarioCupo->nombre }}</p>
+            @if($concesionarioCupo->cupo_feria !== null)
+                <p class="text-lg font-bold {{ $cupoUsadoActual >= $concesionarioCupo->cupo_feria ? 'text-red-400' : 'text-white' }}">
+                    {{ $cupoUsadoActual }} / {{ $concesionarioCupo->cupo_feria }} cupos usados
+                </p>
+            @else
+                <p class="text-lg font-bold text-white">{{ $cupoUsadoActual }} cupos usados (sin límite configurado)</p>
+            @endif
+        </div>
+    @endif
+
     {{-- Contadores por estado --}}
     <div class="grid grid-cols-3 gap-3">
         @php
@@ -61,7 +74,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                 </svg>
                 Filtros
-                @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
+                @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
                 @endif
             </div>
@@ -96,10 +109,18 @@
                             <option value="Vendido"    {{ request('estado') == 'Vendido'    ? 'selected' : '' }}>Vendido</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Ubicación</label>
+                        <select name="ubicacion" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Todas</option>
+                            <option value="Dentro del área" {{ request('ubicacion') == 'Dentro del área' ? 'selected' : '' }}>Dentro del área</option>
+                            <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-sm font-medium transition">Aplicar</button>
-                    @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
+                    @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
                         <a href="{{ route('vehiculos.index') }}" class="px-4 py-2 bg-gray-800 rounded-xl text-sm text-gray-400 hover:text-white transition">Limpiar</a>
                     @endif
                 </div>
@@ -176,12 +197,12 @@
 
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-base font-semibold text-gray-300">Filtros</h2>
-            @if(request()->hasAny(['placa','marca','estado','concesionario_id']))
+            @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
                 <a href="{{ route('vehiculos.index') }}" class="text-xs text-gray-400 hover:text-white transition">✕ Limpiar filtros</a>
             @endif
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5">
             <div>
                 <label class="block text-xs text-gray-400 mb-1">Buscar (placa, marca, línea...)</label>
                 <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
@@ -203,6 +224,14 @@
                     <option value="Disponible" {{ request('estado') == 'Disponible' ? 'selected' : '' }}>Disponible</option>
                     <option value="Reservado"  {{ request('estado') == 'Reservado'  ? 'selected' : '' }}>Reservado</option>
                     <option value="Vendido"    {{ request('estado') == 'Vendido'    ? 'selected' : '' }}>Vendido</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">Ubicación</label>
+                <select name="ubicacion" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todas</option>
+                    <option value="Dentro del área" {{ request('ubicacion') == 'Dentro del área' ? 'selected' : '' }}>Dentro del área</option>
+                    <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
                 </select>
             </div>
             <div>
@@ -244,6 +273,7 @@
                         <th class="p-4 hidden md:table-cell">Concesionario</th>
                         <th class="p-4 hidden sm:table-cell">Precio Expocar</th>
                         <th class="p-4">Estado</th>
+                        <th class="p-4 hidden lg:table-cell">Ubicación</th>
                         <th class="p-4">Acciones</th>
                     </tr>
                 </thead>
@@ -277,6 +307,11 @@
                             <td class="p-4">
                                 <span class="text-xs {{ $evcfg['badge'] }} px-3 py-1 rounded-full">{{ $vehiculo->estado }}</span>
                             </td>
+                            <td class="p-4 hidden lg:table-cell">
+                                <span class="text-xs {{ $vehiculo->ubicacion == 'Dentro del área' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-700 text-gray-300' }} px-3 py-1 rounded-full whitespace-nowrap">
+                                    {{ $vehiculo->ubicacion }}
+                                </span>
+                            </td>
                             <td class="p-4">
                                 @include('partials._acciones', [
                                     'modelo'      => $vehiculo,
@@ -289,11 +324,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center p-8 text-gray-400">No se encontraron vehículos con los filtros aplicados</td>
+                            <td colspan="12" class="text-center p-8 text-gray-400">No se encontraron vehículos con los filtros aplicados</td>
                         </tr>
                     @endforelse
                     <tr x-show="q.trim() !== '' && visibleCount === 0">
-                        <td colspan="11" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                        <td colspan="12" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
                     </tr>
                 </tbody>
             </table>

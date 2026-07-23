@@ -16,6 +16,7 @@ class Concesionario extends Model
     'email',
     'responsable',
     'peso_asignacion',
+    'cupo_feria',
     'activo'
 ];
 protected $casts = [

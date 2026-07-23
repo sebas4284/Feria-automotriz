@@ -62,7 +62,9 @@ class Vehiculo extends Model
 
         'precio_expocar',
 
-        'estado'
+        'estado',
+
+        'ubicacion'
     ];
     public function getFotoUrlAttribute(): ?string
     {

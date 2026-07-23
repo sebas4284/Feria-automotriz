@@ -30,6 +30,9 @@
                 <input type="number" name="peso_asignacion" value="1" min="1" placeholder="Peso de asignación"
                     class="bg-gray-800 rounded-xl p-3">
 
+                <input type="number" name="cupo_feria" min="0" placeholder="Cupo feria (opcional)"
+                    class="bg-gray-800 rounded-xl p-3">
+
             </div>
 
             <button class="mt-6 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl">

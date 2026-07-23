@@ -28,7 +28,10 @@ class ConcesionarioController extends Controller
             'nombre' => 'required'
         ]);
 
-        Concesionario::create($request->all());
+        $data = $request->all();
+        $data['cupo_feria'] = $request->cupo_feria !== null && $request->cupo_feria !== '' ? $request->cupo_feria : null;
+
+        Concesionario::create($data);
 
         return redirect()
             ->route('concesionarios.index')
@@ -68,6 +71,7 @@ class ConcesionarioController extends Controller
         'email' => $request->email,
         'responsable' => $request->responsable,
         'peso_asignacion' => $request->peso_asignacion,
+        'cupo_feria' => $request->cupo_feria !== null && $request->cupo_feria !== '' ? $request->cupo_feria : null,
         'activo' => $request->has('activo')
     ]);
 

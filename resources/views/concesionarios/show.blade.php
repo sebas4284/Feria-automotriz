@@ -57,6 +57,10 @@
                         <p class="text-white font-medium text-lg">{{ $concesionario->peso_asignacion }}</p>
                     </div>
                     <div>
+                        <p class="text-gray-400 text-sm">Cupo feria</p>
+                        <p class="text-white font-medium text-lg">{{ $concesionario->cupo_feria ?? 'Sin límite' }}</p>
+                    </div>
+                    <div>
                         <p class="text-gray-400 text-sm">Estado</p>
                         <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium {{ $concesionario->activo ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400' }}">
                             {{ $concesionario->activo ? 'Activo' : 'Inactivo' }}

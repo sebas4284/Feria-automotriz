@@ -440,5 +440,21 @@
 
 </select>
 
+<select
+    name="ubicacion"
+    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+
+    <option value="Dentro del área"
+        @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Dentro del área')>
+        Dentro del área (ocupa cupo de feria)
+    </option>
+
+    <option value="Fuera del área"
+        @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Fuera del área')>
+        Fuera del área (no ocupa cupo)
+    </option>
+
+</select>
+
 
 </div>

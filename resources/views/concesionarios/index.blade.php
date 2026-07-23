@@ -75,6 +75,12 @@
                             <p class="text-xs text-gray-300 font-medium">{{ $concesionario->peso_asignacion }}</p>
                         </div>
                     @endif
+                    @if($concesionario->cupo_feria !== null)
+                        <div>
+                            <p class="text-xs text-gray-600">Cupo feria</p>
+                            <p class="text-xs text-gray-300 font-medium">{{ $concesionario->cupo_feria }}</p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="flex gap-2 pt-3 border-t border-gray-800">
@@ -144,6 +150,7 @@
                     <th class="p-4 text-left">Nombre</th>
                     <th class="p-4 text-left hidden sm:table-cell">Ciudad</th>
                     <th class="p-4 text-left hidden sm:table-cell">Peso</th>
+                    <th class="p-4 text-left hidden sm:table-cell">Cupo feria</th>
                     <th class="p-4 text-left hidden md:table-cell">Responsable</th>
                     <th class="p-4 text-left">Estado</th>
                     <th class="p-4 text-left">Acciones</th>
@@ -161,6 +168,7 @@
                         </td>
                         <td class="p-4 hidden sm:table-cell">{{ $concesionario->ciudad }}</td>
                         <td class="p-4 hidden sm:table-cell">{{ $concesionario->peso_asignacion }}</td>
+                        <td class="p-4 hidden sm:table-cell">{{ $concesionario->cupo_feria ?? 'Sin límite' }}</td>
                         <td class="p-4 hidden md:table-cell">{{ $concesionario->responsable }}</td>
                         <td class="p-4">
                             @if($concesionario->activo)

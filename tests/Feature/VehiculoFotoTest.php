@@ -24,6 +24,7 @@ class VehiculoFotoTest extends TestCase
             'linea' => 'L',
             'modelo' => 2024,
             'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
             'foto' => UploadedFile::fake()->image('carro.jpg'),
         ])->assertRedirect(route('vehiculos.index'));
 
@@ -48,6 +49,7 @@ class VehiculoFotoTest extends TestCase
             'linea' => 'L',
             'modelo' => 2024,
             'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
             'foto' => UploadedFile::fake()->image('nueva.jpg'),
         ])->assertRedirect(route('vehiculos.show', $vehiculo));
 
@@ -72,6 +74,7 @@ class VehiculoFotoTest extends TestCase
             'linea' => 'L',
             'modelo' => 2024,
             'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
         ])->assertRedirect(route('vehiculos.show', $vehiculo));
 
         $this->assertEquals($path, $vehiculo->fresh()->foto);
