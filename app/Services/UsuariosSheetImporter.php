@@ -8,6 +8,8 @@ use App\Models\User;
 
 class UsuariosSheetImporter
 {
+    private const PASSWORD_POR_DEFECTO = 'expocar2026';
+
     /**
      * Ubica la fila de encabezado real dentro de un rango leído crudo:
      * la fila donde la primera celda es "Nombre" (algunas pestañas traen
@@ -54,7 +56,6 @@ class UsuariosSheetImporter
             $email = strtolower($get('email'));
             $rol = strtolower($get('rol'));
             $cedula = preg_replace('/\D/', '', $get('cedula'));
-            $password = $get('password');
 
             if ($nombre === '' || $email === '') {
                 $stats['omitidos'][] = "{$nombreConcesionario}: fila sin nombre o email (\"{$nombre}\")";
@@ -65,8 +66,6 @@ class UsuariosSheetImporter
                 $stats['omitidos'][] = "{$nombreConcesionario}: {$nombre} <{$email}> tiene un rol no reconocido (\"{$rol}\")";
                 continue;
             }
-
-            $passwordFinal = $this->normalizarPassword($password);
 
             $asesorComercialId = null;
 
@@ -86,22 +85,23 @@ class UsuariosSheetImporter
 
             $existente = User::where('email', $email)->first();
 
+            // La contraseña siempre queda en el valor por defecto al sincronizar,
+            // tanto para usuarios nuevos como existentes, y se les exige cambiarla
+            // en su próximo ingreso.
             $datos = [
                 'name' => $nombre,
                 'rol' => $rol,
                 'concesionario_id' => $rol === 'concesionario' ? $concesionario->id : null,
                 'asesor_comercial_id' => $asesorComercialId,
+                'password' => self::PASSWORD_POR_DEFECTO,
+                'must_change_password' => true,
             ];
 
             if ($existente) {
                 $existente->update($datos);
                 $stats['usuarios_actualizados']++;
             } else {
-                User::create($datos + [
-                    'email' => $email,
-                    'password' => $passwordFinal,
-                    'must_change_password' => true,
-                ]);
+                User::create($datos + ['email' => $email]);
                 $stats['usuarios_creados']++;
             }
         }
@@ -118,7 +118,6 @@ class UsuariosSheetImporter
         $aliases = [
             'nombre' => ['nombre'],
             'email' => ['email'],
-            'password' => ['contraseña', 'contrasena'],
             'cedula' => ['cedula', 'cédula'],
             'rol' => ['rol'],
         ];
@@ -139,18 +138,5 @@ class UsuariosSheetImporter
         }
 
         return $map;
-    }
-
-    private function normalizarPassword(string $password): string
-    {
-        if ($password === '') {
-            $password = 'expocar2026';
-        }
-
-        while (strlen($password) < 8) {
-            $password .= $password;
-        }
-
-        return $password;
     }
 }
