@@ -4,6 +4,32 @@
     Información General
 </h2>
 
+<div
+    x-data="{
+        catalogo: @json($catalogoVehiculos),
+        marca: @js(old('marca', $vehiculo->marca ?? '')),
+        linea: @js(old('linea', $vehiculo->linea ?? '')),
+        version: @js(old('version', $vehiculo->version ?? '')),
+        get marcas() {
+            return [...new Set(this.catalogo.map(f => f.marca))].sort();
+        },
+        get lineas() {
+            return [...new Set(this.catalogo.filter(f => f.marca === this.marca).map(f => f.linea))].sort();
+        },
+        get versiones() {
+            return [...new Set(this.catalogo.filter(f => f.marca === this.marca && f.linea === this.linea).map(f => f.version))].sort();
+        },
+        aplicarFicha() {
+            const ficha = this.catalogo.find(f => f.marca === this.marca && f.linea === this.linea && f.version === this.version);
+            if (ficha) {
+                this.$refs.clase_vehiculo.value = ficha.clase_vehiculo;
+                this.$refs.cc.value = ficha.cc;
+                this.$refs.combustible.value = ficha.combustible;
+            }
+        },
+    }"
+>
+
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
 
@@ -64,11 +90,16 @@
         Marca
     </label>
 
-    <input
-        type="text"
+    <select
         name="marca"
-        value="{{ old('marca', $vehiculo->marca ?? '') }}"
+        x-model="marca"
+        @change="linea = ''; version = ''"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        <option value="">Seleccionar</option>
+        <template x-for="m in marcas" :key="m">
+            <option :value="m" x-text="m" :selected="m === marca"></option>
+        </template>
+    </select>
 </div>
 
 <div>
@@ -76,11 +107,17 @@
         Línea
     </label>
 
-    <input
-        type="text"
+    <select
         name="linea"
-        value="{{ old('linea', $vehiculo->linea ?? '') }}"
-        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        x-model="linea"
+        :disabled="!marca"
+        @change="version = ''"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 disabled:opacity-50">
+        <option value="">Seleccionar</option>
+        <template x-for="l in lineas" :key="l">
+            <option :value="l" x-text="l" :selected="l === linea"></option>
+        </template>
+    </select>
 </div>
 
 <div>
@@ -88,11 +125,17 @@
         Versión
     </label>
 
-    <input
-        type="text"
+    <select
         name="version"
-        value="{{ old('version', $vehiculo->version ?? '') }}"
-        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        x-model="version"
+        :disabled="!linea"
+        @change="aplicarFicha()"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 disabled:opacity-50">
+        <option value="">Seleccionar</option>
+        <template x-for="v in versiones" :key="v">
+            <option :value="v" x-text="v" :selected="v === version"></option>
+        </template>
+    </select>
 </div>
 
 <div>
@@ -100,11 +143,14 @@
         Modelo
     </label>
 
-    <input
-        type="text"
+    <select
         name="modelo"
-        value="{{ old('modelo', $vehiculo->modelo ?? '') }}"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        <option value="">Seleccionar</option>
+        @for ($anio = now()->year + 1; $anio >= 1995; $anio--)
+            <option value="{{ $anio }}" @selected(old('modelo', $vehiculo->modelo ?? '') == $anio)>{{ $anio }}</option>
+        @endfor
+    </select>
 </div>
 
 <div>
@@ -140,16 +186,30 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
 
-<input
-    type="text"
+@php
+    $coloresDisponibles = ['Azul', 'Blanco', 'Gris', 'Negro', 'Plata', 'Rojo'];
+    $colorActual = old('color', $vehiculo->color ?? '');
+
+    $combustiblesDisponibles = ['Gasolina', 'ACPM (Diésel)', 'Híbrido'];
+    $combustibleActual = old('combustible', $vehiculo->combustible ?? '');
+@endphp
+
+<select
     name="color"
-    placeholder="Color"
-    value="{{ old('color', $vehiculo->color ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    <option value="">Color</option>
+    @foreach($coloresDisponibles as $c)
+        <option value="{{ $c }}" @selected($colorActual == $c)>{{ $c }}</option>
+    @endforeach
+    @if($colorActual && ! in_array($colorActual, $coloresDisponibles, true))
+        <option value="{{ $colorActual }}" selected>{{ $colorActual }}</option>
+    @endif
+</select>
 
 <input
     type="text"
     name="clase_vehiculo"
+    x-ref="clase_vehiculo"
     placeholder="Clase de Vehículo"
     value="{{ old('clase_vehiculo', $vehiculo->clase_vehiculo ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
@@ -164,16 +224,23 @@
 <input
     type="number"
     name="cc"
+    x-ref="cc"
     placeholder="CC"
     value="{{ old('cc', $vehiculo->cc ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
-<input
-    type="text"
+<select
     name="combustible"
-    placeholder="Combustible"
-    value="{{ old('combustible', $vehiculo->combustible ?? '') }}"
+    x-ref="combustible"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    <option value="">Combustible</option>
+    @foreach($combustiblesDisponibles as $c)
+        <option value="{{ $c }}" @selected($combustibleActual == $c)>{{ $c }}</option>
+    @endforeach
+    @if($combustibleActual && ! in_array($combustibleActual, $combustiblesDisponibles, true))
+        <option value="{{ $combustibleActual }}" selected>{{ $combustibleActual }}</option>
+    @endif
+</select>
 
 <select
     name="transmision"
@@ -181,14 +248,19 @@
 
     <option value="">Transmisión</option>
 
-    <option value="Manual"
-        @selected(old('transmision', $vehiculo->transmision ?? '') == 'Manual')>
-        Manual
+    <option value="Mecánica"
+        @selected(old('transmision', $vehiculo->transmision ?? '') == 'Mecánica')>
+        Mecánica
     </option>
 
     <option value="Automática"
         @selected(old('transmision', $vehiculo->transmision ?? '') == 'Automática')>
         Automática
+    </option>
+
+    <option value="CVT"
+        @selected(old('transmision', $vehiculo->transmision ?? '') == 'CVT')>
+        CVT
     </option>
 
 </select>
@@ -200,6 +272,8 @@
     value="{{ old('kilometraje', $vehiculo->kilometraje ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
+
+</div>
 
 </div>
 
@@ -229,12 +303,21 @@
     <label class="block mb-2 text-sm text-gray-400">
         Ciudad Matrícula
     </label>
-<input
-    type="text"
-    name="ciudad_matricula"
-    placeholder="Ciudad Matrícula"
-    value="{{ old('ciudad_matricula', $vehiculo->ciudad_matricula ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    @php
+        $ciudadesDisponibles = ['Barranquilla', 'Bogotá D.C.', 'Bucaramanga', 'Cali', 'Cartagena', 'Cúcuta', 'Medellín', 'Pereira'];
+        $ciudadActual = old('ciudad_matricula', $vehiculo->ciudad_matricula ?? '');
+    @endphp
+    <select
+        name="ciudad_matricula"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        <option value="">Seleccionar</option>
+        @foreach($ciudadesDisponibles as $c)
+            <option value="{{ $c }}" @selected($ciudadActual == $c)>{{ $c }}</option>
+        @endforeach
+        @if($ciudadActual && ! in_array($ciudadActual, $ciudadesDisponibles, true))
+            <option value="{{ $ciudadActual }}" selected>{{ $ciudadActual }}</option>
+        @endif
+    </select>
 </div>
 <div>
     <label class="block mb-2 text-sm text-gray-400">

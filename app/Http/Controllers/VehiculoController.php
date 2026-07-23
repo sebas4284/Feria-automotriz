@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vehiculo;
+use App\Models\VehiculoCatalogo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
 use Illuminate\Support\Facades\Storage;
@@ -64,10 +65,11 @@ class VehiculoController extends Controller
         $this->authorize('create', Vehiculo::class);
 
         $concesionarios = $this->concesionariosDisponibles();
+        $catalogoVehiculos = $this->catalogoVehiculos();
 
         return view(
             'vehiculos.create',
-            compact('concesionarios')
+            compact('concesionarios', 'catalogoVehiculos')
         );
     }
 
@@ -164,12 +166,14 @@ class VehiculoController extends Controller
         $this->authorize('update', $vehiculo);
 
         $concesionarios = $this->concesionariosDisponibles();
+        $catalogoVehiculos = $this->catalogoVehiculos();
 
         return view(
             'vehiculos.edit',
             compact(
                 'vehiculo',
-                'concesionarios'
+                'concesionarios',
+                'catalogoVehiculos'
             )
         );
     }
@@ -275,6 +279,12 @@ class VehiculoController extends Controller
         return redirect()
             ->route('vehiculos.index')
             ->with('success', 'Vehículo eliminado correctamente');
+    }
+
+    private function catalogoVehiculos()
+    {
+        return VehiculoCatalogo::orderBy('marca')->orderBy('linea')->orderBy('version')
+            ->get(['marca', 'linea', 'version', 'clase_vehiculo', 'cc', 'combustible', 'transmision']);
     }
 
     private function concesionariosDisponibles()
