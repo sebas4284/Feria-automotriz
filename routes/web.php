@@ -15,6 +15,7 @@ use App\Http\Controllers\AsesorComercialController;
 use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
+use App\Http\Controllers\EstrategiaController;
 use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\PushSubscriptionController;
 
@@ -91,6 +92,11 @@ Route::resource('usuarios', UserController::class)
 Route::get('/estadisticas', [EstadisticasController::class, 'index'])
     ->name('estadisticas.index')
     ->middleware(['auth', 'role:admin,concesionario']);
+
+//Estrategia de ventas
+Route::get('/estrategia', [EstrategiaController::class, 'index'])
+    ->name('estrategia.index')
+    ->middleware(['auth', 'role:admin']);
 
 //Autenticación
 Route::middleware('auth')->group(function () {
