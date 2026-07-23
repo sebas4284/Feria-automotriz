@@ -5,11 +5,11 @@
 </h2>
 
 <div
-    x-data='{
-        catalogo: @json($catalogoVehiculos),
-        marca: @js(old("marca", $vehiculo->marca ?? "")),
-        linea: @js(old("linea", $vehiculo->linea ?? "")),
-        version: @js(old("version", $vehiculo->version ?? "")),
+    x-data="{
+        catalogo: @js($catalogoVehiculos),
+        marca: @js(old('marca', $vehiculo->marca ?? '')),
+        linea: @js(old('linea', $vehiculo->linea ?? '')),
+        version: @js(old('version', $vehiculo->version ?? '')),
         get marcas() {
             return [...new Set(this.catalogo.map(f => f.marca))].sort();
         },
@@ -27,7 +27,7 @@
                 this.$refs.combustible.value = ficha.combustible;
             }
         },
-    }'
+    }"
 >
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
