@@ -3,8 +3,18 @@
 # Este archivo redirige internamente todo el tráfico hacia /public, sin
 # exponer app/, .env, vendor/, etc. y sin cambiar la URL visible.
 
+# Evita que Apache liste el contenido de la raíz (app/, vendor/, .env, etc.)
+# si por algún motivo la regla de reescritura de abajo no llega a aplicarse.
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ /public/$1 [L]
 </IfModule>
+
+# Respaldo: si mod_rewrite no está habilitado en el hosting (o el .htaccess
+# no se procesa por AllowOverride), no hay ninguna regla que redirija a
+# /public y Apache responde 403 al no poder listar la raíz ni encontrar un
+# index. El index.php de la raíz (ver ./index.php) hace de front controller
+# alterno para que el sitio siga funcionando en ese escenario.
