@@ -5,7 +5,8 @@
 <div class="max-w-3xl mx-auto">
 
     <div class="mb-6">
-        <h1 class="text-2xl lg:text-3xl font-bold">Marcas</h1>
+        <a href="{{ route('vehiculos.index') }}" class="text-sm text-blue-400 hover:underline">&larr; Volver a Vehículos</a>
+        <h1 class="text-2xl lg:text-3xl font-bold mt-2">Marcas</h1>
         <p class="text-gray-400 text-sm mt-0.5">Marcas disponibles para seleccionar al crear un vehículo</p>
     </div>
 
