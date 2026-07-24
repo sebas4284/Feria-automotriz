@@ -64,7 +64,7 @@ class UsuariosSheetImporterTest extends TestCase
         $this->assertDatabaseHas('asesores_comerciales', ['cedula' => '854950']);
     }
 
-    public function test_new_user_gets_the_default_password_and_must_change_it(): void
+    public function test_new_user_gets_the_default_password(): void
     {
         $importer = app(UsuariosSheetImporter::class);
 
@@ -75,7 +75,6 @@ class UsuariosSheetImporterTest extends TestCase
         $user = User::where('email', 'efrain@example.com')->firstOrFail();
 
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('expocar2026', $user->password));
-        $this->assertTrue($user->must_change_password);
     }
 
     public function test_rows_with_missing_email_or_unknown_role_are_skipped_and_reported(): void
@@ -91,7 +90,7 @@ class UsuariosSheetImporterTest extends TestCase
         $this->assertCount(2, $stats['omitidos']);
     }
 
-    public function test_running_import_twice_does_not_duplicate_and_resets_password_to_default(): void
+    public function test_running_import_twice_does_not_duplicate_or_reset_password(): void
     {
         $importer = app(UsuariosSheetImporter::class);
 
@@ -100,7 +99,7 @@ class UsuariosSheetImporterTest extends TestCase
         ]);
 
         $user = User::where('email', 'dahiana@example.com')->firstOrFail();
-        $user->update(['password' => 'contraseña-elegida-por-el-usuario', 'must_change_password' => false]);
+        $user->update(['password' => 'contraseña-elegida-por-el-usuario']);
 
         $importer->import('Eurocars', self::HEADERS, [
             ['Dahiana', 'dahiana@example.com', '12345678', '1005978881', 'Concesionario', 'EUROCARS'],
@@ -110,7 +109,6 @@ class UsuariosSheetImporterTest extends TestCase
         $this->assertDatabaseCount('concesionarios', 1);
 
         $user->refresh();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('expocar2026', $user->password));
-        $this->assertTrue($user->must_change_password);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('contraseña-elegida-por-el-usuario', $user->password));
     }
 }

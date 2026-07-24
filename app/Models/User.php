@@ -28,7 +28,6 @@ class User extends Authenticatable
         'concesionario_id',
         'asesor_comercial_id',
         'rol',
-        'must_change_password',
     ];
 
     /**
@@ -51,7 +50,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'must_change_password' => 'boolean',
         ];
     }
     public function concesionario()

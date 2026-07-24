@@ -85,23 +85,18 @@ class UsuariosSheetImporter
 
             $existente = User::where('email', $email)->first();
 
-            // La contraseña siempre queda en el valor por defecto al sincronizar,
-            // tanto para usuarios nuevos como existentes, y se les exige cambiarla
-            // en su próximo ingreso.
             $datos = [
                 'name' => $nombre,
                 'rol' => $rol,
                 'concesionario_id' => $rol === 'concesionario' ? $concesionario->id : null,
                 'asesor_comercial_id' => $asesorComercialId,
-                'password' => self::PASSWORD_POR_DEFECTO,
-                'must_change_password' => true,
             ];
 
             if ($existente) {
                 $existente->update($datos);
                 $stats['usuarios_actualizados']++;
             } else {
-                User::create($datos + ['email' => $email]);
+                User::create($datos + ['email' => $email, 'password' => self::PASSWORD_POR_DEFECTO]);
                 $stats['usuarios_creados']++;
             }
         }
