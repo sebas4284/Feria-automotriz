@@ -12,7 +12,7 @@ use App\Http\Controllers\ConcesionarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\AsesorComercialController;
-use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
@@ -71,9 +71,17 @@ Route::resource('clientes', ClienteController::class)
 Route::resource('vehiculos', VehiculoController::class)
     ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
-//Marcas (catálogo editable desde el que se alimenta el select de vehículos)
-Route::resource('marcas', MarcaController::class)
-    ->only(['index', 'store', 'destroy'])
+//Catálogos (marcas, ciudades, colores, combustibles editables desde admin)
+Route::get('/catalogos/{tipo}', [CatalogoController::class, 'index'])
+    ->name('catalogos.index')
+    ->middleware(['auth', 'role:admin']);
+
+Route::post('/catalogos/{tipo}', [CatalogoController::class, 'store'])
+    ->name('catalogos.store')
+    ->middleware(['auth', 'role:admin']);
+
+Route::delete('/catalogos/{catalogo}', [CatalogoController::class, 'destroy'])
+    ->name('catalogos.destroy')
     ->middleware(['auth', 'role:admin']);
 
 //Leads

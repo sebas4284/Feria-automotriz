@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Marca;
+use App\Models\Catalogo;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
@@ -81,11 +81,10 @@ class VehiculoController extends Controller
         $this->authorize('create', Vehiculo::class);
 
         $concesionarios = $this->concesionariosDisponibles();
-        $marcas = Marca::orderBy('nombre')->pluck('nombre');
 
         return view(
             'vehiculos.create',
-            compact('concesionarios', 'marcas')
+            array_merge(compact('concesionarios'), $this->catalogosDisponibles())
         );
     }
 
@@ -188,15 +187,10 @@ class VehiculoController extends Controller
         $this->authorize('update', $vehiculo);
 
         $concesionarios = $this->concesionariosDisponibles();
-        $marcas = Marca::orderBy('nombre')->pluck('nombre');
 
         return view(
             'vehiculos.edit',
-            compact(
-                'vehiculo',
-                'concesionarios',
-                'marcas'
-            )
+            array_merge(compact('vehiculo', 'concesionarios'), $this->catalogosDisponibles())
         );
     }
 
@@ -342,6 +336,16 @@ class VehiculoController extends Controller
                 'ubicacion' => 'Se alcanzó el cupo total de la feria (' . config('feria.cupo_total') . ').',
             ]);
         }
+    }
+
+    private function catalogosDisponibles(): array
+    {
+        return [
+            'marcas' => Catalogo::tipo('marca')->orderBy('valor')->pluck('valor'),
+            'ciudades' => Catalogo::tipo('ciudad')->orderBy('valor')->pluck('valor'),
+            'colores' => Catalogo::tipo('color')->orderBy('valor')->pluck('valor'),
+            'combustibles' => Catalogo::tipo('combustible')->orderBy('valor')->pluck('valor'),
+        ];
     }
 
     private function concesionariosDisponibles()

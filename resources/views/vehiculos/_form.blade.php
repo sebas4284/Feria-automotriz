@@ -81,7 +81,7 @@
     </select>
 
     <p class="text-xs text-gray-500 mt-1">
-        ¿Falta una marca? Agrégala en <a href="{{ route('marcas.index') }}" class="text-blue-400 hover:underline">Marcas</a>.
+        ¿Falta una marca? Agrégala en <a href="{{ route('catalogos.index', 'marca') }}" class="text-blue-400 hover:underline">Catálogos</a>.
     </p>
 </div>
 
@@ -158,10 +158,7 @@
 
 
 @php
-    $coloresDisponibles = ['Azul', 'Blanco', 'Gris', 'Negro', 'Plata', 'Rojo'];
     $colorActual = old('color', $vehiculo->color ?? '');
-
-    $combustiblesDisponibles = ['Gasolina', 'ACPM (Diésel)', 'Híbrido'];
     $combustibleActual = old('combustible', $vehiculo->combustible ?? '');
 @endphp
 
@@ -169,10 +166,10 @@
     name="color"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
     <option value="">Color</option>
-    @foreach($coloresDisponibles as $c)
+    @foreach($colores as $c)
         <option value="{{ $c }}" @selected($colorActual == $c)>{{ $c }}</option>
     @endforeach
-    @if($colorActual && ! in_array($colorActual, $coloresDisponibles, true))
+    @if($colorActual && ! $colores->contains($colorActual))
         <option value="{{ $colorActual }}" selected>{{ $colorActual }}</option>
     @endif
 </select>
@@ -202,10 +199,10 @@
     name="combustible"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
     <option value="">Combustible</option>
-    @foreach($combustiblesDisponibles as $c)
+    @foreach($combustibles as $c)
         <option value="{{ $c }}" @selected($combustibleActual == $c)>{{ $c }}</option>
     @endforeach
-    @if($combustibleActual && ! in_array($combustibleActual, $combustiblesDisponibles, true))
+    @if($combustibleActual && ! $combustibles->contains($combustibleActual))
         <option value="{{ $combustibleActual }}" selected>{{ $combustibleActual }}</option>
     @endif
 </select>
@@ -270,17 +267,16 @@
         Ciudad Matrícula
     </label>
     @php
-        $ciudadesDisponibles = ['Armenia', 'Barranquilla', 'Bogotá D.C.', 'Bucaramanga', 'Cali', 'Cartagena', 'Cúcuta', 'Ibagué', 'Manizales', 'Medellín', 'Montería', 'Neiva', 'Pasto', 'Pereira', 'Popayán', 'Santa Marta', 'Sincelejo', 'Tunja', 'Valledupar', 'Villavicencio'];
         $ciudadActual = old('ciudad_matricula', $vehiculo->ciudad_matricula ?? '');
     @endphp
     <select
         name="ciudad_matricula"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
         <option value="">Seleccionar</option>
-        @foreach($ciudadesDisponibles as $c)
+        @foreach($ciudades as $c)
             <option value="{{ $c }}" @selected($ciudadActual == $c)>{{ $c }}</option>
         @endforeach
-        @if($ciudadActual && ! in_array($ciudadActual, $ciudadesDisponibles, true))
+        @if($ciudadActual && ! $ciudades->contains($ciudadActual))
             <option value="{{ $ciudadActual }}" selected>{{ $ciudadActual }}</option>
         @endif
     </select>

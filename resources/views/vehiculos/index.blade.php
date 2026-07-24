@@ -23,7 +23,7 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
             @if(auth()->user()->isAdmin())
-                <a href="{{ route('marcas.index') }}"
+                <a href="{{ route('catalogos.index', 'marca') }}"
                     class="w-11 h-11 bg-gray-800 hover:bg-gray-700 rounded-2xl flex items-center justify-center transition">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
@@ -200,9 +200,9 @@
         </div>
         <div class="flex items-center gap-3">
             @if(auth()->user()->isAdmin())
-                <a href="{{ route('marcas.index') }}"
+                <a href="{{ route('catalogos.index', 'marca') }}"
                     class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
-                    Gestionar marcas
+                    Gestionar catálogos
                 </a>
             @endif
             @can('create', App\Models\Vehiculo::class)
