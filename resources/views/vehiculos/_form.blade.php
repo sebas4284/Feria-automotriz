@@ -270,7 +270,7 @@
         Ciudad Matrícula
     </label>
     @php
-        $ciudadesDisponibles = ['Barranquilla', 'Bogotá D.C.', 'Bucaramanga', 'Cali', 'Cartagena', 'Cúcuta', 'Medellín', 'Pereira'];
+        $ciudadesDisponibles = ['Armenia', 'Barranquilla', 'Bogotá D.C.', 'Bucaramanga', 'Cali', 'Cartagena', 'Cúcuta', 'Ibagué', 'Manizales', 'Medellín', 'Montería', 'Neiva', 'Pasto', 'Pereira', 'Popayán', 'Santa Marta', 'Sincelejo', 'Tunja', 'Valledupar', 'Villavicencio'];
         $ciudadActual = old('ciudad_matricula', $vehiculo->ciudad_matricula ?? '');
     @endphp
     <select
