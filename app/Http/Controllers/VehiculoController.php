@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Marca;
 use App\Models\Vehiculo;
-use App\Models\VehiculoCatalogo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
 use Illuminate\Support\Facades\Storage;
@@ -81,11 +81,11 @@ class VehiculoController extends Controller
         $this->authorize('create', Vehiculo::class);
 
         $concesionarios = $this->concesionariosDisponibles();
-        $catalogoVehiculos = $this->catalogoVehiculos();
+        $marcas = Marca::orderBy('nombre')->pluck('nombre');
 
         return view(
             'vehiculos.create',
-            compact('concesionarios', 'catalogoVehiculos')
+            compact('concesionarios', 'marcas')
         );
     }
 
@@ -188,14 +188,14 @@ class VehiculoController extends Controller
         $this->authorize('update', $vehiculo);
 
         $concesionarios = $this->concesionariosDisponibles();
-        $catalogoVehiculos = $this->catalogoVehiculos();
+        $marcas = Marca::orderBy('nombre')->pluck('nombre');
 
         return view(
             'vehiculos.edit',
             compact(
                 'vehiculo',
                 'concesionarios',
-                'catalogoVehiculos'
+                'marcas'
             )
         );
     }
@@ -342,12 +342,6 @@ class VehiculoController extends Controller
                 'ubicacion' => 'Se alcanzó el cupo total de la feria (' . config('feria.cupo_total') . ').',
             ]);
         }
-    }
-
-    private function catalogoVehiculos()
-    {
-        return VehiculoCatalogo::orderBy('marca')->orderBy('linea')->orderBy('version')
-            ->get(['marca', 'linea', 'version', 'clase_vehiculo', 'cc', 'combustible', 'transmision']);
     }
 
     private function concesionariosDisponibles()

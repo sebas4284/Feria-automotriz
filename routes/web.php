@@ -12,6 +12,7 @@ use App\Http\Controllers\ConcesionarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\AsesorComercialController;
+use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\RifaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EstadisticasController;
@@ -69,6 +70,11 @@ Route::resource('clientes', ClienteController::class)
 //Vehiculos
 Route::resource('vehiculos', VehiculoController::class)
     ->middleware(['auth', 'role:admin,concesionario,asesor']);
+
+//Marcas (catálogo editable desde el que se alimenta el select de vehículos)
+Route::resource('marcas', MarcaController::class)
+    ->only(['index', 'store', 'destroy'])
+    ->middleware(['auth', 'role:admin']);
 
 //Leads
 Route::resource('leads', LeadController::class)

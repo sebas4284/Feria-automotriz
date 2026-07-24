@@ -4,32 +4,6 @@
     Información General
 </h2>
 
-<div
-    x-data="{
-        catalogo: @js($catalogoVehiculos),
-        marca: @js(old('marca', $vehiculo->marca ?? '')),
-        linea: @js(old('linea', $vehiculo->linea ?? '')),
-        version: @js(old('version', $vehiculo->version ?? '')),
-        get marcas() {
-            return [...new Set(this.catalogo.map(f => f.marca))].sort();
-        },
-        get lineas() {
-            return [...new Set(this.catalogo.filter(f => f.marca === this.marca).map(f => f.linea))].sort();
-        },
-        get versiones() {
-            return [...new Set(this.catalogo.filter(f => f.marca === this.marca && f.linea === this.linea).map(f => f.version))].sort();
-        },
-        aplicarFicha() {
-            const ficha = this.catalogo.find(f => f.marca === this.marca && f.linea === this.linea && f.version === this.version);
-            if (ficha) {
-                this.$refs.clase_vehiculo.value = ficha.clase_vehiculo;
-                this.$refs.cc.value = ficha.cc;
-                this.$refs.combustible.value = ficha.combustible;
-            }
-        },
-    }"
->
-
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
 
@@ -85,6 +59,10 @@
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 
+@php
+    $marcaActual = old('marca', $vehiculo->marca ?? '');
+@endphp
+
 <div>
     <label class="block mb-2 text-sm text-gray-400">
         Marca
@@ -92,14 +70,19 @@
 
     <select
         name="marca"
-        x-model="marca"
-        @change="linea = ''; version = ''"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
         <option value="">Seleccionar</option>
-        <template x-for="m in marcas" :key="m">
-            <option :value="m" x-text="m" :selected="m === marca"></option>
-        </template>
+        @foreach($marcas as $m)
+            <option value="{{ $m }}" @selected($marcaActual == $m)>{{ $m }}</option>
+        @endforeach
+        @if($marcaActual && ! $marcas->contains($marcaActual))
+            <option value="{{ $marcaActual }}" selected>{{ $marcaActual }}</option>
+        @endif
     </select>
+
+    <p class="text-xs text-gray-500 mt-1">
+        ¿Falta una marca? Agrégala en <a href="{{ route('marcas.index') }}" class="text-blue-400 hover:underline">Marcas</a>.
+    </p>
 </div>
 
 <div>
@@ -107,17 +90,11 @@
         Línea
     </label>
 
-    <select
+    <input
+        type="text"
         name="linea"
-        x-model="linea"
-        :disabled="!marca"
-        @change="version = ''"
-        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 disabled:opacity-50">
-        <option value="">Seleccionar</option>
-        <template x-for="l in lineas" :key="l">
-            <option :value="l" x-text="l" :selected="l === linea"></option>
-        </template>
-    </select>
+        value="{{ old('linea', $vehiculo->linea ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 
 <div>
@@ -125,17 +102,11 @@
         Versión
     </label>
 
-    <select
+    <input
+        type="text"
         name="version"
-        x-model="version"
-        :disabled="!linea"
-        @change="aplicarFicha()"
-        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 disabled:opacity-50">
-        <option value="">Seleccionar</option>
-        <template x-for="v in versiones" :key="v">
-            <option :value="v" x-text="v" :selected="v === version"></option>
-        </template>
-    </select>
+        value="{{ old('version', $vehiculo->version ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 
 <div>
@@ -209,7 +180,6 @@
 <input
     type="text"
     name="clase_vehiculo"
-    x-ref="clase_vehiculo"
     placeholder="Clase de Vehículo"
     value="{{ old('clase_vehiculo', $vehiculo->clase_vehiculo ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
@@ -224,14 +194,12 @@
 <input
     type="number"
     name="cc"
-    x-ref="cc"
     placeholder="CC"
     value="{{ old('cc', $vehiculo->cc ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
 <select
     name="combustible"
-    x-ref="combustible"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
     <option value="">Combustible</option>
     @foreach($combustiblesDisponibles as $c)
@@ -272,8 +240,6 @@
     value="{{ old('kilometraje', $vehiculo->kilometraje ?? '') }}"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
-
-</div>
 
 </div>
 
