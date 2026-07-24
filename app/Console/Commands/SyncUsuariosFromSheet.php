@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 
 class SyncUsuariosFromSheet extends Command
 {
-    protected $signature = 'usuarios:sync-sheet';
+    protected $signature = 'usuarios:sync-sheet {--tab= : Sincronizar solo la pestaña con este nombre exacto, en vez de todas}';
 
     protected $description = 'Sincroniza (solo lectura) concesionarios y usuarios desde el spreadsheet de onboarding (una pestaña por concesionario)';
 
@@ -32,10 +32,19 @@ class SyncUsuariosFromSheet extends Command
 
         $meta = $service->spreadsheets->get($spreadsheetId);
 
+        $tabFiltro = $this->option('tab');
+
         $totales = ['concesionarios_creados' => 0, 'usuarios_creados' => 0, 'usuarios_actualizados' => 0, 'omitidos' => []];
+        $pestanaEncontrada = false;
 
         foreach ($meta->getSheets() as $sheet) {
             $nombrePestana = $sheet->getProperties()->getTitle();
+
+            if ($tabFiltro !== null && strtolower(trim($nombrePestana)) !== strtolower(trim($tabFiltro))) {
+                continue;
+            }
+
+            $pestanaEncontrada = true;
 
             $response = $service->spreadsheets_values->get($spreadsheetId, "'{$nombrePestana}'!A1:Z50");
             $values = $response->getValues() ?? [];
@@ -55,6 +64,12 @@ class SyncUsuariosFromSheet extends Command
             $totales['usuarios_creados'] += $stats['usuarios_creados'];
             $totales['usuarios_actualizados'] += $stats['usuarios_actualizados'];
             $totales['omitidos'] = array_merge($totales['omitidos'], $stats['omitidos']);
+        }
+
+        if ($tabFiltro !== null && ! $pestanaEncontrada) {
+            $this->error("No se encontró ninguna pestaña llamada \"{$tabFiltro}\" en el spreadsheet.");
+
+            return self::FAILURE;
         }
 
         $this->info(sprintf(
