@@ -19,12 +19,12 @@ class VehiculoPolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isConcesionario();
+        return $user->isAdmin() || $user->concesionarioIdPropio() !== null;
     }
 
     public function update(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->isAdmin() || $vehiculo->concesionario_id === $user->concesionario_id;
+        return $user->isAdmin() || $vehiculo->concesionario_id === $user->concesionarioIdPropio();
     }
 
     public function delete(User $user, Vehiculo $vehiculo): bool

@@ -350,7 +350,7 @@ class VehiculoController extends Controller
 
         return $user->isAdmin()
             ? Concesionario::where('activo', true)->get()
-            : Concesionario::where('id', $user->concesionario_id)->get();
+            : Concesionario::where('id', $user->concesionarioIdPropio())->get();
     }
 
     private function resolveConcesionarioId(Request $request, ?Vehiculo $vehiculo = null): ?int
@@ -361,6 +361,6 @@ class VehiculoController extends Controller
             return $request->concesionario_id;
         }
 
-        return $vehiculo ? $vehiculo->concesionario_id : $user->concesionario_id;
+        return $vehiculo ? $vehiculo->concesionario_id : $user->concesionarioIdPropio();
     }
 }

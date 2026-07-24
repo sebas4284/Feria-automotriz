@@ -333,7 +333,7 @@ class RolePermissionsTest extends TestCase
         $this->assertEquals('Contactado', $lead->fresh()->estado_gestion);
     }
 
-    public function test_asesor_sees_all_vehiculos_but_cannot_create_or_edit(): void
+    public function test_asesor_sees_all_vehiculos_but_can_only_create_and_edit_for_own_concesionario(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
         $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
@@ -348,8 +348,20 @@ class RolePermissionsTest extends TestCase
         $response->assertSee('AAA111');
         $response->assertSee('BBB222');
 
-        $this->actingAs($user)->get('/vehiculos/create')->assertForbidden();
-        $this->actingAs($user)->get("/vehiculos/{$vehA->id}/edit")->assertForbidden();
+        $this->actingAs($user)->get('/vehiculos/create')->assertOk();
+        $this->actingAs($user)->get("/vehiculos/{$vehA->id}/edit")->assertOk();
+        $this->actingAs($user)->get("/vehiculos/{$vehB->id}/edit")->assertForbidden();
+
+        $this->actingAs($user)->post('/vehiculos', [
+            'placa' => 'CCC333',
+            'marca' => 'M',
+            'linea' => 'L',
+            'modelo' => 2024,
+            'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
+        ])->assertRedirect(route('vehiculos.index'));
+
+        $this->assertDatabaseHas('vehiculos', ['placa' => 'CCC333', 'concesionario_id' => $concA->id]);
     }
 
     public function test_asesor_cannot_access_clientes_ventas_or_estadisticas(): void

@@ -86,6 +86,11 @@ class User extends Authenticatable
         return $this->rol === 'staff';
     }
 
+    public function concesionarioIdPropio(): ?int
+    {
+        return $this->concesionario_id ?? $this->asesorComercial?->concesionario_id;
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new RestablecerContrasena($token));
