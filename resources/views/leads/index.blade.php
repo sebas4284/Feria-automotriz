@@ -114,9 +114,8 @@
                         <th class="p-4">Nombre</th>
                         <th class="p-4 hidden sm:table-cell">Actividad económica</th>
                         <th class="p-4 hidden sm:table-cell">Monto interés a aprobar</th>
-                        <th class="p-4 hidden md:table-cell">Email</th>
                         <th class="p-4 hidden md:table-cell">Teléfono</th>
-                        <th class="p-4 hidden md:table-cell">Estado (Meta)</th>
+                        <th class="p-4 hidden md:table-cell">Observaciones</th>
                         <th class="p-4">Concesionario</th>
                         <th class="p-4 hidden lg:table-cell">Asesor</th>
                         <th class="p-4">Estado</th>
@@ -129,7 +128,7 @@
                         <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">
                                 <div class="font-medium">{{ $lead->full_name ?: 'Sin nombre' }}</div>
-                                <div class="text-sm text-gray-400 md:hidden">{{ $lead->email }}</div>
+                                <div class="text-sm text-gray-400 md:hidden truncate">{{ $lead->observaciones ?: $lead->email }}</div>
                                 <div class="text-xs text-gray-500 mt-0.5 md:hidden">
                                     @if($lead->phone_number)
                                         <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300">{{ $lead->phone_number }}</a>
@@ -145,7 +144,6 @@
                             </td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->actividad_economica ?: '—' }}</td>
                             <td class="p-4 hidden sm:table-cell">{{ $lead->monto_interes_aprobar ?: '—' }}</td>
-                            <td class="p-4 hidden md:table-cell">{{ $lead->email ?: '—' }}</td>
                             <td class="p-4 hidden md:table-cell">
                                 @if($lead->phone_number)
                                     <a href="{{ $lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300 hover:underline">{{ $lead->phone_number }}</a>
@@ -153,7 +151,7 @@
                                     —
                                 @endif
                             </td>
-                            <td class="p-4 hidden md:table-cell">{{ $lead->meta_lead_status ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell max-w-xs truncate" title="{{ $lead->observaciones }}">{{ $lead->observaciones ?: '—' }}</td>
                             <td class="p-4 whitespace-nowrap">
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
                             </td>
