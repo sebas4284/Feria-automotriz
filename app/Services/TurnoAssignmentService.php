@@ -24,19 +24,18 @@ class TurnoAssignmentService
     }
 
     /**
-     * Elige el concesionario que corresponde según turno: el que menos
-     * clientes ha recibido hoy (empate: quien llegó primero, luego por id).
-     * Se ordena por un contador entero en vez de por hora exacta para que
-     * la rotación sea determinística aunque varias asignaciones ocurran
-     * dentro del mismo segundo.
+     * Elige el concesionario que corresponde según turno: fila estricta por
+     * orden de llegada. Quien nunca ha sido atendido hoy espera desde que
+     * llegó; a quien ya le tocó, se le cuenta la espera desde la última vez
+     * que fue atendido — así, al ser atendido, pasa al final de la fila y
+     * el ciclo se repite (A, B, C, A, B, C...).
      */
     public function nextConcesionario(): ?Concesionario
     {
         $turno = Turno::with('concesionario')
             ->whereDate('fecha', today())
             ->whereHas('concesionario', fn ($q) => $q->where('activo', true))
-            ->orderBy('veces_asignado')
-            ->orderBy('llegada_at')
+            ->orderByRaw('COALESCE(ultima_asignacion_at, llegada_at) ASC')
             ->orderBy('id')
             ->first();
 

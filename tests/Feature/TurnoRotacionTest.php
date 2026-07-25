@@ -64,6 +64,41 @@ class TurnoRotacionTest extends TestCase
         $this->assertDatabaseMissing('turnos', ['concesionario_id' => $sinLlegar->id]);
     }
 
+    public function test_fila_estricta_no_reordena_por_conteo_total_sino_por_ultima_vez_atendido(): void
+    {
+        // Reproduce el caso de la captura: A y B llegaron primero y ya
+        // fueron atendidos una vez cada uno; C llegó después y todavía no.
+        // La fila estricta debe seguir el orden real de espera (A fue
+        // atendido hace más tiempo que B), no "todos los de 0 primero".
+        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $c = Concesionario::create(['nombre' => 'C', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create([
+            'concesionario_id' => $a->id, 'fecha' => today(),
+            'llegada_at' => now()->subMinutes(20), 'veces_asignado' => 1,
+            'ultima_asignacion_at' => now()->subMinutes(15),
+        ]);
+        Turno::create([
+            'concesionario_id' => $b->id, 'fecha' => today(),
+            'llegada_at' => now()->subMinutes(18), 'veces_asignado' => 1,
+            'ultima_asignacion_at' => now()->subMinutes(5),
+        ]);
+        Turno::create([
+            'concesionario_id' => $c->id, 'fecha' => today(),
+            'llegada_at' => now()->subMinutes(10),
+        ]);
+
+        $service = new \App\Services\TurnoAssignmentService();
+
+        // C nunca ha sido atendido, pero llegó después de que A y B ya
+        // hubieran sido atendidos por última vez hace 15 y 5 minutos
+        // respectivamente — en fila estricta, C (llegó hace 10 min) va
+        // antes que B (esperando desde hace solo 5 min), pero después de
+        // A (esperando desde hace 15 min).
+        $this->assertTrue($service->nextConcesionario()->is($a));
+    }
+
     public function test_turnos_screen_shows_ronda_and_detras(): void
     {
         $admin = $this->makeUser('admin');

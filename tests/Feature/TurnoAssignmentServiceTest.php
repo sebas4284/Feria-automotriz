@@ -72,11 +72,17 @@ class TurnoAssignmentServiceTest extends TestCase
 
         $orden = [];
 
+        // Cada turno se confirma con al menos un segundo de diferencia real
+        // (como pasaría en la práctica); si no, varias asignaciones caen en
+        // el mismo segundo y el desempate por id rompe el ciclo.
         for ($i = 0; $i < 6; $i++) {
             $siguiente = $service->nextConcesionario();
             $orden[] = $siguiente->nombre;
             $service->registrarAsignacion($siguiente);
+            \Illuminate\Support\Carbon::setTestNow(now()->addSecond());
         }
+
+        \Illuminate\Support\Carbon::setTestNow();
 
         $this->assertEquals(['A', 'B', 'C', 'A', 'B', 'C'], $orden);
     }

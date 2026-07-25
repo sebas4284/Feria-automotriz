@@ -23,7 +23,7 @@ class TurnoController extends Controller
             ->sortBy(function (Concesionario $c) use ($turnosHoy) {
                 $t = $turnosHoy->get($c->id);
 
-                return [$t->veces_asignado, $t->llegada_at->timestamp, $t->id];
+                return [($t->ultima_asignacion_at ?? $t->llegada_at)->timestamp, $t->id];
             })
             ->values();
 
