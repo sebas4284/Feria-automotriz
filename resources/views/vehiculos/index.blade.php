@@ -149,31 +149,42 @@
         <div class="space-y-2">
             @forelse($vehiculos as $vehiculo)
                 @php $evcfg = $estadoVehiculo[$vehiculo->estado] ?? ['badge' => 'bg-gray-500/20 text-gray-400']; @endphp
-                <a href="{{ route('vehiculos.show', $vehiculo) }}" x-show="matches($el)"
+                <div x-show="matches($el)"
                     data-search="{{ mb_strtolower($vehiculo->placa.' '.$vehiculo->marca.' '.$vehiculo->linea.' '.$vehiculo->version.' '.$vehiculo->numero_llave) }}"
-                    class="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition active:scale-[.99]">
-                    @if($vehiculo->fotoUrl)
-                        <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
-                            class="w-10 h-10 object-cover rounded-xl shrink-0">
-                    @else
-                        <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                            </svg>
-                        </div>
-                    @endif
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2">
-                            <p class="font-semibold text-sm font-mono">{{ $vehiculo->placa }}</p>
-                            <span class="text-xs {{ $evcfg['badge'] }} px-2 py-0.5 rounded-full shrink-0">{{ $vehiculo->estado }}</span>
-                        </div>
-                        <p class="text-sm text-gray-300 truncate mt-0.5">{{ $vehiculo->marca }} {{ $vehiculo->linea }} {{ $vehiculo->modelo }}</p>
-                        <p class="text-xs text-blue-400 font-medium mt-0.5">$ {{ number_format($vehiculo->precio_expocar, 0, ',', '.') }}</p>
-                        @if($vehiculo->numero_llave)
-                            <p class="text-xs text-gray-500 mt-0.5">Llave: {{ $vehiculo->numero_llave }}</p>
+                    class="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
+                    <a href="{{ route('vehiculos.show', $vehiculo) }}"
+                        class="flex items-center gap-3 flex-1 min-w-0 active:scale-[.99]">
+                        @if($vehiculo->fotoUrl)
+                            <img src="{{ $vehiculo->fotoUrl }}" alt="Foto de {{ $vehiculo->placa }}"
+                                class="w-10 h-10 object-cover rounded-xl shrink-0">
+                        @else
+                            <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                                </svg>
+                            </div>
                         @endif
-                    </div>
-                </a>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="font-semibold text-sm font-mono">{{ $vehiculo->placa }}</p>
+                                <span class="text-xs {{ $evcfg['badge'] }} px-2 py-0.5 rounded-full shrink-0">{{ $vehiculo->estado }}</span>
+                            </div>
+                            <p class="text-sm text-gray-300 truncate mt-0.5">{{ $vehiculo->marca }} {{ $vehiculo->linea }} {{ $vehiculo->modelo }}</p>
+                            <p class="text-xs text-blue-400 font-medium mt-0.5">$ {{ number_format($vehiculo->precio_expocar, 0, ',', '.') }}</p>
+                            @if($vehiculo->numero_llave)
+                                <p class="text-xs text-gray-500 mt-0.5">Llave: {{ $vehiculo->numero_llave }}</p>
+                            @endif
+                        </div>
+                    </a>
+                    @can('update', $vehiculo)
+                        <a href="{{ route('vehiculos.edit', $vehiculo) }}" title="Editar"
+                            class="p-2.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 hover:text-blue-300 transition shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                            </svg>
+                        </a>
+                    @endcan
+                </div>
             @empty
                 <div class="text-center py-12 text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-10 h-10 mx-auto mb-3 text-gray-700">
