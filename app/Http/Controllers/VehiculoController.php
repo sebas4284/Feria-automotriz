@@ -179,6 +179,11 @@ class VehiculoController extends Controller
         return view('vehiculos.show', compact('vehiculo'));
     }
 
+    public function ficha(Vehiculo $vehiculo)
+    {
+        return view('vehiculos.ficha', compact('vehiculo'));
+    }
+
     /**
      * Show the form for editing the specified resource.
      */

@@ -16,6 +16,10 @@
     </div>
 
     <div class="flex gap-2 shrink-0">
+        <a href="{{ route('vehiculos.ficha', $vehiculo) }}" target="_blank"
+            class="bg-purple-600 hover:bg-purple-700 px-4 py-2.5 rounded-xl text-sm font-medium transition">
+            Ficha / PDF
+        </a>
         @can('update', $vehiculo)
             <a href="{{ route('vehiculos.edit', $vehiculo) }}"
                 class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2.5 rounded-xl text-sm font-medium transition">

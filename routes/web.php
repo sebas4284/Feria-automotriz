@@ -71,6 +71,10 @@ Route::resource('clientes', ClienteController::class)
 Route::resource('vehiculos', VehiculoController::class)
     ->middleware(['auth', 'role:admin,concesionario,asesor']);
 
+Route::get('/vehiculos/{vehiculo}/ficha', [VehiculoController::class, 'ficha'])
+    ->name('vehiculos.ficha')
+    ->middleware(['auth', 'role:admin,concesionario,asesor']);
+
 //Catálogos (marcas, ciudades, colores, combustibles editables desde admin)
 Route::get('/catalogos/{tipo}', [CatalogoController::class, 'index'])
     ->name('catalogos.index')
