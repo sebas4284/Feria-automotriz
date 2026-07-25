@@ -98,6 +98,9 @@
                                 @if($venta->forma_pago)
                                     <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{{ $venta->forma_pago }}</span>
                                 @endif
+                                @if($venta->tiene_retoma)
+                                    <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">+ Retoma</span>
+                                @endif
                                 <p class="text-xs text-gray-600">{{ $venta->fecha_venta?->format('d/m/Y') }}</p>
                             </div>
                         </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AsesorComercial;
+use App\Models\Catalogo;
 use App\Models\Cliente;
 use App\Models\Comprador;
 use App\Models\Concesionario;
@@ -58,7 +59,7 @@ class VentaController extends Controller
             'forma_pago' => $validated['forma_pago'],
             'observaciones' => $validated['observaciones'] ?? null,
             'participa_experiencia' => $request->boolean('participa_experiencia'),
-        ]);
+        ] + $this->pagoExtra($validated, $request));
 
         $vehiculo->update(['estado' => 'Vendido']);
 
@@ -122,7 +123,7 @@ class VentaController extends Controller
                 'forma_pago' => $validated['forma_pago'],
                 'observaciones' => $validated['observaciones'] ?? null,
                 'participa_experiencia' => $request->boolean('participa_experiencia'),
-            ]);
+            ] + $this->pagoExtra($validated, $request));
         });
 
         return redirect()
@@ -157,7 +158,28 @@ class VentaController extends Controller
             'valor' => 'required|numeric|min:0',
             'fecha_venta' => 'required|date',
             'forma_pago' => 'required|in:Contado,Credito,Credito y Contado',
+            'banco' => 'nullable|string|max:255|required_if:forma_pago,Credito|required_if:forma_pago,Credito y Contado',
+            'tiene_retoma' => 'nullable|boolean',
+            'retoma_valor' => 'nullable|numeric|min:0|required_if:tiene_retoma,1',
+            'retoma_descripcion' => 'nullable|string|max:255|required_if:tiene_retoma,1',
             'observaciones' => 'nullable|string',
+        ];
+    }
+
+    /**
+     * Datos de banco/retoma a guardar, limpiando los que no aplican
+     * según la forma de pago y si tiene o no retoma.
+     */
+    private function pagoExtra(array $validated, Request $request): array
+    {
+        $requiereBanco = in_array($validated['forma_pago'], ['Credito', 'Credito y Contado'], true);
+        $tieneRetoma = $request->boolean('tiene_retoma');
+
+        return [
+            'banco' => $requiereBanco ? $validated['banco'] : null,
+            'tiene_retoma' => $tieneRetoma,
+            'retoma_valor' => $tieneRetoma ? $validated['retoma_valor'] : null,
+            'retoma_descripcion' => $tieneRetoma ? $validated['retoma_descripcion'] : null,
         ];
     }
 
@@ -187,6 +209,7 @@ class VentaController extends Controller
         $concesionarios = Concesionario::orderBy('nombre')->get();
         $asesores = AsesorComercial::orderBy('nombre')->get();
         $compradores = Comprador::select('id', 'identificacion', 'nombre', 'telefono', 'direccion', 'correo')->get();
+        $bancos = Catalogo::tipo('banco')->orderBy('valor')->pluck('valor');
 
         $vehiculosJson = $vehiculos->map(fn (Vehiculo $v) => [
             'id' => $v->id,
@@ -212,7 +235,8 @@ class VentaController extends Controller
             'asesores',
             'vehiculosJson',
             'asesoresJson',
-            'compradores'
+            'compradores',
+            'bancos'
         );
     }
 }

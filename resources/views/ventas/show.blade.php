@@ -125,6 +125,12 @@
                         {{ $formaPagoLabel }}
                     </span>
                 </div>
+                @if($venta->banco)
+                    <div>
+                        <p class="text-gray-400 text-sm">Banco</p>
+                        <p class="text-white font-medium">{{ $venta->banco }}</p>
+                    </div>
+                @endif
                 <div>
                     <p class="text-gray-400 text-sm">Valor</p>
                     <p class="text-white font-medium text-lg">$ {{ number_format($venta->valor, 0, ',', '.') }}</p>
@@ -137,6 +143,13 @@
                     <p class="text-gray-400 text-sm">Registrada por</p>
                     <p class="text-white">{{ $venta->usuario->name ?? '—' }}</p>
                 </div>
+                @if($venta->tiene_retoma)
+                    <div>
+                        <p class="text-gray-400 text-sm">Retoma</p>
+                        <p class="text-white font-medium">$ {{ number_format($venta->retoma_valor, 0, ',', '.') }}</p>
+                        <p class="text-gray-500 text-xs">{{ $venta->retoma_descripcion }}</p>
+                    </div>
+                @endif
             </div>
         </div>
 

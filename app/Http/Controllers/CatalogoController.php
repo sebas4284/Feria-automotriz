@@ -13,6 +13,7 @@ class CatalogoController extends Controller
         'ciudad' => 'Ciudades',
         'color' => 'Colores',
         'combustible' => 'Combustibles',
+        'banco' => 'Bancos',
     ];
 
     public function index(string $tipo)

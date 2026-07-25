@@ -19,12 +19,17 @@ class Venta extends Model
         'valor',
         'fecha_venta',
         'forma_pago',
+        'banco',
+        'tiene_retoma',
+        'retoma_valor',
+        'retoma_descripcion',
         'observaciones',
         'participa_experiencia',
     ];
 
     protected $casts = [
         'participa_experiencia' => 'boolean',
+        'tiene_retoma' => 'boolean',
         'fecha_venta' => 'date',
     ];
 

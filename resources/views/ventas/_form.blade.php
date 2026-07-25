@@ -137,11 +137,25 @@
 
             <div>
                 <label class="block mb-2 text-sm text-gray-400">Forma de pago</label>
-                <select name="forma_pago" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3" required>
+                <select name="forma_pago" x-model="formaPago" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3" required>
                     <option value="">Seleccione...</option>
-                    <option value="Contado" @selected(old('forma_pago', $venta->forma_pago ?? null) === 'Contado')>Contado</option>
-                    <option value="Credito" @selected(old('forma_pago', $venta->forma_pago ?? null) === 'Credito')>Crédito</option>
-                    <option value="Credito y Contado" @selected(old('forma_pago', $venta->forma_pago ?? null) === 'Credito y Contado')>Crédito y Contado</option>
+                    <option value="Contado">Contado</option>
+                    <option value="Credito">Crédito</option>
+                    <option value="Credito y Contado">Crédito y Contado</option>
+                </select>
+            </div>
+
+            <div x-show="formaPago === 'Credito' || formaPago === 'Credito y Contado'">
+                <label class="block mb-2 text-sm text-gray-400">Banco</label>
+                @php $bancoActual = old('banco', $venta->banco ?? ''); @endphp
+                <select name="banco" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+                    <option value="">Seleccione...</option>
+                    @foreach($bancos as $b)
+                        <option value="{{ $b }}" @selected($bancoActual == $b)>{{ $b }}</option>
+                    @endforeach
+                    @if($bancoActual && ! $bancos->contains($bancoActual))
+                        <option value="{{ $bancoActual }}" selected>{{ $bancoActual }}</option>
+                    @endif
                 </select>
             </div>
 
@@ -152,6 +166,27 @@
                 <label for="participa_experiencia" class="text-sm text-gray-400">
                     ¿Participa en la experiencia (rifa)?
                 </label>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="tiene_retoma" id="tiene_retoma" value="1" x-model="tieneRetoma"
+                    class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-blue-500">
+                <label for="tiene_retoma" class="text-sm text-gray-400">
+                    ¿Incluye retoma?
+                </label>
+            </div>
+
+            <div x-show="tieneRetoma">
+                <label class="block mb-2 text-sm text-gray-400">Valor de la retoma</label>
+                <input type="number" name="retoma_valor" step="0.01" value="{{ old('retoma_valor', $venta->retoma_valor ?? '') }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+            </div>
+
+            <div x-show="tieneRetoma">
+                <label class="block mb-2 text-sm text-gray-400">Vehículo entregado en retoma</label>
+                <input type="text" name="retoma_descripcion" value="{{ old('retoma_descripcion', $venta->retoma_descripcion ?? '') }}"
+                    placeholder="Ej. Mazda 3 2018, placa ABC123"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
             </div>
 
         </div>
@@ -196,6 +231,8 @@ function ventaForm() {
         concesionarioTiene: {{ Js::from($venta->vehiculo->concesionario->nombre ?? '') }},
         concesionarioVende: {{ Js::from(old('concesionario_vende_id', $venta->concesionario_vende_id ?? '')) }},
         asesorSeleccionado: {{ Js::from(old('asesor_comercial_id', $venta->asesor_comercial_id ?? '')) }},
+        formaPago: {{ Js::from(old('forma_pago', $venta->forma_pago ?? '')) }},
+        tieneRetoma: {{ Js::from((bool) old('tiene_retoma', $venta->tiene_retoma ?? false)) }},
 
         buscarComprador() {
             const match = this.compradores.find(c => c.identificacion === this.comprador.identificacion);
