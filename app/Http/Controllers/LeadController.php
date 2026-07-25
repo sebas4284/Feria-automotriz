@@ -29,6 +29,8 @@ class LeadController extends Controller
             $query->vencido();
         } elseif ($request->query('filtro') === 'sin_asesor') {
             $query->whereNull('asesor_comercial_id');
+        } elseif ($request->query('filtro') === 'contactado') {
+            $query->where('estado_gestion', 'Contactado');
         }
 
         if ($request->user()->isAdmin() && $request->filled('concesionario_id')) {
@@ -47,6 +49,7 @@ class LeadController extends Controller
             ->count();
         $totalVencidos = $this->filteredLeadsQuery($request)->vencido()->count();
         $totalSinAsesor = $this->filteredLeadsQuery($request)->whereNull('asesor_comercial_id')->count();
+        $totalContactados = $this->filteredLeadsQuery($request)->where('estado_gestion', 'Contactado')->count();
 
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
 
@@ -54,7 +57,7 @@ class LeadController extends Controller
 
         return view(
             'leads.index',
-            compact('leads', 'totalNuevos', 'totalVencidos', 'totalSinAsesor', 'concesionarios', 'asesoresPorConcesionario')
+            compact('leads', 'totalNuevos', 'totalVencidos', 'totalSinAsesor', 'totalContactados', 'concesionarios', 'asesoresPorConcesionario')
         );
     }
 

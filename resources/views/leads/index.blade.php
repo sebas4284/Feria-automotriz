@@ -28,7 +28,7 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Total leads</p>
             <p class="text-2xl lg:text-4xl font-bold">{{ $leads->total() }}</p>
@@ -45,6 +45,10 @@
             <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Sin asesor</p>
             <p class="text-2xl lg:text-4xl font-bold text-teal-400">{{ $totalSinAsesor }}</p>
         </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Contactados</p>
+            <p class="text-2xl lg:text-4xl font-bold text-cyan-400">{{ $totalContactados }}</p>
+        </div>
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
@@ -52,7 +56,7 @@
         <div class="p-5 border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
             <div class="flex flex-wrap gap-2 items-center">
                 <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'concesionario_id' => request('concesionario_id')])) }}"
-                    class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') !== 'vencido' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
+                    class="px-3 py-1.5 rounded-xl text-sm transition {{ ! request('filtro') ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Todos
                 </a>
                 <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'vencido', 'concesionario_id' => request('concesionario_id')])) }}"
@@ -62,6 +66,10 @@
                 <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'sin_asesor', 'concesionario_id' => request('concesionario_id')])) }}"
                     class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'sin_asesor' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
                     Sin asesor
+                </a>
+                <a href="{{ route('leads.index', array_filter(['buscar' => request('buscar'), 'filtro' => 'contactado', 'concesionario_id' => request('concesionario_id')])) }}"
+                    class="px-3 py-1.5 rounded-xl text-sm transition {{ request('filtro') === 'contactado' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white' }}">
+                    Contactados
                 </a>
 
                 @if(auth()->user()->isAdmin())
