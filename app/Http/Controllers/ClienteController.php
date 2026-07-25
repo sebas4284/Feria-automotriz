@@ -42,17 +42,14 @@ class ClienteController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
         $this->authorize('create', Cliente::class);
 
         $concesionarios = $this->concesionariosDisponibles();
         $medios = self::MEDIOS;
-        $concesionarioAsignado = $request->filled('concesionario_id')
-            ? Concesionario::find($request->concesionario_id)
-            : null;
 
-        return view('clientes.create', compact('concesionarios', 'medios', 'concesionarioAsignado'));
+        return view('clientes.create', compact('concesionarios', 'medios'));
     }
 
     /**
@@ -75,11 +72,6 @@ class ClienteController extends Controller
 
         if ($tieneCita) {
             $concesionarioId = $this->resolveConcesionarioId($request);
-        } elseif ($request->filled('concesionario_id')) {
-            // El turno ya se confirmó y registró desde /turnos (botón "Confirmar
-            // turno"); no se vuelve a calcular ni a registrar aquí para no
-            // contar el mismo turno dos veces.
-            $concesionarioId = $request->concesionario_id;
         } else {
             $concesionario = $turnos->nextConcesionario();
             $concesionarioId = $concesionario?->id;

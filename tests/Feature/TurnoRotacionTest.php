@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Cliente;
 use App\Models\Concesionario;
 use App\Models\Turno;
 use App\Models\User;
@@ -18,7 +17,7 @@ class TurnoRotacionTest extends TestCase
         return User::factory()->create(['rol' => $rol]);
     }
 
-    public function test_confirmar_turno_registra_asignacion_y_redirige_a_nuevo_cliente(): void
+    public function test_confirmar_el_siguiente_registra_su_asignacion_y_se_queda_en_turnos(): void
     {
         $admin = $this->makeUser('admin');
         $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
@@ -28,13 +27,13 @@ class TurnoRotacionTest extends TestCase
         Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
 
         $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $a->id])
-            ->assertRedirect(route('clientes.create', ['concesionario_id' => $a->id, 'cita' => 0]));
+            ->assertRedirect(route('turnos.index'));
 
         $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 1]);
         $this->assertDatabaseHas('turnos', ['concesionario_id' => $b->id, 'veces_asignado' => 0]);
     }
 
-    public function test_confirmar_turno_con_concesionario_equivocado_no_registra_nada(): void
+    public function test_no_esta_pasa_el_turno_al_de_atras_sin_afectar_al_saltado(): void
     {
         $admin = $this->makeUser('admin');
         $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
@@ -43,43 +42,41 @@ class TurnoRotacionTest extends TestCase
         Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
         Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
 
-        // A es quien realmente sigue (llegó primero); se intenta confirmar B por error.
+        // A es quien sigue, pero no está: se confirma directamente a B (el de atrás).
         $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $b->id])
-            ->assertRedirect();
+            ->assertRedirect(route('turnos.index'));
 
         $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 0]);
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $b->id, 'veces_asignado' => 0]);
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $b->id, 'veces_asignado' => 1]);
     }
 
-    public function test_cliente_create_view_muestra_concesionario_prefijado_y_lo_envia_oculto(): void
-    {
-        $admin = $this->makeUser('admin');
-        $a = Concesionario::create(['nombre' => 'Auto Sol', 'peso_asignacion' => 1, 'activo' => true]);
-
-        $response = $this->actingAs($admin)->get(route('clientes.create', ['concesionario_id' => $a->id, 'cita' => 0]));
-
-        $response->assertOk();
-        $response->assertSee('Auto Sol');
-        $response->assertSee('name="concesionario_id" value="' . $a->id . '"', false);
-    }
-
-    public function test_guardar_cliente_con_concesionario_prefijado_no_vuelve_a_registrar_asignacion(): void
+    public function test_no_se_puede_confirmar_un_concesionario_que_no_esta_en_la_fila_de_hoy(): void
     {
         $admin = $this->makeUser('admin');
         $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $sinLlegar = Concesionario::create(['nombre' => 'Sin Llegar', 'peso_asignacion' => 1, 'activo' => true]);
 
-        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10), 'veces_asignado' => 1]);
+        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()]);
 
-        $this->actingAs($admin)->post('/clientes', [
-            'nombre' => 'Cliente Confirmado',
-            'cita' => '0',
-            'concesionario_id' => $a->id,
-        ])->assertRedirect(route('clientes.index'));
+        $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $sinLlegar->id])
+            ->assertRedirect(route('turnos.index'));
 
-        $cliente = Cliente::where('nombre', 'Cliente Confirmado')->first();
-        $this->assertEquals($a->id, $cliente->concesionario_id);
+        $this->assertDatabaseMissing('turnos', ['concesionario_id' => $sinLlegar->id]);
+    }
 
-        // El contador no debe subir de nuevo: ya se había incrementado al confirmar en /turnos.
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 1]);
+    public function test_turnos_screen_shows_ronda_and_detras(): void
+    {
+        $admin = $this->makeUser('admin');
+        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $response = $this->actingAs($admin)->get('/turnos');
+
+        $response->assertOk();
+        $response->assertSee('Ronda 1');
+        $response->assertSee('Detrás: B');
     }
 }

@@ -43,23 +43,32 @@ class TurnoController extends Controller
         ));
     }
 
+    /**
+     * Confirma manualmente a quién le tocó el turno actual. Es un ajuste
+     * excepcional del staff, independiente del registro de clientes (que
+     * sigue asignando automático vía TurnoAssignmentService::nextConcesionario()).
+     * concesionario_id puede ser el "siguiente" sugerido (si sí está) o el
+     * que queda "detrás" (si el sugerido no está en ese momento).
+     */
     public function rotar(Request $request, TurnoAssignmentService $turnos)
     {
         $request->validate([
             'concesionario_id' => 'required|exists:concesionarios,id',
         ]);
 
-        $siguiente = $turnos->nextConcesionario();
+        $concesionario = Concesionario::findOrFail($request->concesionario_id);
 
-        if (! $siguiente || $siguiente->id !== (int) $request->concesionario_id) {
-            return back()->with('error', 'El turno cambió antes de confirmar. Revisa quién sigue e inténtalo de nuevo.');
+        $tieneTurnoHoy = Turno::where('concesionario_id', $concesionario->id)
+            ->whereDate('fecha', today())
+            ->exists();
+
+        if (! $tieneTurnoHoy) {
+            return redirect()->route('turnos.index')->with('error', 'Ese concesionario no está en la fila de hoy.');
         }
 
-        $turnos->registrarAsignacion($siguiente);
+        $turnos->registrarAsignacion($concesionario);
 
-        return redirect()
-            ->route('clientes.create', ['concesionario_id' => $siguiente->id, 'cita' => 0])
-            ->with('success', "Turno confirmado para {$siguiente->nombre}. Registra los datos del cliente.");
+        return redirect()->route('turnos.index')->with('success', "Turno confirmado para {$concesionario->nombre}.");
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)

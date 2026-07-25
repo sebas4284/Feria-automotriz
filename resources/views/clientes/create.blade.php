@@ -87,17 +87,9 @@
                     <label class="block mb-2 text-sm text-gray-400">
                         Concesionario asignado
                     </label>
-                    @if($concesionarioAsignado)
-                        <input type="hidden" name="concesionario_id" value="{{ $concesionarioAsignado->id }}">
-                        <p class="text-sm text-green-400 bg-green-500/10 border border-green-500/40 rounded-xl px-4 py-3">
-                            Este cliente quedará asignado a: <strong>{{ $concesionarioAsignado->nombre }}</strong>
-                            (turno confirmado en Turnos)
-                        </p>
-                    @else
-                        <p class="text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3">
-                            Se asignará automáticamente según el turno del concesionario que llegó primero.
-                        </p>
-                    @endif
+                    <p class="text-sm text-gray-500 bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3">
+                        Se asignará automáticamente según el turno del concesionario que llegó primero.
+                    </p>
                 </div>
 
                 <div>

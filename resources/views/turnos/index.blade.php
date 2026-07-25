@@ -33,14 +33,26 @@
             @if($detras)
                 <p class="text-xs text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
             @endif
-            <form action="{{ route('turnos.rotar') }}" method="POST" class="mt-3"
-                onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
-                @csrf
-                <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-xl text-sm font-medium transition">
-                    Confirmar turno
-                </button>
-            </form>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <form action="{{ route('turnos.rotar') }}" method="POST"
+                    onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
+                    @csrf
+                    <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-xl text-sm font-medium transition">
+                        Sí está, confirmar
+                    </button>
+                </form>
+                @if($detras)
+                    <form action="{{ route('turnos.rotar') }}" method="POST"
+                        onsubmit="return confirm('¿{{ $siguiente->nombre }} no está? El turno pasará a {{ $detras->nombre }}.')">
+                        @csrf
+                        <input type="hidden" name="concesionario_id" value="{{ $detras->id }}">
+                        <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 py-2.5 rounded-xl text-sm font-medium transition">
+                            No está, siguiente
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
     @else
         <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-gray-500">
@@ -140,14 +152,26 @@
                     <p class="text-sm text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
                 @endif
             </div>
-            <form action="{{ route('turnos.rotar') }}" method="POST"
-                onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
-                @csrf
-                <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl text-sm font-medium transition shrink-0">
-                    Confirmar turno
-                </button>
-            </form>
+            <div class="flex gap-2 shrink-0">
+                <form action="{{ route('turnos.rotar') }}" method="POST"
+                    onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
+                    @csrf
+                    <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl text-sm font-medium transition">
+                        Sí está, confirmar
+                    </button>
+                </form>
+                @if($detras)
+                    <form action="{{ route('turnos.rotar') }}" method="POST"
+                        onsubmit="return confirm('¿{{ $siguiente->nombre }} no está? El turno pasará a {{ $detras->nombre }}.')">
+                        @csrf
+                        <input type="hidden" name="concesionario_id" value="{{ $detras->id }}">
+                        <button type="submit" class="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl text-sm font-medium transition">
+                            No está, siguiente
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
     @else
         <div class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 text-gray-500">
