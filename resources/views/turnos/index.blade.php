@@ -20,10 +20,27 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="bg-red-500/10 border border-red-500/30 rounded-2xl px-4 py-3 text-red-400 text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if($siguiente)
         <div class="bg-blue-500/10 border border-blue-500/40 rounded-2xl px-4 py-3">
             <p class="text-xs text-blue-400">Siguiente en turno</p>
-            <p class="font-semibold">{{ $siguiente->nombre }}</p>
+            <p class="font-semibold">{{ $siguiente->nombre }} <span class="text-xs text-blue-400 font-normal">· Ronda {{ $rondaSiguiente }}</span></p>
+            @if($detras)
+                <p class="text-xs text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
+            @endif
+            <form action="{{ route('turnos.rotar') }}" method="POST" class="mt-3"
+                onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
+                @csrf
+                <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-xl text-sm font-medium transition">
+                    Confirmar turno
+                </button>
+            </form>
         </div>
     @else
         <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-gray-500">
@@ -108,12 +125,29 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if($siguiente)
-        <div class="mb-6 bg-blue-500/10 border border-blue-500/40 rounded-xl p-4 flex items-center justify-between">
+        <div class="mb-6 bg-blue-500/10 border border-blue-500/40 rounded-xl p-4 flex items-center justify-between gap-4">
             <div>
                 <p class="text-xs text-blue-400">Siguiente en turno para el próximo cliente sin cita</p>
-                <p class="text-lg font-semibold">{{ $siguiente->nombre }}</p>
+                <p class="text-lg font-semibold">{{ $siguiente->nombre }} <span class="text-sm text-blue-400 font-normal">· Ronda {{ $rondaSiguiente }}</span></p>
+                @if($detras)
+                    <p class="text-sm text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
+                @endif
             </div>
+            <form action="{{ route('turnos.rotar') }}" method="POST"
+                onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
+                @csrf
+                <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl text-sm font-medium transition shrink-0">
+                    Confirmar turno
+                </button>
+            </form>
         </div>
     @else
         <div class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 text-gray-500">

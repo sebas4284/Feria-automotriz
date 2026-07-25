@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Concesionario;
 use App\Models\Turno;
 use App\Services\TurnoAssignmentService;
+use Illuminate\Http\Request;
 
 class TurnoController extends Controller
 {
@@ -26,13 +27,39 @@ class TurnoController extends Controller
             })
             ->values();
 
+        $detras = $enFila->get(1);
+        $rondaSiguiente = $siguiente ? $turnosHoy->get($siguiente->id)->veces_asignado + 1 : null;
+        $rondaDetras = $detras ? $turnosHoy->get($detras->id)->veces_asignado + 1 : null;
+
         $clientesHoy = Cliente::with('concesionario')
             ->where('cita', false)
             ->whereDate('created_at', today())
             ->latest()
             ->get();
 
-        return view('turnos.index', compact('concesionarios', 'turnosHoy', 'siguiente', 'enFila', 'clientesHoy'));
+        return view('turnos.index', compact(
+            'concesionarios', 'turnosHoy', 'siguiente', 'detras',
+            'rondaSiguiente', 'rondaDetras', 'enFila', 'clientesHoy'
+        ));
+    }
+
+    public function rotar(Request $request, TurnoAssignmentService $turnos)
+    {
+        $request->validate([
+            'concesionario_id' => 'required|exists:concesionarios,id',
+        ]);
+
+        $siguiente = $turnos->nextConcesionario();
+
+        if (! $siguiente || $siguiente->id !== (int) $request->concesionario_id) {
+            return back()->with('error', 'El turno cambió antes de confirmar. Revisa quién sigue e inténtalo de nuevo.');
+        }
+
+        $turnos->registrarAsignacion($siguiente);
+
+        return redirect()
+            ->route('clientes.create', ['concesionario_id' => $siguiente->id, 'cita' => 0])
+            ->with('success', "Turno confirmado para {$siguiente->nombre}. Registra los datos del cliente.");
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)
