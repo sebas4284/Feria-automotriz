@@ -13,14 +13,14 @@
 
     <div class="w-full max-w-5xl text-center">
 
-        <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-14 mx-auto mb-12 opacity-80">
+        <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-6 mx-auto mb-10 opacity-70">
 
         @if($ultimoCliente)
             <p class="text-3xl lg:text-4xl text-gray-400 mb-4">Cliente</p>
-            <p class="text-6xl lg:text-8xl font-bold mb-16 break-words">{{ $ultimoCliente->nombre }}</p>
+            <p class="text-7xl lg:text-[9rem] font-bold mb-16 break-words leading-tight">{{ $ultimoCliente->nombre }}</p>
 
             <p class="text-3xl lg:text-4xl text-gray-400 mb-4">Lo atiende</p>
-            <p class="text-7xl lg:text-9xl font-extrabold text-blue-400 break-words">
+            <p class="text-8xl lg:text-[13rem] font-extrabold text-blue-400 break-words leading-tight">
                 {{ $ultimoCliente->concesionario->nombre ?? 'Sin asignar' }}
             </p>
         @else
