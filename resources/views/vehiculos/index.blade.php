@@ -327,13 +327,22 @@
                                 </span>
                             </td>
                             <td class="p-4">
-                                @include('partials._acciones', [
-                                    'modelo'      => $vehiculo,
-                                    'ruta'        => 'vehiculos',
-                                    'label'       => 'vehículo',
-                                    'sinEditar'   => auth()->user()->cannot('update', $vehiculo),
-                                    'sinEliminar' => auth()->user()->cannot('delete', $vehiculo),
-                                ])
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('vehiculos.ficha', $vehiculo) }}" target="_blank"
+                                        title="Ficha / PDF"
+                                        class="p-2.5 sm:p-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 hover:text-purple-300 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3 16.5h1.5m-1.5-3h1.5m-6-3h6m-6 3h1.5m-1.5 3h1.5M9 3.75H6.75A2.25 2.25 0 0 0 4.5 6v12a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25V11.25a9 9 0 0 0-9-7.5Z" />
+                                        </svg>
+                                    </a>
+                                    @include('partials._acciones', [
+                                        'modelo'      => $vehiculo,
+                                        'ruta'        => 'vehiculos',
+                                        'label'       => 'vehículo',
+                                        'sinEditar'   => auth()->user()->cannot('update', $vehiculo),
+                                        'sinEliminar' => auth()->user()->cannot('delete', $vehiculo),
+                                    ])
+                                </div>
                             </td>
                         </tr>
                     @empty
