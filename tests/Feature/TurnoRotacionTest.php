@@ -114,4 +114,32 @@ class TurnoRotacionTest extends TestCase
         $response->assertSee('Ronda 1');
         $response->assertSee('Detrás: B');
     }
+
+    public function test_pantalla_muestra_mensaje_de_espera_sin_clientes_hoy(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $response = $this->actingAs($admin)->get('/turnos/pantalla');
+
+        $response->assertOk();
+        $response->assertSee('Esperando el primer cliente del día');
+    }
+
+    public function test_pantalla_muestra_el_ultimo_cliente_y_su_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Auto Sol', 'peso_asignacion' => 1, 'activo' => true]);
+
+        \App\Models\Cliente::create([
+            'nombre' => 'Cliente Prueba',
+            'cita' => false,
+            'concesionario_id' => $conc->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/turnos/pantalla');
+
+        $response->assertOk();
+        $response->assertSee('Cliente Prueba');
+        $response->assertSee('Auto Sol');
+    }
 }

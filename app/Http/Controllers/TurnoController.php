@@ -71,6 +71,22 @@ class TurnoController extends Controller
         return redirect()->route('turnos.index')->with('success', "Turno confirmado para {$concesionario->nombre}.");
     }
 
+    /**
+     * Vista de solo lectura pensada para una pantalla grande/TV en el
+     * punto de atención: muestra el último cliente sin cita registrado y
+     * el concesionario que le corresponde, en letras enormes.
+     */
+    public function pantalla()
+    {
+        $ultimoCliente = Cliente::with('concesionario')
+            ->where('cita', false)
+            ->whereDate('created_at', today())
+            ->latest()
+            ->first();
+
+        return view('turnos.pantalla', compact('ultimoCliente'));
+    }
+
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)
     {
         $turnos->checkIn($concesionario);

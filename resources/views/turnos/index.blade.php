@@ -9,9 +9,15 @@
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
-    <div>
-        <h1 class="text-2xl font-bold">Turnos</h1>
-        <p class="text-gray-400 text-sm mt-0.5">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-bold">Turnos</h1>
+            <p class="text-gray-400 text-sm mt-0.5">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+        </div>
+        <a href="{{ route('turnos.pantalla') }}" target="_blank"
+            class="shrink-0 bg-gray-800 hover:bg-gray-700 text-xs px-3 py-2 rounded-xl transition">
+            Pantalla grande
+        </a>
     </div>
 
     @if(session('success'))
@@ -126,9 +132,15 @@
 {{-- ===================== VISTA DESKTOP ===================== --}}
 <div class="hidden lg:block">
 
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold">Turnos</h1>
-        <p class="text-gray-400">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold">Turnos</h1>
+            <p class="text-gray-400">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
+        </div>
+        <a href="{{ route('turnos.pantalla') }}" target="_blank"
+            class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm transition">
+            Abrir pantalla grande
+        </a>
     </div>
 
     @if(session('success'))
