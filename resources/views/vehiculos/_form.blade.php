@@ -259,7 +259,7 @@
     <input
         type="date"
         name="fecha_matricula"
-        value="{{ old('fecha_matricula', isset($vehiculo) ? optional($vehiculo->fecha_matricula)->format('Y-m-d') : '') }}"
+        value="{{ old('fecha_matricula', isset($vehiculo) && $vehiculo->fecha_matricula ? \Carbon\Carbon::parse($vehiculo->fecha_matricula)->format('Y-m-d') : '') }}"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 <div>
@@ -289,7 +289,7 @@
     <input
         type="date"
         name="fecha_soat"
-        value="{{ old('fecha_soat', isset($vehiculo) ? optional($vehiculo->fecha_soat)->format('Y-m-d') : '') }}"
+        value="{{ old('fecha_soat', isset($vehiculo) && $vehiculo->fecha_soat ? \Carbon\Carbon::parse($vehiculo->fecha_soat)->format('Y-m-d') : '') }}"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 
@@ -301,7 +301,7 @@
     <input
         type="date"
         name="fecha_tecno"
-        value="{{ old('fecha_tecno', isset($vehiculo) ? optional($vehiculo->fecha_tecno)->format('Y-m-d') : '') }}"
+        value="{{ old('fecha_tecno', isset($vehiculo) && $vehiculo->fecha_tecno ? \Carbon\Carbon::parse($vehiculo->fecha_tecno)->format('Y-m-d') : '') }}"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>
 <div>
