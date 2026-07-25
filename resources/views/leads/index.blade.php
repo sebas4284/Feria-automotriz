@@ -115,9 +115,9 @@
                         <th class="p-4 hidden sm:table-cell">Actividad económica</th>
                         <th class="p-4 hidden sm:table-cell">Monto interés a aprobar</th>
                         <th class="p-4 hidden md:table-cell">Teléfono</th>
-                        <th class="p-4 hidden md:table-cell">Observaciones</th>
                         <th class="p-4">Concesionario</th>
                         <th class="p-4 hidden lg:table-cell">Asesor</th>
+                        <th class="p-4 hidden lg:table-cell w-40">Observaciones</th>
                         <th class="p-4">Estado</th>
                         <th class="p-4">Acciones</th>
                     </tr>
@@ -151,7 +151,6 @@
                                     —
                                 @endif
                             </td>
-                            <td class="p-4 hidden md:table-cell max-w-xs truncate" title="{{ $lead->observaciones }}">{{ $lead->observaciones ?: '—' }}</td>
                             <td class="p-4 whitespace-nowrap">
                                 {{ $lead->concesionario->nombre ?? 'Sin asignar' }}
                             </td>
@@ -162,6 +161,7 @@
                                     <span class="text-gray-500">Sin asesor</span>
                                 @endif
                             </td>
+                            <td class="p-4 hidden lg:table-cell w-40 text-xs text-gray-400 truncate" title="{{ $lead->observaciones }}">{{ $lead->observaciones ?: '—' }}</td>
                             <td class="p-4">
                                 @if($lead->vencido)
                                     <span class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full">Vencido</span>
