@@ -37,16 +37,46 @@ class TurnoController extends Controller
             ->latest()
             ->get();
 
+        $pendientes = $clientesHoy->whereNull('concesionario_id')->values();
+
         return view('turnos.index', compact(
             'concesionarios', 'turnosHoy', 'siguiente', 'detras',
-            'rondaSiguiente', 'rondaDetras', 'enFila', 'clientesHoy'
+            'rondaSiguiente', 'rondaDetras', 'enFila', 'clientesHoy', 'pendientes'
         ));
     }
 
     /**
+     * Asigna un cliente pendiente (sin cita, sin concesionario) a uno
+     * específico — se dispara al soltarlo (drag & drop) sobre su tarjeta
+     * en /turnos. Avanza la cola de ese concesionario igual que "rotar()".
+     */
+    public function asignarCliente(Request $request, TurnoAssignmentService $turnos)
+    {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'concesionario_id' => 'required|exists:concesionarios,id',
+        ]);
+
+        $concesionario = Concesionario::findOrFail($request->concesionario_id);
+
+        $tieneTurnoHoy = Turno::where('concesionario_id', $concesionario->id)
+            ->whereDate('fecha', today())
+            ->exists();
+
+        if (! $tieneTurnoHoy) {
+            return response()->json(['message' => 'Ese concesionario no está en la fila de hoy.'], 422);
+        }
+
+        $cliente = Cliente::findOrFail($request->cliente_id);
+        $cliente->update(['concesionario_id' => $concesionario->id]);
+        $turnos->registrarAsignacion($concesionario);
+
+        return response()->json(['message' => "{$cliente->nombre} asignado a {$concesionario->nombre}."]);
+    }
+
+    /**
      * Confirma manualmente a quién le tocó el turno actual. Es un ajuste
-     * excepcional del staff, independiente del registro de clientes (que
-     * sigue asignando automático vía TurnoAssignmentService::nextConcesionario()).
+     * excepcional del staff (ej. cuando el sugerido no está físicamente).
      * concesionario_id puede ser el "siguiente" sugerido (si sí está) o el
      * que queda "detrás" (si el sugerido no está en ese momento).
      */

@@ -503,30 +503,25 @@ class RolePermissionsTest extends TestCase
         $this->assertDatabaseMissing('turnos', ['concesionario_id' => $conc->id]);
     }
 
-    public function test_cliente_sin_cita_is_auto_assigned_via_turno_and_rotates(): void
+    public function test_cliente_sin_cita_queda_pendiente_sin_concesionario(): void
     {
+        // El cliente sin cita ya no se auto-asigna al guardar: queda
+        // pendiente para que alguien lo arrastre en /turnos (ver
+        // TurnoController::asignarCliente).
         $admin = $this->makeUser('admin');
         $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
-        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
 
         Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
-        Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
 
         $this->actingAs($admin)->post('/clientes', [
             'nombre' => 'Walk-in Uno',
             'cita' => '0',
         ])->assertRedirect(route('clientes.index'));
 
-        $this->actingAs($admin)->post('/clientes', [
-            'nombre' => 'Walk-in Dos',
-            'cita' => '0',
-        ])->assertRedirect(route('clientes.index'));
+        $cliente = Cliente::where('nombre', 'Walk-in Uno')->first();
 
-        $primero = Cliente::where('nombre', 'Walk-in Uno')->first();
-        $segundo = Cliente::where('nombre', 'Walk-in Dos')->first();
-
-        $this->assertEquals($a->id, $primero->concesionario_id);
-        $this->assertEquals($b->id, $segundo->concesionario_id);
+        $this->assertNull($cliente->concesionario_id);
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 0]);
     }
 
     public function test_cliente_con_cita_ignores_turno_queue(): void

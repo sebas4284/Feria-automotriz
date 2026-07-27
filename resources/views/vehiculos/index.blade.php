@@ -97,7 +97,7 @@
         <div x-show="open" x-collapse class="border-t border-gray-800">
             <form method="GET" action="{{ route('vehiculos.index') }}" class="p-4 space-y-3">
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Buscar (placa, marca, línea...)</label>
+                    <label class="block text-xs text-gray-400 mb-1">Buscar (placa)</label>
                     <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
                         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 </div>

@@ -72,6 +72,10 @@ Route::post('/turnos/rotar', [TurnoController::class, 'rotar'])
     ->name('turnos.rotar')
     ->middleware(['auth', 'role:admin,staff']);
 
+Route::post('/turnos/asignar-cliente', [TurnoController::class, 'asignarCliente'])
+    ->name('turnos.asignar-cliente')
+    ->middleware(['auth', 'role:admin,staff']);
+
 //Clientes
 Route::resource('clientes', ClienteController::class)
     ->middleware(['auth', 'role:admin,concesionario']);

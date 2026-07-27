@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Cliente;
 use App\Models\Concesionario;
 use App\Models\Turno;
 use App\Models\User;
@@ -141,5 +142,48 @@ class TurnoRotacionTest extends TestCase
         $response->assertOk();
         $response->assertSee('Cliente Prueba');
         $response->assertSee('Auto Sol');
+    }
+
+    public function test_asignar_cliente_arrastrado_lo_asigna_y_avanza_la_cola(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        Turno::create(['concesionario_id' => $conc->id, 'fecha' => today(), 'llegada_at' => now()]);
+
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $conc->id,
+        ])->assertOk();
+
+        $this->assertSame($conc->id, $cliente->fresh()->concesionario_id);
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $conc->id, 'veces_asignado' => 1]);
+    }
+
+    public function test_no_se_puede_asignar_a_un_concesionario_que_no_esta_en_la_fila(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Sin Llegar', 'peso_asignacion' => 1, 'activo' => true]);
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $conc->id,
+        ])->assertStatus(422);
+
+        $this->assertNull($cliente->fresh()->concesionario_id);
+    }
+
+    public function test_pendientes_se_muestran_en_turnos_index(): void
+    {
+        $admin = $this->makeUser('admin');
+        Cliente::create(['nombre' => 'Pendiente Visible', 'cita' => false, 'concesionario_id' => null]);
+
+        $response = $this->actingAs($admin)->get('/turnos');
+
+        $response->assertOk();
+        $response->assertSee('Pendiente Visible');
+        $response->assertSee('Pendientes por asignar');
     }
 }
