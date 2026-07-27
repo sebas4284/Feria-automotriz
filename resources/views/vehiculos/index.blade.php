@@ -12,6 +12,18 @@
 
 <div x-data="liveSearch('{{ addslashes(request('placa', '')) }}')">
 
+@if(session('success'))
+    <div class="mb-4 bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 text-green-400 text-sm">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('warning'))
+    <div class="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3 text-amber-400 text-sm">
+        {{ session('warning') }}
+    </div>
+@endif
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -101,7 +113,7 @@
                     <input type="text" name="placa" x-model="q" placeholder="Ej. ABC123"
                         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3"> 
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Marca</label>
                         <select name="marca" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">

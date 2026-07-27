@@ -7,7 +7,6 @@ use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class VehiculoController extends Controller
 {
@@ -154,9 +153,7 @@ class VehiculoController extends Controller
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
 
-        if ($data['concesionario_id'] && $request->ubicacion === 'Dentro del área' && $request->estado !== 'Vendido') {
-            $this->validarCupoFeria($data['concesionario_id']);
-        }
+        $mensajeCupo = $this->ajustarUbicacionPorCupo($data);
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('vehiculos', 'public');
@@ -166,10 +163,7 @@ class VehiculoController extends Controller
 
         return redirect()
             ->route('vehiculos.index')
-            ->with(
-                'success',
-                'Vehículo creado correctamente'
-            );
+            ->with($mensajeCupo ? 'warning' : 'success', $mensajeCupo ?? 'Vehículo creado correctamente');
     }
     /**
      * Display the specified resource.
@@ -268,9 +262,7 @@ class VehiculoController extends Controller
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
 
-        if ($data['concesionario_id'] && $request->ubicacion === 'Dentro del área' && $request->estado !== 'Vendido') {
-            $this->validarCupoFeria($data['concesionario_id'], $vehiculo->id);
-        }
+        $mensajeCupo = $this->ajustarUbicacionPorCupo($data, $vehiculo->id);
 
         if ($request->hasFile('foto')) {
             if ($vehiculo->foto) {
@@ -284,10 +276,7 @@ class VehiculoController extends Controller
 
         return redirect()
             ->route('vehiculos.show', $vehiculo)
-            ->with(
-                'success',
-                'Vehículo actualizado correctamente'
-            );
+            ->with($mensajeCupo ? 'warning' : 'success', $mensajeCupo ?? 'Vehículo actualizado correctamente');
     }
 
     /**
@@ -317,17 +306,25 @@ class VehiculoController extends Controller
             ->count();
     }
 
-    private function validarCupoFeria(int $concesionarioId, ?int $excluirVehiculoId = null): void
+    private function ajustarUbicacionPorCupo(array &$data, ?int $excluirVehiculoId = null): ?string
     {
-        $concesionario = Concesionario::find($concesionarioId);
+        if (($data['ubicacion'] ?? null) !== 'Dentro del área' || ($data['estado'] ?? null) === 'Vendido') {
+            return null;
+        }
 
-        if ($concesionario && $concesionario->cupo_feria !== null) {
-            $usado = $this->cupoUsado($concesionarioId, $excluirVehiculoId);
+        $concesionarioId = $data['concesionario_id'] ?? null;
 
-            if ($usado >= $concesionario->cupo_feria) {
-                throw ValidationException::withMessages([
-                    'ubicacion' => "Este concesionario ya alcanzó su cupo de feria ({$usado}/{$concesionario->cupo_feria}).",
-                ]);
+        if ($concesionarioId) {
+            $concesionario = Concesionario::find($concesionarioId);
+
+            if ($concesionario && $concesionario->cupo_feria !== null) {
+                $usado = $this->cupoUsado($concesionarioId, $excluirVehiculoId);
+
+                if ($usado >= $concesionario->cupo_feria) {
+                    $data['ubicacion'] = 'Fuera del área';
+
+                    return "Este concesionario ya alcanzó su cupo de feria ({$usado}/{$concesionario->cupo_feria}); el vehículo se guardó como Fuera del área.";
+                }
             }
         }
 
@@ -337,10 +334,12 @@ class VehiculoController extends Controller
             ->count();
 
         if ($totalGlobal >= config('feria.cupo_total')) {
-            throw ValidationException::withMessages([
-                'ubicacion' => 'Se alcanzó el cupo total de la feria (' . config('feria.cupo_total') . ').',
-            ]);
+            $data['ubicacion'] = 'Fuera del área';
+
+            return 'Se alcanzó el cupo total de la feria (' . config('feria.cupo_total') . '); el vehículo se guardó como Fuera del área.';
         }
+
+        return null;
     }
 
     private function catalogosDisponibles(): array

@@ -24,7 +24,7 @@ class VehiculoCupoFeriaTest extends TestCase
         ], $overrides);
     }
 
-    public function test_cannot_create_vehiculo_dentro_del_area_when_concesionario_reached_its_cupo(): void
+    public function test_creating_vehiculo_dentro_del_area_when_cupo_lleno_lo_guarda_fuera_del_area(): void
     {
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true, 'cupo_feria' => 2]);
         $admin = User::factory()->create(['rol' => 'admin']);
@@ -35,9 +35,10 @@ class VehiculoCupoFeriaTest extends TestCase
         $this->actingAs($admin)->post('/vehiculos', $this->payload([
             'placa' => 'CUP003',
             'concesionario_id' => $conc->id,
-        ]))->assertSessionHasErrors('ubicacion');
+        ]))->assertRedirect(route('vehiculos.index'))
+            ->assertSessionHas('warning');
 
-        $this->assertDatabaseMissing('vehiculos', ['placa' => 'CUP003']);
+        $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP003', 'ubicacion' => 'Fuera del área']);
     }
 
     public function test_can_create_vehiculo_fuera_del_area_without_limit(): void
@@ -63,11 +64,15 @@ class VehiculoCupoFeriaTest extends TestCase
 
         $vendido = Vehiculo::create($this->payload(['placa' => 'CUP020', 'concesionario_id' => $conc->id]));
 
-        // Al tope: un segundo vehículo "Dentro del área" debe fallar.
+        // Al tope: un segundo vehículo "Dentro del área" se guarda como "Fuera del área".
         $this->actingAs($admin)->post('/vehiculos', $this->payload([
             'placa' => 'CUP021',
             'concesionario_id' => $conc->id,
-        ]))->assertSessionHasErrors('ubicacion');
+        ]))->assertRedirect(route('vehiculos.index'));
+
+        $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP021', 'ubicacion' => 'Fuera del área']);
+
+        Vehiculo::where('placa', 'CUP021')->delete();
 
         // Se vende el primero: libera el cupo.
         $vendido->update(['estado' => 'Vendido']);
@@ -77,7 +82,7 @@ class VehiculoCupoFeriaTest extends TestCase
             'concesionario_id' => $conc->id,
         ]))->assertRedirect(route('vehiculos.index'));
 
-        $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP021']);
+        $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP021', 'ubicacion' => 'Dentro del área']);
     }
 
     public function test_editing_a_vehiculo_already_dentro_del_area_without_changes_does_not_fail(): void
@@ -126,8 +131,9 @@ class VehiculoCupoFeriaTest extends TestCase
         $this->actingAs($admin)->post('/vehiculos', $this->payload([
             'placa' => 'CUP062',
             'concesionario_id' => $concB->id,
-        ]))->assertSessionHasErrors('ubicacion');
+        ]))->assertRedirect(route('vehiculos.index'))
+            ->assertSessionHas('warning');
 
-        $this->assertDatabaseMissing('vehiculos', ['placa' => 'CUP062']);
+        $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP062', 'ubicacion' => 'Fuera del área']);
     }
 }

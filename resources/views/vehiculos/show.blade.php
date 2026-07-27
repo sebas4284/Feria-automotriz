@@ -4,6 +4,18 @@
 
 <div class="max-w-7xl mx-auto">
 
+@if(session('success'))
+    <div class="mb-6 bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 text-green-400 text-sm">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('warning'))
+    <div class="mb-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3 text-amber-400 text-sm">
+        {{ session('warning') }}
+    </div>
+@endif
+
 <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
 
     <div>
