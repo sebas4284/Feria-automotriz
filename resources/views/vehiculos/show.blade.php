@@ -38,7 +38,7 @@
                 Editar
             </a>
         @endcan
-        <a href="{{ route('vehiculos.index') }}"
+        <a href="{{ url()->previous(route('vehiculos.index')) }}"
             class="bg-gray-700 hover:bg-gray-600 px-4 py-2.5 rounded-xl text-sm transition">
             Volver
         </a>

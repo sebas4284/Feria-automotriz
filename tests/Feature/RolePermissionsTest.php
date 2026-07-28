@@ -212,6 +212,19 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('BBB222');
     }
 
+    public function test_vehiculos_index_search_also_matches_marca_y_linea(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'CCC333', 'marca' => 'Toyota', 'linea' => 'Corolla', 'modelo' => 2024, 'estado' => 'Disponible']);
+        Vehiculo::create(['placa' => 'DDD444', 'marca' => 'Mazda', 'linea' => 'CX5', 'modelo' => 2024, 'estado' => 'Disponible']);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?placa=Toyota');
+
+        $response->assertOk();
+        $response->assertSee('CCC333');
+        $response->assertDontSee('DDD444');
+    }
+
     public function test_concesionario_only_sees_own_clientes(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
