@@ -148,6 +148,21 @@
         @include('partials._boton-crear', ['href' => route('ventas.create'), 'texto' => 'Nueva Venta'])
     </div>
 
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-emerald-400">$ {{ number_format($ingresosMes, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 mt-1">Ingresos este mes</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold">{{ $ventas->count() }}</p>
+            <p class="text-xs text-gray-500 mt-1">Ventas totales</p>
+        </div>
+        <div class="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-700/20 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-white">$ {{ number_format($totalIngresosAll, 0, ',', '.') }}</p>
+            <p class="text-xs text-blue-400 mt-1">Total acumulado · {{ $totalMes }} este mes</p>
+        </div>
+    </div>
+
     <div class="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800">
         <div class="p-5 border-b border-gray-800 flex justify-between items-center">
             <h2 class="text-xl font-semibold">

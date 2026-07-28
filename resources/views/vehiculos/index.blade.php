@@ -243,6 +243,21 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-green-400">{{ $disponibles }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Disponibles</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-yellow-400">{{ $reservados }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Reservados</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-red-400">{{ $vendidosV }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Vendidos</p>
+        </div>
+    </div>
+
     {{-- Panel de filtros desktop --}}
     <form method="GET" action="{{ route('vehiculos.index') }}" class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6">
 
