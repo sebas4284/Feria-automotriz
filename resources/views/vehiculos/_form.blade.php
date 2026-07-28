@@ -37,12 +37,13 @@
 
 <div>
     <label class="block mb-2 text-sm text-gray-400">
-        Placa
+        Placa (6 caracteres, ej: ABC123)
     </label>
 
     <input
         type="text"
         name="placa"
+        maxlength="6"
         value="{{ old('placa', $vehiculo->placa ?? '') }}"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 </div>

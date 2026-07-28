@@ -95,7 +95,7 @@ class VehiculoController extends Controller
 
             'concesionario_id' => 'nullable|exists:concesionarios,id',
 
-            'placa' => 'required|string|max:20|unique:vehiculos,placa',
+            'placa' => 'required|string|size:6|unique:vehiculos,placa',
 
             'numero_llave' => 'nullable|string|max:50',
 
@@ -148,6 +148,9 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
 
             'ubicacion' => 'required|in:Dentro del área,Fuera del área',
+        ], [
+            'placa.size' => 'La placa debe tener exactamente 6 caracteres (ej: ABC123). Corrígela e intenta de nuevo.',
+            'placa.unique' => 'Esta placa ya está registrada en otro vehículo.',
         ]);
 
         $data = $request->except('foto');
@@ -205,7 +208,7 @@ class VehiculoController extends Controller
 
             'concesionario_id' => 'nullable|exists:concesionarios,id',
 
-            'placa' => 'required|string|max:20|unique:vehiculos,placa,' . $vehiculo->id,
+            'placa' => 'required|string|size:6|unique:vehiculos,placa,' . $vehiculo->id,
 
             'numero_llave' => 'nullable|string|max:50',
 
@@ -258,6 +261,9 @@ class VehiculoController extends Controller
             'estado' => 'required|string',
 
             'ubicacion' => 'required|in:Dentro del área,Fuera del área',
+        ], [
+            'placa.size' => 'La placa debe tener exactamente 6 caracteres (ej: ABC123). Corrígela e intenta de nuevo.',
+            'placa.unique' => 'Esta placa ya está registrada en otro vehículo.',
         ]);
 
         $data = $request->except('foto');
