@@ -39,6 +39,7 @@ class LeadSheetImporter
     public function __construct(
         private LeadAssignmentService $assignmentService,
         private LeadNotifier $notifier,
+        private WacrmClient $wacrmClient,
     ) {
     }
 
@@ -68,11 +69,18 @@ class LeadSheetImporter
             if ($existing) {
                 $existing->update($attributes);
                 $stats['updated']++;
+
+                if ($existing->wasChanged(['full_name', 'phone_number'])) {
+                    $this->wacrmClient->syncContact($existing);
+                }
+
                 continue;
             }
 
             $lead = Lead::create($attributes);
             $stats['created']++;
+
+            $this->wacrmClient->syncContact($lead);
 
             $concesionario = $this->assignmentService->assignNext();
 
