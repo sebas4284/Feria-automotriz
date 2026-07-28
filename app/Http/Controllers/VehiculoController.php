@@ -152,6 +152,7 @@ class VehiculoController extends Controller
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
+        $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
 
         $mensajeCupo = $this->ajustarUbicacionPorCupo($data);
 
@@ -261,6 +262,7 @@ class VehiculoController extends Controller
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
+        $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
 
         $mensajeCupo = $this->ajustarUbicacionPorCupo($data, $vehiculo->id);
 
@@ -304,6 +306,15 @@ class VehiculoController extends Controller
             ->where('estado', '!=', 'Vendido')
             ->when($excluirVehiculoId, fn ($q) => $q->where('id', '!=', $excluirVehiculoId))
             ->count();
+    }
+
+    private function calcularPrecioExpocar(array $data): ?float
+    {
+        if (!isset($data['precio_normal']) || $data['precio_normal'] === null || $data['precio_normal'] === '') {
+            return null;
+        }
+
+        return (float) $data['precio_normal'] - (float) ($data['bono_descuento'] ?? 0);
     }
 
     private function ajustarUbicacionPorCupo(array &$data, ?int $excluirVehiculoId = null): ?string

@@ -339,7 +339,8 @@
     Valores Comerciales
 </h2>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6"
+    x-data="{ normal: {{ (float) old('precio_normal', $vehiculo->precio_normal ?? 0) }}, bono: {{ (float) old('bono_descuento', $vehiculo->bono_descuento ?? 0) }} }">
 
 
 <input
@@ -362,7 +363,7 @@
     step="0.01"
     name="precio_normal"
     placeholder="Precio Normal"
-    value="{{ old('precio_normal', $vehiculo->precio_normal ?? '') }}"
+    x-model.number="normal"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
 <input
@@ -370,16 +371,17 @@
     step="0.01"
     name="bono_descuento"
     placeholder="Bono Descuento"
-    value="{{ old('bono_descuento', $vehiculo->bono_descuento ?? '') }}"
+    x-model.number="bono"
     class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
 <input
     type="number"
     step="0.01"
     name="precio_expocar"
-    placeholder="Precio Expocar"
-    value="{{ old('precio_expocar', $vehiculo->precio_expocar ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    placeholder="Precio Expocar (automático)"
+    :value="(normal - bono).toFixed(2)"
+    readonly
+    class="bg-gray-900 text-gray-400 cursor-not-allowed border border-gray-700 rounded-xl px-4 py-3">
 
 <select
     name="estado"
