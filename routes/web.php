@@ -19,13 +19,22 @@ use App\Http\Controllers\EstadisticasController;
 use App\Http\Controllers\EstrategiaController;
 use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\PorteriaController;
 
 Route::get('/', function () {
     if (! auth()->check()) {
         return redirect()->route('login');
     }
 
-    return redirect()->route(auth()->user()->isAsesor() ? 'leads.index' : 'dashboard');
+    if (auth()->user()->isAsesor()) {
+        return redirect()->route('leads.index');
+    }
+
+    if (auth()->user()->isPorteria()) {
+        return redirect()->route('porteria.index');
+    }
+
+    return redirect()->route('dashboard');
 });
 
 Route::get(
@@ -71,6 +80,19 @@ Route::delete('/turnos/{concesionario}/check-in', [TurnoController::class, 'chec
 Route::post('/turnos/asignar-cliente', [TurnoController::class, 'asignarCliente'])
     ->name('turnos.asignar-cliente')
     ->middleware(['auth', 'role:admin,staff']);
+
+//Portería (check-in de vehículos en la entrada de la feria)
+Route::get('/porteria', [PorteriaController::class, 'index'])
+    ->name('porteria.index')
+    ->middleware(['auth', 'role:admin,porteria']);
+
+Route::post('/porteria/{vehiculo}/ingreso', [PorteriaController::class, 'marcarIngreso'])
+    ->name('porteria.ingreso')
+    ->middleware(['auth', 'role:admin,porteria']);
+
+Route::delete('/porteria/{vehiculo}/ingreso', [PorteriaController::class, 'quitarIngreso'])
+    ->name('porteria.quitar-ingreso')
+    ->middleware(['auth', 'role:admin,porteria']);
 
 //Clientes
 Route::resource('clientes', ClienteController::class)

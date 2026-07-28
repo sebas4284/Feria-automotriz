@@ -49,6 +49,7 @@
                         <option value="concesionario" @selected(old('rol', 'concesionario') === 'concesionario')>Concesionario</option>
                         <option value="asesor" @selected(old('rol') === 'asesor')>Asesor</option>
                         <option value="staff" @selected(old('rol') === 'staff')>Staff (Rifa y Turnos)</option>
+                        <option value="porteria" @selected(old('rol') === 'porteria')>Portería (check-in de vehículos)</option>
                         <option value="admin" @selected(old('rol') === 'admin')>Admin</option>
                     </select>
                 </div>

@@ -64,8 +64,15 @@ class Vehiculo extends Model
 
         'estado',
 
-        'ubicacion'
+        'ubicacion',
+
+        'ingresado_at',
     ];
+
+    protected $casts = [
+        'ingresado_at' => 'datetime',
+    ];
+
     public function getFotoUrlAttribute(): ?string
     {
         return $this->foto ? Storage::disk('public')->url($this->foto) : null;

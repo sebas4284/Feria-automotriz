@@ -8,6 +8,7 @@
         'concesionario' => ['badge' => 'bg-blue-500/20 text-blue-400',     'label' => 'Concesionario'],
         'asesor'        => ['badge' => 'bg-teal-500/20 text-teal-400',     'label' => 'Asesor'],
         'staff'         => ['badge' => 'bg-amber-500/20 text-amber-400',   'label' => 'Staff'],
+        'porteria'      => ['badge' => 'bg-cyan-500/20 text-cyan-400',     'label' => 'Portería'],
     ];
 @endphp
 
