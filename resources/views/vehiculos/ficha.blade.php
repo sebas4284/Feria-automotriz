@@ -28,17 +28,17 @@
             justify-content: center;
             background: #111;
             border-radius: 10px;
-            margin: 16px;
-            padding: 12px;
+            margin: 12px;
+            padding: 10px;
         }
         .encabezado img {
             max-width: 100%;
-            height: 60px;
+            height: 56px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px 14px;
+            gap: 8px 14px;
             padding: 0 16px 16px;
             grid-template-areas:
                 "placa       vitrina"
@@ -59,7 +59,7 @@
             flex-direction: column;
         }
         .etiqueta {
-            font-size: 10px;
+            font-size: 12px;
             text-transform: uppercase;
             color: #16215c;
             font-weight: bold;
@@ -70,15 +70,15 @@
             flex: 1;
             background: #e4e4e4;
             border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 15px;
+            padding: 9px 11px;
+            font-size: 19px;
             font-weight: bold;
             word-break: break-word;
             display: flex;
             align-items: center;
         }
         .valor.grande {
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 900;
             color: #c8161e;
             background: #fdeaea;
@@ -118,8 +118,20 @@
             cursor: pointer;
         }
         @media print {
+            @page {
+                size: letter;
+                margin: 8mm;
+            }
             body { background: #fff; padding: 0; }
-            .hoja { width: 100%; }
+            .hoja {
+                width: 100%;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .grid, .encabezado, .celda {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
             .acciones { display: none; }
         }
     </style>
