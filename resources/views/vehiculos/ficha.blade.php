@@ -289,7 +289,7 @@
             </div>
 
             <div class="celda prferia">
-                <div class="etiqueta">PR Feria</div>
+                <div class="etiqueta">Precio Feria</div>
                 <div class="valor grande">$ {{ number_format($vehiculo->precio_expocar ?? 0, 0, ',', '.') }}</div>
             </div>
 
