@@ -18,7 +18,7 @@
             padding: 24px;
         }
         .hoja {
-            width: 480px;
+            width: 520px;
             margin: 0 auto;
             background: #fff;
         }
@@ -28,18 +28,18 @@
             justify-content: center;
             background: #111;
             border-radius: 10px;
-            margin: 12px;
-            padding: 10px;
+            margin: 18px;
+            padding: 14px;
         }
         .encabezado img {
             max-width: 100%;
-            height: 56px;
+            height: 70px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px 14px;
-            padding: 0 16px 16px;
+            gap: 13px 18px;
+            padding: 0 18px 20px;
             grid-template-areas:
                 "placa       vitrina"
                 "marca       marca"
@@ -59,26 +59,26 @@
             flex-direction: column;
         }
         .etiqueta {
-            font-size: 12px;
+            font-size: 14px;
             text-transform: uppercase;
             color: #16215c;
             font-weight: bold;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .valor {
             flex: 1;
             background: #e4e4e4;
             border-radius: 8px;
-            padding: 9px 11px;
-            font-size: 19px;
+            padding: 13px 15px;
+            font-size: 24px;
             font-weight: bold;
             word-break: break-word;
             display: flex;
             align-items: center;
         }
         .valor.grande {
-            font-size: 32px;
+            font-size: 42px;
             font-weight: 900;
             color: #c8161e;
             background: #fdeaea;
@@ -104,7 +104,7 @@
         .accesorios { grid-area: accesorios; }
         .accesorios .valor { align-items: flex-start; }
         .acciones {
-            width: 480px;
+            width: 520px;
             margin: 16px auto 0;
             text-align: right;
         }
