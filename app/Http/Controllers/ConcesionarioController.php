@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Concesionario;
+use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 
 class ConcesionarioController extends Controller
@@ -75,12 +76,51 @@ class ConcesionarioController extends Controller
         'activo' => $request->has('activo')
     ]);
 
+    $demovidos = $this->demoverExcedentes($concesionario);
+
+    $mensaje = 'Concesionario actualizado correctamente';
+    if ($demovidos > 0) {
+        $mensaje .= ". Se movieron {$demovidos} vehículo(s) a \"Fuera del área\" por la reducción de cupo.";
+    }
+
     return redirect()
         ->route('concesionarios.index')
         ->with(
             'success',
-            'Concesionario actualizado correctamente'
+            $mensaje
         );
+}
+
+private function demoverExcedentes(Concesionario $concesionario): int
+{
+    if ($concesionario->cupo_feria === null) {
+        return 0;
+    }
+
+    $usado = Vehiculo::where('concesionario_id', $concesionario->id)
+        ->where('ubicacion', 'Dentro del área')
+        ->where('estado', '!=', 'Vendido')
+        ->count();
+
+    $exceso = $usado - $concesionario->cupo_feria;
+
+    if ($exceso <= 0) {
+        return 0;
+    }
+
+    $candidatos = Vehiculo::where('concesionario_id', $concesionario->id)
+        ->where('ubicacion', 'Dentro del área')
+        ->where('estado', '!=', 'Vendido')
+        ->whereNull('ingresado_at')
+        ->orderByDesc('created_at')
+        ->limit($exceso)
+        ->get();
+
+    foreach ($candidatos as $vehiculo) {
+        $vehiculo->update(['ubicacion' => 'Fuera del área']);
+    }
+
+    return $candidatos->count();
 }
 
     public function destroy(

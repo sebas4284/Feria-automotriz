@@ -136,4 +136,42 @@ class VehiculoCupoFeriaTest extends TestCase
 
         $this->assertDatabaseHas('vehiculos', ['placa' => 'CUP062', 'ubicacion' => 'Fuera del área']);
     }
+
+    public function test_reconciliar_cupo_demotes_newest_excess_vehiculos_dentro_del_area_when_over_cupo(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true, 'cupo_feria' => 2]);
+
+        $v1 = Vehiculo::create($this->payload(['placa' => 'DEM001', 'concesionario_id' => $conc->id]));
+        $v2 = Vehiculo::create($this->payload(['placa' => 'DEM002', 'concesionario_id' => $conc->id]));
+        $v3 = Vehiculo::create($this->payload(['placa' => 'DEM003', 'concesionario_id' => $conc->id]));
+
+        Vehiculo::where('placa', 'DEM001')->update(['created_at' => now()->subMinutes(3)]);
+        Vehiculo::where('placa', 'DEM002')->update(['created_at' => now()->subMinutes(2)]);
+        Vehiculo::where('placa', 'DEM003')->update(['created_at' => now()->subMinute()]);
+
+        $this->artisan('vehiculos:reconciliar-cupo')->assertExitCode(0);
+
+        // Cupo=2, había 3 dentro: el más reciente (DEM003) es el que sale.
+        $this->assertEquals('Dentro del área', $v1->fresh()->ubicacion);
+        $this->assertEquals('Dentro del área', $v2->fresh()->ubicacion);
+        $this->assertEquals('Fuera del área', $v3->fresh()->ubicacion);
+    }
+
+    public function test_reconciliar_cupo_does_not_demote_vehiculos_already_ingresados(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true, 'cupo_feria' => 1]);
+
+        $v1 = Vehiculo::create($this->payload(['placa' => 'DEM010', 'concesionario_id' => $conc->id, 'ingresado_at' => now()]));
+        $v2 = Vehiculo::create($this->payload(['placa' => 'DEM011', 'concesionario_id' => $conc->id, 'ingresado_at' => now()]));
+        $v3 = Vehiculo::create($this->payload(['placa' => 'DEM012', 'concesionario_id' => $conc->id]));
+
+        $this->artisan('vehiculos:reconciliar-cupo')
+            ->expectsOutputToContain('sigue 1 vehículo(s) por encima de su cupo')
+            ->assertExitCode(0);
+
+        // v1 y v2 ya hicieron check-in en portería, así que no se mueven aunque excedan el cupo.
+        $this->assertEquals('Dentro del área', $v1->fresh()->ubicacion);
+        $this->assertEquals('Dentro del área', $v2->fresh()->ubicacion);
+        $this->assertEquals('Fuera del área', $v3->fresh()->ubicacion);
+    }
 }
