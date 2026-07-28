@@ -16,7 +16,20 @@ class PorteriaController extends Controller
         $totalDentro = $vehiculos->where('ubicacion', 'Dentro del área')->count();
         $totalIngresados = $vehiculos->where('ubicacion', 'Dentro del área')->whereNotNull('ingresado_at')->count();
 
-        return view('porteria.index', compact('vehiculos', 'totalDentro', 'totalIngresados'));
+        $porConcesionario = $vehiculos
+            ->groupBy(fn (Vehiculo $v) => $v->concesionario?->nombre ?? 'Sin concesionario')
+            ->map(function ($items, $nombre) {
+                return (object) [
+                    'nombre' => $nombre,
+                    'dentro' => $items->where('ubicacion', 'Dentro del área')->count(),
+                    'ingresados' => $items->where('ubicacion', 'Dentro del área')->whereNotNull('ingresado_at')->count(),
+                    'vehiculos' => $items->sortBy('placa')->values(),
+                ];
+            })
+            ->sortBy('nombre')
+            ->values();
+
+        return view('porteria.index', compact('vehiculos', 'totalDentro', 'totalIngresados', 'porConcesionario'));
     }
 
     public function marcarIngreso(Vehiculo $vehiculo)

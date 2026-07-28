@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Concesionario;
 use App\Models\User;
 use App\Models\Vehiculo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -99,5 +100,52 @@ class PorteriaTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('1 / 2');
+    }
+
+    public function test_pestana_por_concesionario_muestra_conteo_correcto_por_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $concesionario = Concesionario::create(['nombre' => 'Autos del Valle']);
+
+        $this->makeVehiculo(['placa' => 'CON001', 'concesionario_id' => $concesionario->id, 'ubicacion' => 'Dentro del área', 'ingresado_at' => now()]);
+        $this->makeVehiculo(['placa' => 'CON002', 'concesionario_id' => $concesionario->id, 'ubicacion' => 'Dentro del área']);
+        $this->makeVehiculo(['placa' => 'CON003', 'concesionario_id' => $concesionario->id, 'ubicacion' => 'Fuera del área']);
+
+        $response = $this->actingAs($admin)->get('/porteria');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Autos del Valle', '1 / 2']);
+        $response->assertSee('CON001');
+        $response->assertSee('CON002');
+        $response->assertSee('CON003');
+    }
+
+    public function test_vehiculo_sin_concesionario_se_agrupa_como_sin_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+
+        $this->makeVehiculo(['placa' => 'SIN001', 'concesionario_id' => null, 'ubicacion' => 'Dentro del área']);
+
+        $response = $this->actingAs($admin)->get('/porteria');
+
+        $response->assertOk();
+        $response->assertSee('Sin concesionario');
+    }
+
+    public function test_dos_concesionarios_no_mezclan_sus_conteos(): void
+    {
+        $admin = $this->makeUser('admin');
+        $concesionarioA = Concesionario::create(['nombre' => 'Concesionario A']);
+        $concesionarioB = Concesionario::create(['nombre' => 'Concesionario B']);
+
+        $this->makeVehiculo(['placa' => 'AAA001', 'concesionario_id' => $concesionarioA->id, 'ubicacion' => 'Dentro del área', 'ingresado_at' => now()]);
+        $this->makeVehiculo(['placa' => 'AAA002', 'concesionario_id' => $concesionarioA->id, 'ubicacion' => 'Dentro del área', 'ingresado_at' => now()]);
+        $this->makeVehiculo(['placa' => 'BBB001', 'concesionario_id' => $concesionarioB->id, 'ubicacion' => 'Dentro del área']);
+
+        $response = $this->actingAs($admin)->get('/porteria');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Concesionario A', '2 / 2']);
+        $response->assertSeeInOrder(['Concesionario B', '0 / 1']);
     }
 }
