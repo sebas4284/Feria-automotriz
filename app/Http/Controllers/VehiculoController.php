@@ -180,9 +180,16 @@ class VehiculoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Vehiculo $vehiculo)
+    public function show(Request $request, Vehiculo $vehiculo)
     {
-        return view('vehiculos.show', compact('vehiculo'));
+        $referer = $request->headers->get('referer');
+        $volverUrl = route('vehiculos.index');
+
+        if ($referer && ! str_contains($referer, '/ficha')) {
+            $volverUrl = $referer;
+        }
+
+        return view('vehiculos.show', compact('vehiculo', 'volverUrl'));
     }
 
     public function ficha(Vehiculo $vehiculo)
