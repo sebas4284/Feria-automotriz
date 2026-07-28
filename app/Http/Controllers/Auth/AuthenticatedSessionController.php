@@ -28,7 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $home = $request->user()->isAsesor() ? 'leads.index' : 'dashboard';
+        $home = match (true) {
+            $request->user()->isAsesor() => 'leads.index',
+            $request->user()->isPorteria() => 'porteria.index',
+            default => 'dashboard',
+        };
 
         return redirect()->intended(route($home, absolute: false));
     }
