@@ -27,13 +27,13 @@
             border-radius: 6px;
             padding: 8px 0;
             margin: 10px;
-            height: 70px;
+            height: 58px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .encabezado img {
-            height: 58px;
+            height: 46px;
         }
         .grid {
             display: grid;
@@ -71,41 +71,42 @@
             background: #efefef;
             border-radius: 4px;
             padding: 6px 10px;
-            min-height: 42px;
+            font-size: 15px;
             font-weight: bold;
             word-break: break-word;
             display: flex;
             align-items: center;
         }
         .placa .valor {
-            font-size: 56px;
+            font-size: 34px;
             font-weight: 900;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
+            padding: 7px 10px;
         }
         .marca .valor {
-            font-size: 40px;
+            font-size: 22px;
             font-weight: 900;
         }
         .linea .valor {
-            font-size: 38px;
+            font-size: 20px;
             font-weight: 900;
         }
         .modelo .valor {
-            font-size: 42px;
+            font-size: 22px;
             font-weight: 900;
         }
         .kilometraje .valor {
-            font-size: 44px;
+            font-size: 22px;
             font-weight: 900;
         }
         .prnormal .valor {
             background: #fff;
-            font-size: 26px;
+            font-size: 18px;
             font-weight: 900;
         }
         .bono .valor {
             background: #fff;
-            font-size: 28px;
+            font-size: 18px;
             font-weight: 900;
         }
         .valor.grande {
@@ -113,10 +114,10 @@
             color: #666;
             border: 3px solid #333;
             border-radius: 10px;
-            font-size: 68px;
+            font-size: 44px;
             font-weight: 900;
             justify-content: center;
-            padding: 12px;
+            padding: 10px;
         }
         .placa { grid-area: placa; }
         .vitrina { grid-area: vitrina; }
@@ -138,10 +139,10 @@
         .accesorios { grid-area: accesorios; }
         .accesorios .valor {
             align-items: flex-start;
-            font-size: 20px;
-            line-height: 1.45;
+            font-size: 13px;
+            line-height: 1.4;
             font-weight: 700;
-            padding: 15px;
+            padding: 10px;
         }
         .acciones {
             width: 640px;
