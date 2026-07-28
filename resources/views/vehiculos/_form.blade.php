@@ -162,80 +162,97 @@
     $combustibleActual = old('combustible', $vehiculo->combustible ?? '');
 @endphp
 
-<select
-    name="color"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-    <option value="">Color</option>
-    @foreach($colores as $c)
-        <option value="{{ $c }}" @selected($colorActual == $c)>{{ $c }}</option>
-    @endforeach
-    @if($colorActual && ! $colores->contains($colorActual))
-        <option value="{{ $colorActual }}" selected>{{ $colorActual }}</option>
-    @endif
-</select>
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Color</label>
+    <select
+        name="color"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        <option value="">Seleccionar</option>
+        @foreach($colores as $c)
+            <option value="{{ $c }}" @selected($colorActual == $c)>{{ $c }}</option>
+        @endforeach
+        @if($colorActual && ! $colores->contains($colorActual))
+            <option value="{{ $colorActual }}" selected>{{ $colorActual }}</option>
+        @endif
+    </select>
+</div>
 
-<input
-    type="text"
-    name="clase_vehiculo"
-    placeholder="Clase de Vehículo"
-    value="{{ old('clase_vehiculo', $vehiculo->clase_vehiculo ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Clase de Vehículo</label>
+    <input
+        type="text"
+        name="clase_vehiculo"
+        value="{{ old('clase_vehiculo', $vehiculo->clase_vehiculo ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
 
-<input
-    type="text"
-    name="tipo_vehiculo"
-    placeholder="Tipo de Vehículo"
-    value="{{ old('tipo_vehiculo', $vehiculo->tipo_vehiculo ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Tipo de Vehículo</label>
+    <input
+        type="text"
+        name="tipo_vehiculo"
+        value="{{ old('tipo_vehiculo', $vehiculo->tipo_vehiculo ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
 
-<input
-    type="number"
-    name="cc"
-    placeholder="CC"
-    value="{{ old('cc', $vehiculo->cc ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Cilindraje (CC)</label>
+    <input
+        type="number"
+        name="cc"
+        value="{{ old('cc', $vehiculo->cc ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
 
-<select
-    name="combustible"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-    <option value="">Combustible</option>
-    @foreach($combustibles as $c)
-        <option value="{{ $c }}" @selected($combustibleActual == $c)>{{ $c }}</option>
-    @endforeach
-    @if($combustibleActual && ! $combustibles->contains($combustibleActual))
-        <option value="{{ $combustibleActual }}" selected>{{ $combustibleActual }}</option>
-    @endif
-</select>
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Combustible</label>
+    <select
+        name="combustible"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+        <option value="">Seleccionar</option>
+        @foreach($combustibles as $c)
+            <option value="{{ $c }}" @selected($combustibleActual == $c)>{{ $c }}</option>
+        @endforeach
+        @if($combustibleActual && ! $combustibles->contains($combustibleActual))
+            <option value="{{ $combustibleActual }}" selected>{{ $combustibleActual }}</option>
+        @endif
+    </select>
+</div>
 
-<select
-    name="transmision"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Transmisión</label>
+    <select
+        name="transmision"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
-    <option value="">Transmisión</option>
+        <option value="">Seleccionar</option>
 
-    <option value="Mecánica"
-        @selected(old('transmision', $vehiculo->transmision ?? '') == 'Mecánica')>
-        Mecánica
-    </option>
+        <option value="Mecánica"
+            @selected(old('transmision', $vehiculo->transmision ?? '') == 'Mecánica')>
+            Mecánica
+        </option>
 
-    <option value="Automática"
-        @selected(old('transmision', $vehiculo->transmision ?? '') == 'Automática')>
-        Automática
-    </option>
+        <option value="Automática"
+            @selected(old('transmision', $vehiculo->transmision ?? '') == 'Automática')>
+            Automática
+        </option>
 
-    <option value="CVT"
-        @selected(old('transmision', $vehiculo->transmision ?? '') == 'CVT')>
-        CVT
-    </option>
+        <option value="CVT"
+            @selected(old('transmision', $vehiculo->transmision ?? '') == 'CVT')>
+            CVT
+        </option>
 
-</select>
+    </select>
+</div>
 
-<input
-    type="number"
-    name="kilometraje"
-    placeholder="Kilometraje"
-    value="{{ old('kilometraje', $vehiculo->kilometraje ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Kilometraje</label>
+    <input
+        type="number"
+        name="kilometraje"
+        value="{{ old('kilometraje', $vehiculo->kilometraje ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
 
 
 </div>
@@ -340,85 +357,113 @@
 </h2>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6"
-    x-data="{ normal: {{ (float) old('precio_normal', $vehiculo->precio_normal ?? 0) }}, bono: {{ (float) old('bono_descuento', $vehiculo->bono_descuento ?? 0) }} }">
+    x-data="{
+        prFasecolda: {{ (float) old('pr_fasecolda', $vehiculo->pr_fasecolda ?? 0) }},
+        normal: {{ (float) old('precio_normal', $vehiculo->precio_normal ?? 0) }},
+        bono: {{ (float) old('bono_descuento', $vehiculo->bono_descuento ?? 0) }},
+        get expocar() { return this.normal - this.bono },
+        cop(n) { return n ? new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(n) : ''; },
+        parseCop(str) { return parseInt(String(str).replace(/[^\d]/g, ''), 10) || 0; },
+    }">
 
 
-<input
-    type="text"
-    name="cod_fasecolda"
-    placeholder="Código Fasecolda"
-    value="{{ old('cod_fasecolda', $vehiculo->cod_fasecolda ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Código Fasecolda</label>
+    <input
+        type="text"
+        name="cod_fasecolda"
+        value="{{ old('cod_fasecolda', $vehiculo->cod_fasecolda ?? '') }}"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+</div>
 
-<input
-    type="number"
-    step="0.01"
-    name="pr_fasecolda"
-    placeholder="Precio Fasecolda"
-    value="{{ old('pr_fasecolda', $vehiculo->pr_fasecolda ?? '') }}"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Precio Fasecolda</label>
+    <input
+        type="text"
+        inputmode="numeric"
+        :value="cop(prFasecolda)"
+        @input="prFasecolda = parseCop($event.target.value)"
+        placeholder="$ 0"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    <input type="hidden" name="pr_fasecolda" :value="prFasecolda">
+</div>
 
-<input
-    type="number"
-    step="0.01"
-    name="precio_normal"
-    placeholder="Precio Normal"
-    x-model.number="normal"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Precio Normal</label>
+    <input
+        type="text"
+        inputmode="numeric"
+        :value="cop(normal)"
+        @input="normal = parseCop($event.target.value)"
+        placeholder="$ 0"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    <input type="hidden" name="precio_normal" :value="normal">
+</div>
 
-<input
-    type="number"
-    step="0.01"
-    name="bono_descuento"
-    placeholder="Bono Descuento"
-    x-model.number="bono"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Bono Descuento</label>
+    <input
+        type="text"
+        inputmode="numeric"
+        :value="cop(bono)"
+        @input="bono = parseCop($event.target.value)"
+        placeholder="$ 0"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+    <input type="hidden" name="bono_descuento" :value="bono">
+</div>
 
-<input
-    type="number"
-    step="0.01"
-    name="precio_expocar"
-    placeholder="Precio Expocar (automático)"
-    :value="(normal - bono).toFixed(2)"
-    readonly
-    class="bg-gray-900 text-gray-400 cursor-not-allowed border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Precio Expocar (automático)</label>
+    <input
+        type="text"
+        :value="cop(expocar)"
+        readonly
+        class="w-full bg-gray-900 text-gray-400 cursor-not-allowed border border-gray-700 rounded-xl px-4 py-3">
+    <input type="hidden" name="precio_expocar" :value="expocar">
+</div>
 
-<select
-    name="estado"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Estado</label>
+    <select
+        name="estado"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
-    <option value="Disponible"
-        @selected(old('estado', $vehiculo->estado ?? '') == 'Disponible')>
-        Disponible
-    </option>
+        <option value="Disponible"
+            @selected(old('estado', $vehiculo->estado ?? '') == 'Disponible')>
+            Disponible
+        </option>
 
-    <option value="Reservado"
-        @selected(old('estado', $vehiculo->estado ?? '') == 'Reservado')>
-        Reservado
-    </option>
+        <option value="Reservado"
+            @selected(old('estado', $vehiculo->estado ?? '') == 'Reservado')>
+            Reservado
+        </option>
 
-    <option value="Vendido"
-        @selected(old('estado', $vehiculo->estado ?? '') == 'Vendido')>
-        Vendido
-    </option>
+        <option value="Vendido"
+            @selected(old('estado', $vehiculo->estado ?? '') == 'Vendido')>
+            Vendido
+        </option>
 
-</select>
+    </select>
+</div>
 
-<select
-    name="ubicacion"
-    class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+<div>
+    <label class="block mb-2 text-sm text-gray-400">Ubicación</label>
+    <select
+        name="ubicacion"
+        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
 
-    <option value="Dentro del área"
-        @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Dentro del área')>
-        Dentro del área (ocupa cupo de feria)
-    </option>
+        <option value="Dentro del área"
+            @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Dentro del área')>
+            Dentro del área (ocupa cupo de feria)
+        </option>
 
-    <option value="Fuera del área"
-        @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Fuera del área')>
-        Fuera del área (no ocupa cupo)
-    </option>
+        <option value="Fuera del área"
+            @selected(old('ubicacion', $vehiculo->ubicacion ?? 'Dentro del área') == 'Fuera del área')>
+            Fuera del área (no ocupa cupo)
+        </option>
 
-</select>
+    </select>
+</div>
 
 
 </div>
