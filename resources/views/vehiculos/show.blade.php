@@ -38,7 +38,8 @@
                 Editar
             </a>
         @endcan
-        <a href="{{ url()->previous(route('vehiculos.index')) }}"
+        <a href="{{ route('vehiculos.index') }}"
+            onclick="if (window.history.length > 1) { history.back(); return false; }"
             class="bg-gray-700 hover:bg-gray-600 px-4 py-2.5 rounded-xl text-sm transition">
             Volver
         </a>
