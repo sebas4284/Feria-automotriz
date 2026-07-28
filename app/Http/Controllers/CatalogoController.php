@@ -40,6 +40,10 @@ class CatalogoController extends Controller
 
         $valor = trim($request->valor);
 
+        if ($tipo === 'marca') {
+            $valor = mb_strtoupper($valor);
+        }
+
         $existe = Catalogo::tipo($tipo)->get()->contains(
             fn ($item) => mb_strtolower($item->valor) === mb_strtolower($valor)
         );

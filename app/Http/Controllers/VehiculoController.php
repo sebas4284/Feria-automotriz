@@ -155,6 +155,7 @@ class VehiculoController extends Controller
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
+        $data['marca'] = mb_strtoupper($data['marca']);
         $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
 
         $mensajeCupo = $this->ajustarUbicacionPorCupo($data);
@@ -268,6 +269,7 @@ class VehiculoController extends Controller
 
         $data = $request->except('foto');
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
+        $data['marca'] = mb_strtoupper($data['marca']);
         $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
 
         $mensajeCupo = $this->ajustarUbicacionPorCupo($data, $vehiculo->id);
