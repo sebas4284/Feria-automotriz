@@ -68,10 +68,6 @@ Route::delete('/turnos/{concesionario}/check-in', [TurnoController::class, 'chec
     ->name('turnos.check-out')
     ->middleware(['auth', 'role:admin']);
 
-Route::post('/turnos/rotar', [TurnoController::class, 'rotar'])
-    ->name('turnos.rotar')
-    ->middleware(['auth', 'role:admin,staff']);
-
 Route::post('/turnos/asignar-cliente', [TurnoController::class, 'asignarCliente'])
     ->name('turnos.asignar-cliente')
     ->middleware(['auth', 'role:admin,staff']);

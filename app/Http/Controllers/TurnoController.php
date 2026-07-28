@@ -27,9 +27,8 @@ class TurnoController extends Controller
             })
             ->values();
 
-        $detras = $enFila->get(1);
-        $rondaSiguiente = $siguiente ? $turnosHoy->get($siguiente->id)->veces_asignado + 1 : null;
-        $rondaDetras = $detras ? $turnosHoy->get($detras->id)->veces_asignado + 1 : null;
+        $sinTurno = $concesionarios->reject(fn (Concesionario $c) => $turnosHoy->has($c->id))->values();
+        $concesionariosOrdenados = $enFila->concat($sinTurno);
 
         $clientesHoy = Cliente::with('concesionario')
             ->where('cita', false)
@@ -40,8 +39,8 @@ class TurnoController extends Controller
         $pendientes = $clientesHoy->whereNull('concesionario_id')->values();
 
         return view('turnos.index', compact(
-            'concesionarios', 'turnosHoy', 'siguiente', 'detras',
-            'rondaSiguiente', 'rondaDetras', 'enFila', 'clientesHoy', 'pendientes'
+            'concesionarios', 'concesionariosOrdenados', 'turnosHoy', 'siguiente',
+            'enFila', 'clientesHoy', 'pendientes'
         ));
     }
 
@@ -75,46 +74,21 @@ class TurnoController extends Controller
     }
 
     /**
-     * Confirma manualmente a quién le tocó el turno actual. Es un ajuste
-     * excepcional del staff (ej. cuando el sugerido no está físicamente).
-     * concesionario_id puede ser el "siguiente" sugerido (si sí está) o el
-     * que queda "detrás" (si el sugerido no está en ese momento).
-     */
-    public function rotar(Request $request, TurnoAssignmentService $turnos)
-    {
-        $request->validate([
-            'concesionario_id' => 'required|exists:concesionarios,id',
-        ]);
-
-        $concesionario = Concesionario::findOrFail($request->concesionario_id);
-
-        $tieneTurnoHoy = Turno::where('concesionario_id', $concesionario->id)
-            ->whereDate('fecha', today())
-            ->exists();
-
-        if (! $tieneTurnoHoy) {
-            return redirect()->route('turnos.index')->with('error', 'Ese concesionario no está en la fila de hoy.');
-        }
-
-        $turnos->registrarAsignacion($concesionario);
-
-        return redirect()->route('turnos.index')->with('success', "Turno confirmado para {$concesionario->nombre}.");
-    }
-
-    /**
      * Vista de solo lectura pensada para una pantalla grande/TV en el
-     * punto de atención: muestra el último cliente sin cita registrado y
-     * el concesionario que le corresponde, en letras enormes.
+     * punto de atención: muestra las últimas asignaciones del día
+     * (concesionario + cliente), la más reciente resaltada arriba.
      */
     public function pantalla()
     {
-        $ultimoCliente = Cliente::with('concesionario')
+        $asignaciones = Cliente::with('concesionario')
             ->where('cita', false)
+            ->whereNotNull('concesionario_id')
             ->whereDate('created_at', today())
             ->latest()
-            ->first();
+            ->limit(8)
+            ->get();
 
-        return view('turnos.pantalla', compact('ultimoCliente'));
+        return view('turnos.pantalla', compact('asignaciones'));
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)

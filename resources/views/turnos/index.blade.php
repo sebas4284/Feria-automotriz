@@ -32,42 +32,14 @@
         </div>
     @endif
 
-    @if($siguiente)
-        <div class="bg-blue-500/10 border border-blue-500/40 rounded-2xl px-4 py-3">
-            <p class="text-xs text-blue-400">Siguiente en turno</p>
-            <p class="font-semibold">{{ $siguiente->nombre }} <span class="text-xs text-blue-400 font-normal">· Ronda {{ $rondaSiguiente }}</span></p>
-            @if($detras)
-                <p class="text-xs text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
-            @endif
-            <div class="grid grid-cols-2 gap-2 mt-3">
-                <form action="{{ route('turnos.rotar') }}" method="POST"
-                    onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
-                    @csrf
-                    <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2.5 rounded-xl text-sm font-medium transition">
-                        Sí está, confirmar
-                    </button>
-                </form>
-                @if($detras)
-                    <form action="{{ route('turnos.rotar') }}" method="POST"
-                        onsubmit="return confirm('¿{{ $siguiente->nombre }} no está? El turno pasará a {{ $detras->nombre }}.')">
-                        @csrf
-                        <input type="hidden" name="concesionario_id" value="{{ $detras->id }}">
-                        <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 py-2.5 rounded-xl text-sm font-medium transition">
-                            No está, siguiente
-                        </button>
-                    </form>
-                @endif
-            </div>
-        </div>
-    @else
+    @if(!$siguiente)
         <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 text-sm text-gray-500">
             Ningún concesionario ha marcado llegada hoy. Los clientes sin cita quedarán sin asignar hasta que alguien llegue.
         </div>
     @endif
 
     <div class="space-y-2">
-        @foreach($concesionarios as $c)
+        @foreach($concesionariosOrdenados as $c)
             @php $turno = $turnosHoy->get($c->id); @endphp
             <div class="bg-gray-900 border {{ $siguiente && $siguiente->id === $c->id ? 'border-blue-500' : 'border-gray-800' }} rounded-2xl px-4 py-3.5">
                 <div class="flex items-center justify-between gap-2">
@@ -162,37 +134,7 @@
         </div>
     @endif
 
-    @if($siguiente)
-        <div class="mb-6 bg-blue-500/10 border border-blue-500/40 rounded-xl p-4 flex items-center justify-between gap-4">
-            <div>
-                <p class="text-xs text-blue-400">Siguiente en turno para el próximo cliente sin cita</p>
-                <p class="text-lg font-semibold">{{ $siguiente->nombre }} <span class="text-sm text-blue-400 font-normal">· Ronda {{ $rondaSiguiente }}</span></p>
-                @if($detras)
-                    <p class="text-sm text-gray-400 mt-1">Detrás: {{ $detras->nombre }} · Ronda {{ $rondaDetras }}</p>
-                @endif
-            </div>
-            <div class="flex gap-2 shrink-0">
-                <form action="{{ route('turnos.rotar') }}" method="POST"
-                    onsubmit="return confirm('¿Confirmas que este turno es para {{ $siguiente->nombre }}?')">
-                    @csrf
-                    <input type="hidden" name="concesionario_id" value="{{ $siguiente->id }}">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl text-sm font-medium transition">
-                        Sí está, confirmar
-                    </button>
-                </form>
-                @if($detras)
-                    <form action="{{ route('turnos.rotar') }}" method="POST"
-                        onsubmit="return confirm('¿{{ $siguiente->nombre }} no está? El turno pasará a {{ $detras->nombre }}.')">
-                        @csrf
-                        <input type="hidden" name="concesionario_id" value="{{ $detras->id }}">
-                        <button type="submit" class="bg-gray-700 hover:bg-gray-600 px-5 py-2.5 rounded-xl text-sm font-medium transition">
-                            No está, siguiente
-                        </button>
-                    </form>
-                @endif
-            </div>
-        </div>
-    @else
+    @if(!$siguiente)
         <div class="mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 text-gray-500">
             Ningún concesionario ha marcado llegada hoy. Los clientes sin cita quedarán sin asignar hasta que alguien llegue.
         </div>
@@ -228,7 +170,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($concesionarios as $c)
+                @foreach($concesionariosOrdenados as $c)
                     @php $turno = $turnosHoy->get($c->id); @endphp
                     <tr class="border-t border-gray-800 {{ $siguiente && $siguiente->id === $c->id ? 'bg-blue-500/5' : '' }} hover:bg-gray-800/40 transition"
                         @if($turno)

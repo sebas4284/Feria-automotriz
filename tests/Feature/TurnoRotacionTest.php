@@ -18,53 +18,6 @@ class TurnoRotacionTest extends TestCase
         return User::factory()->create(['rol' => $rol]);
     }
 
-    public function test_confirmar_el_siguiente_registra_su_asignacion_y_se_queda_en_turnos(): void
-    {
-        $admin = $this->makeUser('admin');
-        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
-        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
-
-        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
-        Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
-
-        $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $a->id])
-            ->assertRedirect(route('turnos.index'));
-
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 1]);
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $b->id, 'veces_asignado' => 0]);
-    }
-
-    public function test_no_esta_pasa_el_turno_al_de_atras_sin_afectar_al_saltado(): void
-    {
-        $admin = $this->makeUser('admin');
-        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
-        $b = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
-
-        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
-        Turno::create(['concesionario_id' => $b->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
-
-        // A es quien sigue, pero no está: se confirma directamente a B (el de atrás).
-        $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $b->id])
-            ->assertRedirect(route('turnos.index'));
-
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'veces_asignado' => 0]);
-        $this->assertDatabaseHas('turnos', ['concesionario_id' => $b->id, 'veces_asignado' => 1]);
-    }
-
-    public function test_no_se_puede_confirmar_un_concesionario_que_no_esta_en_la_fila_de_hoy(): void
-    {
-        $admin = $this->makeUser('admin');
-        $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
-        $sinLlegar = Concesionario::create(['nombre' => 'Sin Llegar', 'peso_asignacion' => 1, 'activo' => true]);
-
-        Turno::create(['concesionario_id' => $a->id, 'fecha' => today(), 'llegada_at' => now()]);
-
-        $this->actingAs($admin)->post('/turnos/rotar', ['concesionario_id' => $sinLlegar->id])
-            ->assertRedirect(route('turnos.index'));
-
-        $this->assertDatabaseMissing('turnos', ['concesionario_id' => $sinLlegar->id]);
-    }
-
     public function test_fila_estricta_no_reordena_por_conteo_total_sino_por_ultima_vez_atendido(): void
     {
         // Reproduce el caso de la captura: A y B llegaron primero y ya
@@ -100,7 +53,7 @@ class TurnoRotacionTest extends TestCase
         $this->assertTrue($service->nextConcesionario()->is($a));
     }
 
-    public function test_turnos_screen_shows_ronda_and_detras(): void
+    public function test_turnos_screen_shows_sugerido_badge_en_el_concesionario_correcto(): void
     {
         $admin = $this->makeUser('admin');
         $a = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
@@ -112,8 +65,33 @@ class TurnoRotacionTest extends TestCase
         $response = $this->actingAs($admin)->get('/turnos');
 
         $response->assertOk();
-        $response->assertSee('Ronda 1');
-        $response->assertSee('Detrás: B');
+        $response->assertSee('Sugerido');
+    }
+
+    public function test_concesionario_asignado_pasa_al_final_de_la_fila_visible(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        // Antes de asignar, Uno (llegó primero) va antes que Dos en la tabla.
+        $antes = $this->actingAs($admin)->get('/turnos');
+        $antes->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
+
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $uno->id,
+        ])->assertOk();
+
+        // Tras asignarle un cliente, Uno pasa al final: ahora Dos aparece primero.
+        $despues = $this->actingAs($admin)->get('/turnos');
+        $despues->assertOk();
+        $despues->assertSeeInOrder(['Concesionario Dos', 'Concesionario Uno']);
     }
 
     public function test_pantalla_muestra_mensaje_de_espera_sin_clientes_hoy(): void
@@ -126,7 +104,7 @@ class TurnoRotacionTest extends TestCase
         $response->assertSee('Esperando el primer cliente del día');
     }
 
-    public function test_pantalla_muestra_el_ultimo_cliente_y_su_concesionario(): void
+    public function test_pantalla_muestra_las_ultimas_asignaciones_y_su_concesionario(): void
     {
         $admin = $this->makeUser('admin');
         $conc = Concesionario::create(['nombre' => 'Auto Sol', 'peso_asignacion' => 1, 'activo' => true]);
