@@ -10,6 +10,7 @@
             print-color-adjust: exact;
             color-adjust: exact;
         }
+
         body {
             font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
             color: #111;
@@ -17,29 +18,36 @@
             margin: 0;
             padding: 24px;
         }
+
         .hoja {
-            width: 640px;
+            width: 100%;
+            max-width: 800px;
             margin: 0 auto;
             background: #fff;
+            padding: 20px;
+            border-radius: 8px;
         }
+
         .encabezado {
             background: #111;
             border-radius: 6px;
             padding: 8px 0;
-            margin: 10px;
-            height: 84px;
+            margin-bottom: 12px;
+            height: 70px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
         .encabezado img {
-            height: 70px;
+            height: 55px;
+            object-fit: contain;
         }
+
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px 16px;
-            padding: 18px;
+            gap: 8px 12px;
             grid-template-areas:
                 "placa       vitrina"
                 "marca       marca"
@@ -49,75 +57,65 @@
                 "combustible transmision"
                 "kilometraje kilometraje"
                 "soat        tecno"
-                "fasecolda   accesorios"
                 "prnormal    accesorios"
                 "bono        accesorios"
                 "prferia     prferia";
         }
+
         .celda {
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
+
         .etiqueta {
             font-size: 11px;
             text-transform: uppercase;
             color: #111;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.3px;
             margin-bottom: 2px;
         }
+
         .valor {
             flex: 1;
             background: #efefef;
             border-radius: 4px;
-            padding: 6px 10px;
-            min-height: 42px;
-            font-weight: bold;
+            padding: 4px 10px;
+            font-weight: 900;
             word-break: break-word;
             display: flex;
             align-items: center;
+            font-size: 22px; /* Aumentado globalmente */
         }
-        .placa .valor {
-            font-size: 64px;
-            font-weight: 900;
-            letter-spacing: 2px;
-        }
-        .marca .valor {
-            font-size: 46px;
-            font-weight: 900;
-        }
-        .linea .valor {
-            font-size: 44px;
-            font-weight: 900;
-        }
-        .modelo .valor {
-            font-size: 48px;
-            font-weight: 900;
-        }
-        .kilometraje .valor {
-            font-size: 50px;
-            font-weight: 900;
-        }
-        .prnormal .valor {
-            background: #fff;
-            font-size: 30px;
-            font-weight: 900;
-        }
-        .bono .valor {
-            background: #fff;
-            font-size: 32px;
-            font-weight: 900;
-        }
+
+        /* --- Tamaños específicos para destacar contenido --- */
+        .placa .valor       { font-size: 45px; letter-spacing: 1px; }
+        .vitrina .valor     { font-size: 26px; line-height: 1.1; }
+        .marca .valor       { font-size: 34px; }
+        .linea .valor       { font-size: 26px; }
+        .fecha .valor,
+        .ciudad .valor      { font-size: 22px; }
+        .modelo .valor      { font-size: 30px; }
+        .cilindraje .valor  { font-size: 26px; }
+        .combustible .valor,
+        .transmision .valor { font-size: 22px; }
+        .kilometraje .valor { font-size: 32px; }
+        .soat .valor,
+        .tecno .valor       { font-size: 22px; }
+        .prnormal .valor    { background: #fff; font-size: 24px; }
+        .bono .valor        { background: #fff; font-size: 24px; }
+
         .valor.grande {
             background: #fff;
-            color: #666;
-            border: 3px solid #333;
-            border-radius: 10px;
-            font-size: 78px;
+            color: #111;
+            border: 3px solid #111;
+            border-radius: 8px;
+            font-size: 40px;
             font-weight: 900;
             justify-content: center;
-            padding: 14px;
         }
+
         .placa { grid-area: placa; }
         .vitrina { grid-area: vitrina; }
         .marca { grid-area: marca; }
@@ -131,23 +129,25 @@
         .kilometraje { grid-area: kilometraje; }
         .soat { grid-area: soat; }
         .tecno { grid-area: tecno; }
-        .fasecolda { grid-area: fasecolda; }
         .prnormal { grid-area: prnormal; }
         .bono { grid-area: bono; }
         .prferia { grid-area: prferia; }
         .accesorios { grid-area: accesorios; }
+
         .accesorios .valor {
             align-items: flex-start;
-            font-size: 20px;
-            line-height: 1.45;
+            font-size: 15px;
+            line-height: 1.35;
             font-weight: 700;
-            padding: 15px;
+            padding: 8px 10px;
         }
+
         .acciones {
-            width: 640px;
+            max-width: 800px;
             margin: 16px auto 0;
             text-align: right;
         }
+
         .acciones button {
             background: #2563eb;
             color: #fff;
@@ -157,21 +157,49 @@
             font-size: 14px;
             cursor: pointer;
         }
+
+        /* --- CONFIGURACIÓN DE IMPRESIÓN --- */
         @media print {
             @page {
-                size: letter;
-                margin: 8mm;
+                size: letter portrait;
+                margin: 4mm;
             }
-            body { background: #fff; padding: 0; }
+
+            html, body {
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                overflow: hidden;
+            }
+
             .hoja {
-                page-break-inside: avoid;
-                break-inside: avoid;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100vh !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: flex;
+                flex-direction: column;
             }
-            .grid, .encabezado, .celda {
-                page-break-inside: avoid;
-                break-inside: avoid;
+
+            .encabezado {
+                height: 60px;
+                margin-bottom: 6px;
+                flex-shrink: 0;
             }
-            .acciones { display: none; }
+
+            .grid {
+                flex: 1;
+                height: 100%;
+                gap: 5px 8px;
+                /* Filas distribuidas dinámicamente */
+                grid-template-rows: 1.1fr 1.1fr 1fr 1fr 1.1fr 1fr 1.1fr 1fr 1fr 1fr 1.4fr;
+            }
+
+            .acciones {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -250,11 +278,6 @@
                 <div class="valor">{{ $vehiculo->fecha_tecno ? \Carbon\Carbon::parse($vehiculo->fecha_tecno)->format('d/m/Y') : '—' }}</div>
             </div>
 
-            <div class="celda fasecolda">
-                <div class="etiqueta">Cod Fasecolda</div>
-                <div class="valor">{{ $vehiculo->cod_fasecolda ?: '—' }}</div>
-            </div>
-
             <div class="celda prnormal">
                 <div class="etiqueta">PR Normal</div>
                 <div class="valor">$ {{ number_format($vehiculo->precio_normal ?? 0, 0, ',', '.') }}</div>
@@ -282,31 +305,6 @@
     <div class="acciones">
         <button onclick="window.print()">Imprimir / Guardar PDF</button>
     </div>
-
-    <script>
-        (function () {
-            var hoja = document.querySelector('.hoja');
-            // Alto útil aproximado de una hoja Carta con el margen de @page (8mm).
-            // Solo actúa como red de seguridad si el contenido se pasa de una
-            // hoja (ej. Accesorios con texto muy largo); en el caso normal no
-            // debería reducir el zoom.
-            var ALTO_UTIL_PX = 980;
-
-            function ajustarParaImprimir() {
-                hoja.style.zoom = 1;
-                var alturaNatural = hoja.scrollHeight;
-                var factor = Math.min(1, ALTO_UTIL_PX / alturaNatural);
-                hoja.style.zoom = factor;
-            }
-
-            function restaurar() {
-                hoja.style.zoom = 1;
-            }
-
-            window.addEventListener('beforeprint', ajustarParaImprimir);
-            window.addEventListener('afterprint', restaurar);
-        })();
-    </script>
 
 </body>
 </html>
