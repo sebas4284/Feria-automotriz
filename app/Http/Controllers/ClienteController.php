@@ -9,7 +9,10 @@ use Illuminate\Http\Request;
 class ClienteController extends Controller
 {
     private const MEDIOS = [
-        'Redes sociales',
+        'Instagram',
+        'Facebook',
+        'TikTok',
+        'WhatsApp',
         'Referido',
         'Feria/Evento',
         'Publicidad o pagina web',
@@ -60,11 +63,13 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'required|string|max:20',
             'cita' => 'sometimes|boolean',
             'concesionario_id' => 'nullable|exists:concesionarios,id',
             'medio_entero' => 'nullable|in:' . implode(',', self::MEDIOS),
             'observaciones' => 'nullable|string',
+        ], [
+            'telefono.required' => 'El teléfono es obligatorio.',
         ]);
 
         $tieneCita = $request->boolean('cita');
@@ -127,11 +132,13 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:20',
+            'telefono' => 'required|string|max:20',
             'cita' => 'sometimes|boolean',
             'concesionario_id' => 'nullable|exists:concesionarios,id',
             'medio_entero' => 'nullable|in:' . implode(',', self::MEDIOS),
             'observaciones' => 'nullable|string',
+        ], [
+            'telefono.required' => 'El teléfono es obligatorio.',
         ]);
 
         $cliente->update([

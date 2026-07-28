@@ -515,6 +515,7 @@ class RolePermissionsTest extends TestCase
 
         $this->actingAs($admin)->post('/clientes', [
             'nombre' => 'Walk-in Uno',
+            'telefono' => '3001234567',
             'cita' => '0',
         ])->assertRedirect(route('clientes.index'));
 
@@ -534,6 +535,7 @@ class RolePermissionsTest extends TestCase
 
         $this->actingAs($admin)->post('/clientes', [
             'nombre' => 'Con Cita',
+            'telefono' => '3001234567',
             'cita' => '1',
             'concesionario_id' => $b->id,
         ])->assertRedirect(route('clientes.index'));

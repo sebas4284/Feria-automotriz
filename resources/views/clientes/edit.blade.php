@@ -60,7 +60,8 @@
                     </label>
 
                     <input type="text" name="telefono" value="{{ old('telefono', $cliente->telefono) }}"
-                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('telefono') border-red-500 @enderror"
+                        required>
                     @error('telefono')
                         <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
                     @enderror
