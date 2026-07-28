@@ -18,7 +18,7 @@
             padding: 24px;
         }
         .hoja {
-            width: 520px;
+            width: 480px;
             margin: 0 auto;
             background: #fff;
         }
@@ -28,18 +28,18 @@
             justify-content: center;
             background: #111;
             border-radius: 10px;
-            margin: 18px;
-            padding: 14px;
+            margin: 12px;
+            padding: 10px;
         }
         .encabezado img {
             max-width: 100%;
-            height: 70px;
+            height: 52px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 13px 18px;
-            padding: 0 18px 20px;
+            gap: 7px 12px;
+            padding: 0 14px 14px;
             grid-template-areas:
                 "placa       vitrina"
                 "marca       marca"
@@ -49,40 +49,46 @@
                 "combustible transmision"
                 "kilometraje kilometraje"
                 "soat        tecno"
-                "fasecolda   fasecolda"
+                "fasecolda   accesorios"
                 "prnormal    accesorios"
                 "bono        accesorios"
-                "prferia     accesorios";
+                "prferia     prferia";
         }
         .celda {
             display: flex;
             flex-direction: column;
         }
         .etiqueta {
-            font-size: 14px;
+            font-size: 10px;
             text-transform: uppercase;
             color: #16215c;
             font-weight: bold;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
         .valor {
             flex: 1;
             background: #e4e4e4;
-            border-radius: 8px;
-            padding: 13px 15px;
-            font-size: 24px;
+            border-radius: 7px;
+            padding: 6px 9px;
+            font-size: 14px;
             font-weight: bold;
             word-break: break-word;
             display: flex;
             align-items: center;
         }
+        .valor.destacado {
+            font-size: 20px;
+            padding: 9px 11px;
+        }
         .valor.grande {
-            font-size: 42px;
+            font-size: 34px;
             font-weight: 900;
             color: #c8161e;
             background: #fdeaea;
             border: 2px solid #c8161e;
+            padding: 12px 14px;
+            justify-content: center;
         }
         .placa { grid-area: placa; }
         .vitrina { grid-area: vitrina; }
@@ -102,9 +108,9 @@
         .bono { grid-area: bono; }
         .prferia { grid-area: prferia; }
         .accesorios { grid-area: accesorios; }
-        .accesorios .valor { align-items: flex-start; }
+        .accesorios .valor { align-items: flex-start; font-size: 12px; }
         .acciones {
-            width: 520px;
+            width: 480px;
             margin: 16px auto 0;
             text-align: right;
         }
@@ -158,12 +164,12 @@
 
             <div class="celda marca">
                 <div class="etiqueta">Marca</div>
-                <div class="valor">{{ $vehiculo->marca ?: '—' }}</div>
+                <div class="valor destacado">{{ $vehiculo->marca ?: '—' }}</div>
             </div>
 
             <div class="celda linea">
                 <div class="etiqueta">Línea - Versión</div>
-                <div class="valor">{{ trim(($vehiculo->linea ?? '') . ' ' . ($vehiculo->version ?? '')) ?: '—' }}</div>
+                <div class="valor destacado">{{ trim(($vehiculo->linea ?? '') . ' ' . ($vehiculo->version ?? '')) ?: '—' }}</div>
             </div>
 
             <div class="celda fecha">
@@ -198,7 +204,7 @@
 
             <div class="celda kilometraje">
                 <div class="etiqueta">Kilometraje</div>
-                <div class="valor">{{ $vehiculo->kilometraje !== null ? number_format($vehiculo->kilometraje, 0, ',', '.') : '—' }}</div>
+                <div class="valor destacado">{{ $vehiculo->kilometraje !== null ? number_format($vehiculo->kilometraje, 0, ',', '.') . ' km' : '—' }}</div>
             </div>
 
             <div class="celda soat">
