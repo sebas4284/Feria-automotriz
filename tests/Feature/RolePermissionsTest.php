@@ -180,6 +180,28 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($userA)->get("/vehiculos/{$vehB->id}/edit")->assertForbidden();
     }
 
+    public function test_concesionario_kpi_counts_are_scoped_to_own_vehiculos(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $userA = $this->makeUser('concesionario', $concA);
+
+        Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id, 'ubicacion' => 'Dentro del área']);
+        Vehiculo::create(['placa' => 'AAA222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id, 'ubicacion' => 'Fuera del área']);
+        Vehiculo::create(['placa' => 'BBB111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id, 'ubicacion' => 'Dentro del área']);
+        Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id, 'ubicacion' => 'Dentro del área']);
+        Vehiculo::create(['placa' => 'BBB333', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id, 'ubicacion' => 'Fuera del área']);
+
+        $response = $this->actingAs($userA)->get('/vehiculos');
+
+        $response->assertOk();
+        // A tiene 1 "Dentro del área" y 1 "Fuera del área" propios; B tiene 2 y 1 respectivamente.
+        // Si el KPI no estuviera acotado por concesionario, el tile mostraría 3 (agregado) en vez de 1 para "Dentro del área".
+        $html = $response->getContent();
+        $this->assertMatchesRegularExpression('/<p[^>]*>\s*1\s*<\/p>\s*<p[^>]*>\s*Dentro del área\s*<\/p>/u', $html);
+        $this->assertMatchesRegularExpression('/<p[^>]*>\s*1\s*<\/p>\s*<p[^>]*>\s*Fuera del área\s*<\/p>/u', $html);
+    }
+
     public function test_concesionario_creating_vehiculo_gets_own_concesionario_forced(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);

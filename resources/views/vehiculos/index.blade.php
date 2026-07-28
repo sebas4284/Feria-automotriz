@@ -70,10 +70,14 @@
     {{-- Contadores por estado --}}
     <div class="grid grid-cols-4 gap-2">
         @php
-            $disponibles = $vehiculos->where('estado', 'Disponible')->count();
-            $dentro      = $vehiculos->where('ubicacion', 'Dentro del área')->count();
-            $fuera       = $vehiculos->where('ubicacion', 'Fuera del área')->count();
-            $vendidosV   = $vehiculos->where('estado', 'Vendido')->count();
+            $vehiculosKpi = $concesionarioCupo
+                ? $vehiculos->where('concesionario_id', $concesionarioCupo->id)
+                : $vehiculos;
+
+            $disponibles = $vehiculosKpi->where('estado', 'Disponible')->count();
+            $dentro      = $vehiculosKpi->where('ubicacion', 'Dentro del área')->count();
+            $fuera       = $vehiculosKpi->where('ubicacion', 'Fuera del área')->count();
+            $vendidosV   = $vehiculosKpi->where('estado', 'Vendido')->count();
         @endphp
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 text-center">
             <p class="text-2xl font-bold text-green-400">{{ $disponibles }}</p>
