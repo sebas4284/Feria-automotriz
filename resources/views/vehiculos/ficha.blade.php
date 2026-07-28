@@ -11,35 +11,35 @@
             color-adjust: exact;
         }
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
             color: #111;
             background: #e5e5e5;
             margin: 0;
             padding: 24px;
         }
         .hoja {
-            width: 480px;
+            width: 640px;
             margin: 0 auto;
             background: #fff;
         }
         .encabezado {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             background: #111;
-            border-radius: 10px;
-            margin: 12px;
-            padding: 10px;
+            border-radius: 6px;
+            padding: 8px 0;
+            margin: 10px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .encabezado img {
-            max-width: 100%;
-            height: 52px;
+            height: 58px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 7px 12px;
-            padding: 0 14px 14px;
+            gap: 10px 14px;
+            padding: 15px;
             grid-template-areas:
                 "placa       vitrina"
                 "marca       marca"
@@ -59,36 +59,64 @@
             flex-direction: column;
         }
         .etiqueta {
-            font-size: 10px;
+            font-size: 11px;
             text-transform: uppercase;
-            color: #16215c;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-bottom: 3px;
+            color: #111;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 2px;
         }
         .valor {
             flex: 1;
-            background: #e4e4e4;
-            border-radius: 7px;
-            padding: 6px 9px;
-            font-size: 14px;
+            background: #efefef;
+            border-radius: 4px;
+            padding: 6px 10px;
+            min-height: 42px;
             font-weight: bold;
             word-break: break-word;
             display: flex;
             align-items: center;
         }
-        .valor.destacado {
-            font-size: 20px;
-            padding: 9px 11px;
+        .placa .valor {
+            font-size: 56px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        .marca .valor {
+            font-size: 40px;
+            font-weight: 900;
+        }
+        .linea .valor {
+            font-size: 38px;
+            font-weight: 900;
+        }
+        .modelo .valor {
+            font-size: 42px;
+            font-weight: 900;
+        }
+        .kilometraje .valor {
+            font-size: 44px;
+            font-weight: 900;
+        }
+        .prnormal .valor {
+            background: #fff;
+            font-size: 26px;
+            font-weight: 900;
+        }
+        .bono .valor {
+            background: #fff;
+            font-size: 28px;
+            font-weight: 900;
         }
         .valor.grande {
-            font-size: 34px;
+            background: #fff;
+            color: #666;
+            border: 3px solid #333;
+            border-radius: 10px;
+            font-size: 68px;
             font-weight: 900;
-            color: #c8161e;
-            background: #fdeaea;
-            border: 2px solid #c8161e;
-            padding: 12px 14px;
             justify-content: center;
+            padding: 12px;
         }
         .placa { grid-area: placa; }
         .vitrina { grid-area: vitrina; }
@@ -108,9 +136,15 @@
         .bono { grid-area: bono; }
         .prferia { grid-area: prferia; }
         .accesorios { grid-area: accesorios; }
-        .accesorios .valor { align-items: flex-start; font-size: 12px; }
+        .accesorios .valor {
+            align-items: flex-start;
+            font-size: 20px;
+            line-height: 1.45;
+            font-weight: 700;
+            padding: 15px;
+        }
         .acciones {
-            width: 480px;
+            width: 640px;
             margin: 16px auto 0;
             text-align: right;
         }
@@ -130,7 +164,6 @@
             }
             body { background: #fff; padding: 0; }
             .hoja {
-                width: 100%;
                 page-break-inside: avoid;
                 break-inside: avoid;
             }
@@ -164,12 +197,12 @@
 
             <div class="celda marca">
                 <div class="etiqueta">Marca</div>
-                <div class="valor destacado">{{ $vehiculo->marca ?: '—' }}</div>
+                <div class="valor">{{ $vehiculo->marca ?: '—' }}</div>
             </div>
 
             <div class="celda linea">
                 <div class="etiqueta">Línea - Versión</div>
-                <div class="valor destacado">{{ trim(($vehiculo->linea ?? '') . ' ' . ($vehiculo->version ?? '')) ?: '—' }}</div>
+                <div class="valor">{{ trim(($vehiculo->linea ?? '') . ' ' . ($vehiculo->version ?? '')) ?: '—' }}</div>
             </div>
 
             <div class="celda fecha">
@@ -204,7 +237,7 @@
 
             <div class="celda kilometraje">
                 <div class="etiqueta">Kilometraje</div>
-                <div class="valor destacado">{{ $vehiculo->kilometraje !== null ? number_format($vehiculo->kilometraje, 0, ',', '.') . ' km' : '—' }}</div>
+                <div class="valor">{{ $vehiculo->kilometraje !== null ? number_format($vehiculo->kilometraje, 0, ',', '.') : '—' }}</div>
             </div>
 
             <div class="celda soat">
