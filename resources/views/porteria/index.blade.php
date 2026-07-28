@@ -104,12 +104,19 @@
 
     <div x-show="tab === 'concesionarios'" class="space-y-3">
         @forelse($porConcesionario as $grupo)
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
-                <div class="flex items-center justify-between gap-2 mb-2.5">
+            <div x-data="{ open: false }" class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <button type="button" @click="open = !open"
+                    class="w-full flex items-center justify-between gap-2 px-4 py-3.5 text-left">
                     <p class="font-semibold truncate">{{ $grupo->nombre }}</p>
-                    <span class="text-sm font-bold text-blue-400 shrink-0">{{ $grupo->ingresados }} / {{ $grupo->dentro }}</span>
-                </div>
-                <div class="space-y-1.5">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-sm font-bold text-blue-400">{{ $grupo->ingresados }} / {{ $grupo->dentro }}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                            class="w-4 h-4 text-gray-500 transition-transform" :class="open ? 'rotate-180' : ''">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </div>
+                </button>
+                <div x-show="open" class="px-4 pb-3.5 space-y-1.5 border-t border-gray-800 pt-1.5">
                     @foreach($grupo->vehiculos as $vehiculo)
                         @php
                             $dentro = $vehiculo->ubicacion === 'Dentro del área';
