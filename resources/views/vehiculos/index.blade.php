@@ -68,10 +68,11 @@
     @endif
 
     {{-- Contadores por estado --}}
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-4 gap-2">
         @php
             $disponibles = $vehiculos->where('estado', 'Disponible')->count();
-            $reservados  = $vehiculos->where('estado', 'Reservado')->count();
+            $dentro      = $vehiculos->where('ubicacion', 'Dentro del área')->count();
+            $fuera       = $vehiculos->where('ubicacion', 'Fuera del área')->count();
             $vendidosV   = $vehiculos->where('estado', 'Vendido')->count();
         @endphp
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 text-center">
@@ -79,8 +80,12 @@
             <p class="text-xs text-gray-500 mt-0.5">Disponibles</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 text-center">
-            <p class="text-2xl font-bold text-yellow-400">{{ $reservados }}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Reservados</p>
+            <p class="text-2xl font-bold text-blue-400">{{ $dentro }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Dentro del área</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 text-center">
+            <p class="text-2xl font-bold text-gray-300">{{ $fuera }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Fuera del área</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3 text-center">
             <p class="text-2xl font-bold text-red-400">{{ $vendidosV }}</p>
@@ -195,6 +200,9 @@
                             @if($vehiculo->numero_llave)
                                 <p class="text-xs text-gray-500 mt-0.5">Llave: {{ $vehiculo->numero_llave }}</p>
                             @endif
+                            <span class="text-xs {{ $vehiculo->ubicacion === 'Dentro del área' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-700 text-gray-300' }} px-2 py-0.5 rounded-full inline-block mt-1">
+                                {{ $vehiculo->ubicacion ?: 'Sin ubicación' }}
+                            </span>
                         </div>
                     </a>
                     <a href="{{ route('vehiculos.show', $vehiculo) }}" title="Ver"
@@ -248,14 +256,18 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-4 gap-4 mb-6">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
             <p class="text-2xl font-bold text-green-400">{{ $disponibles }}</p>
             <p class="text-xs text-gray-500 mt-0.5">Disponibles</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
-            <p class="text-2xl font-bold text-yellow-400">{{ $reservados }}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Reservados</p>
+            <p class="text-2xl font-bold text-blue-400">{{ $dentro }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Dentro del área</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-gray-300">{{ $fuera }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Fuera del área</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
             <p class="text-2xl font-bold text-red-400">{{ $vendidosV }}</p>
