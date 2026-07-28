@@ -303,6 +303,10 @@
     </div>
 
     <div class="acciones">
+        <a href="{{ route('vehiculos.show', $vehiculo) }}"
+            style="display:inline-block; background:#374151; color:#fff; padding:10px 20px; border-radius:8px; font-size:14px; text-decoration:none; margin-right:8px;">
+            Volver
+        </a>
         <button onclick="window.print()">Imprimir / Guardar PDF</button>
     </div>
 
