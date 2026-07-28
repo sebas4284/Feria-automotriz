@@ -27,19 +27,19 @@
             border-radius: 6px;
             padding: 8px 0;
             margin: 10px;
-            height: 70px;
+            height: 84px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .encabezado img {
-            height: 58px;
+            height: 70px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px 14px;
-            padding: 15px;
+            gap: 12px 16px;
+            padding: 18px;
             grid-template-areas:
                 "placa       vitrina"
                 "marca       marca"
@@ -78,34 +78,34 @@
             align-items: center;
         }
         .placa .valor {
-            font-size: 56px;
+            font-size: 64px;
             font-weight: 900;
             letter-spacing: 2px;
         }
         .marca .valor {
-            font-size: 40px;
+            font-size: 46px;
             font-weight: 900;
         }
         .linea .valor {
-            font-size: 38px;
+            font-size: 44px;
             font-weight: 900;
         }
         .modelo .valor {
-            font-size: 42px;
+            font-size: 48px;
             font-weight: 900;
         }
         .kilometraje .valor {
-            font-size: 44px;
+            font-size: 50px;
             font-weight: 900;
         }
         .prnormal .valor {
             background: #fff;
-            font-size: 26px;
+            font-size: 30px;
             font-weight: 900;
         }
         .bono .valor {
             background: #fff;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 900;
         }
         .valor.grande {
@@ -113,10 +113,10 @@
             color: #666;
             border: 3px solid #333;
             border-radius: 10px;
-            font-size: 68px;
+            font-size: 78px;
             font-weight: 900;
             justify-content: center;
-            padding: 12px;
+            padding: 14px;
         }
         .placa { grid-area: placa; }
         .vitrina { grid-area: vitrina; }
@@ -286,9 +286,11 @@
     <script>
         (function () {
             var hoja = document.querySelector('.hoja');
-            // Alto útil aproximado de una hoja Carta con el margen de @page (8mm)
-            // y el encabezado/pie que agregan algunos navegadores al imprimir.
-            var ALTO_UTIL_PX = 900;
+            // Alto útil aproximado de una hoja Carta con el margen de @page (8mm).
+            // Solo actúa como red de seguridad si el contenido se pasa de una
+            // hoja (ej. Accesorios con texto muy largo); en el caso normal no
+            // debería reducir el zoom.
+            var ALTO_UTIL_PX = 980;
 
             function ajustarParaImprimir() {
                 hoja.style.zoom = 1;
