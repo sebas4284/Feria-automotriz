@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'cupo_total' => 320,
+    'cupo_total' => 500,
 ];

@@ -140,6 +140,15 @@
                             <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Concesionario</label>
+                        <select name="concesionario_id" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Todos</option>
+                            @foreach($concesionarios as $c)
+                                <option value="{{ $c->id }}" {{ request('concesionario_id') == $c->id ? 'selected' : '' }}>{{ $c->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-sm font-medium transition">Aplicar</button>
