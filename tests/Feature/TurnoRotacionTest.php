@@ -164,4 +164,67 @@ class TurnoRotacionTest extends TestCase
         $response->assertSee('Pendiente Visible');
         $response->assertSee('Pendientes por asignar');
     }
+
+    public function test_saltar_turno_manda_al_final_sin_contar_como_asignacion_real(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        // Antes de saltar, Uno (llegó primero) va antes que Dos.
+        $this->actingAs($admin)->get('/turnos')->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
+
+        $this->actingAs($admin)->post("/turnos/{$uno->id}/saltar")->assertRedirect();
+
+        // Tras saltarlo, Uno pasa al final: ahora Dos aparece primero.
+        $this->actingAs($admin)->get('/turnos')->assertSeeInOrder(['Concesionario Dos', 'Concesionario Uno']);
+
+        $this->assertDatabaseHas('turnos', [
+            'concesionario_id' => $uno->id,
+            'veces_asignado' => 0,
+            'veces_procesado' => 1,
+        ]);
+    }
+
+    public function test_ronda_actual_sube_cuando_todos_los_de_la_fila_han_sido_procesados(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $service = new \App\Services\TurnoAssignmentService();
+
+        $this->assertSame(1, $service->rondaActual());
+
+        // Solo Uno ha sido procesado (saltado): Dos todavía no completa su primera vuelta.
+        $service->enviarAlFinal($uno);
+        $this->assertSame(1, $service->rondaActual());
+
+        // Ahora los dos han sido procesados una vez cada uno: arranca la ronda 2.
+        $service->enviarAlFinal($dos);
+        $this->assertSame(2, $service->rondaActual());
+    }
+
+    public function test_pantalla_muestra_en_turno_y_se_prepara(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $response = $this->actingAs($admin)->get('/turnos/pantalla');
+
+        $response->assertOk();
+        $response->assertSee('En turno');
+        $response->assertSee('Se prepara');
+        $response->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
+    }
 }

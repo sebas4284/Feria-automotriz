@@ -12,6 +12,7 @@ class Turno extends Model
         'llegada_at',
         'ultima_asignacion_at',
         'veces_asignado',
+        'veces_procesado',
     ];
 
     protected $casts = [

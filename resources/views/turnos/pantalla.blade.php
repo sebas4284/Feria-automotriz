@@ -17,8 +17,26 @@
             <p class="text-2xl lg:text-3xl text-gray-400">
                 {{ now()->translatedFormat('l d \d\e F Y') }} / {{ now()->format('h:i A') }}
             </p>
-            <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-10 lg:h-14">
+            <div class="flex items-center gap-4">
+                @if($rondaActual > 0)
+                    <span class="text-lg lg:text-xl text-gray-400">Ronda #{{ $rondaActual }}</span>
+                @endif
+                <img src="{{ asset('images/expocarshow-logo-white.png') }}" alt="Expocar Show" class="h-10 lg:h-14">
+            </div>
         </div>
+
+        @if($enTurno || $sePrepara)
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="bg-blue-600 rounded-3xl p-8 text-center">
+                    <p class="text-xl lg:text-2xl text-blue-200 font-medium mb-2">En turno</p>
+                    <p class="text-4xl lg:text-6xl font-bold truncate">{{ $enTurno->nombre ?? '—' }}</p>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 rounded-3xl p-8 text-center">
+                    <p class="text-xl lg:text-2xl text-gray-500 font-medium mb-2">Se prepara</p>
+                    <p class="text-4xl lg:text-6xl font-bold text-gray-300 truncate">{{ $sePrepara->nombre ?? '—' }}</p>
+                </div>
+            </div>
+        @endif
 
         @if($asignaciones->isNotEmpty())
             <div class="rounded-3xl overflow-hidden border border-gray-800">

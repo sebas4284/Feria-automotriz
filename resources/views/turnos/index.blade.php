@@ -20,6 +20,13 @@
         </a>
     </div>
 
+    @if($rondaActual > 0)
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 flex items-center justify-between">
+            <span class="text-sm text-gray-400">Ronda actual</span>
+            <span class="text-xl font-bold text-blue-400">#{{ $rondaActual }}</span>
+        </div>
+    @endif
+
     @if(session('success'))
         <div class="bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 text-green-400 text-sm">
             {{ session('success') }}
@@ -56,13 +63,22 @@
 
                     @if(auth()->user()->isAdmin())
                         @if($turno)
-                            <form action="{{ route('turnos.check-out', $c) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition shrink-0">
-                                    Quitar
-                                </button>
-                            </form>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <form action="{{ route('turnos.saltar', $c) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" title="Saltar turno (pasa al final)"
+                                        class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold transition">
+                                        ✕
+                                    </button>
+                                </form>
+                                <form action="{{ route('turnos.check-out', $c) }}" method="POST">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                        class="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition">
+                                        Quitar
+                                    </button>
+                                </form>
+                            </div>
                         @else
                             <form action="{{ route('turnos.check-in', $c) }}" method="POST">
                                 @csrf
@@ -111,15 +127,23 @@
 {{-- ===================== VISTA DESKTOP ===================== --}}
 <div class="hidden lg:block">
 
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex items-center justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold">Turnos</h1>
             <p class="text-gray-400">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
         </div>
-        <a href="{{ route('turnos.pantalla') }}" target="_blank"
-            class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm transition">
-            Abrir pantalla grande
-        </a>
+        <div class="flex items-center gap-3">
+            @if($rondaActual > 0)
+                <div class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center gap-2">
+                    <span class="text-sm text-gray-400">Ronda actual</span>
+                    <span class="text-lg font-bold text-blue-400">#{{ $rondaActual }}</span>
+                </div>
+            @endif
+            <a href="{{ route('turnos.pantalla') }}" target="_blank"
+                class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm transition">
+                Abrir pantalla grande
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -196,13 +220,22 @@
                         <td class="p-4">
                             @if(auth()->user()->isAdmin())
                                 @if($turno)
-                                    <form action="{{ route('turnos.check-out', $c) }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
-                                            class="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 text-xs font-medium transition">
-                                            Quitar de la fila
-                                        </button>
-                                    </form>
+                                    <div class="flex items-center gap-2">
+                                        <form action="{{ route('turnos.saltar', $c) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" title="Saltar turno (pasa al final)"
+                                                class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 text-xs font-bold transition">
+                                                ✕
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('turnos.check-out', $c) }}" method="POST">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                class="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 text-xs font-medium transition">
+                                                Quitar de la fila
+                                            </button>
+                                        </form>
+                                    </div>
                                 @else
                                     <form action="{{ route('turnos.check-in', $c) }}" method="POST">
                                         @csrf

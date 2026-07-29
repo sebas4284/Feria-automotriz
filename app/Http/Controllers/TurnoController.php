@@ -17,6 +17,7 @@ class TurnoController extends Controller
         $turnosHoy = Turno::whereDate('fecha', today())->get()->keyBy('concesionario_id');
 
         $siguiente = $turnos->nextConcesionario();
+        $rondaActual = $turnos->rondaActual();
 
         $enFila = $concesionarios
             ->filter(fn (Concesionario $c) => $turnosHoy->has($c->id))
@@ -40,7 +41,7 @@ class TurnoController extends Controller
 
         return view('turnos.index', compact(
             'concesionarios', 'concesionariosOrdenados', 'turnosHoy', 'siguiente',
-            'enFila', 'clientesHoy', 'pendientes'
+            'enFila', 'clientesHoy', 'pendientes', 'rondaActual'
         ));
     }
 
@@ -78,7 +79,7 @@ class TurnoController extends Controller
      * punto de atención: muestra las últimas asignaciones del día
      * (concesionario + cliente), la más reciente resaltada arriba.
      */
-    public function pantalla()
+    public function pantalla(TurnoAssignmentService $turnos)
     {
         $asignaciones = Cliente::with('concesionario')
             ->where('cita', false)
@@ -88,7 +89,12 @@ class TurnoController extends Controller
             ->limit(8)
             ->get();
 
-        return view('turnos.pantalla', compact('asignaciones'));
+        $proximos = $turnos->proximos(2);
+        $enTurno = $proximos->get(0);
+        $sePrepara = $proximos->get(1);
+        $rondaActual = $turnos->rondaActual();
+
+        return view('turnos.pantalla', compact('asignaciones', 'enTurno', 'sePrepara', 'rondaActual'));
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)
@@ -103,5 +109,17 @@ class TurnoController extends Controller
         $turnos->checkOut($concesionario);
 
         return back()->with('success', "{$concesionario->nombre} quitado de la fila de hoy");
+    }
+
+    /**
+     * Salta el turno actual de este concesionario (p. ej. no estaba listo
+     * cuando le tocaba) y lo manda al final de la fila, sin registrarle
+     * una asignación real.
+     */
+    public function saltarTurno(Concesionario $concesionario, TurnoAssignmentService $turnos)
+    {
+        $turnos->enviarAlFinal($concesionario);
+
+        return back()->with('success', "Se saltó el turno de {$concesionario->nombre}, pasa al final de la fila");
     }
 }
