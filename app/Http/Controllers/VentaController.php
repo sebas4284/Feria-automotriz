@@ -59,6 +59,7 @@ class VentaController extends Controller
             'forma_pago' => $validated['forma_pago'],
             'observaciones' => $validated['observaciones'] ?? null,
             'participa_experiencia' => $request->boolean('participa_experiencia'),
+            'detalle_experiencia' => $validated['detalle_experiencia'] ?? null,
         ] + $this->pagoExtra($validated, $request));
 
         $vehiculo->update(['estado' => 'Vendido']);
@@ -123,6 +124,7 @@ class VentaController extends Controller
                 'forma_pago' => $validated['forma_pago'],
                 'observaciones' => $validated['observaciones'] ?? null,
                 'participa_experiencia' => $request->boolean('participa_experiencia'),
+                'detalle_experiencia' => $validated['detalle_experiencia'] ?? null,
             ] + $this->pagoExtra($validated, $request));
         });
 
@@ -163,6 +165,7 @@ class VentaController extends Controller
             'retoma_valor' => 'nullable|numeric|min:0|required_if:tiene_retoma,1',
             'retoma_descripcion' => 'nullable|string|max:255|required_if:tiene_retoma,1',
             'observaciones' => 'nullable|string',
+            'detalle_experiencia' => 'nullable|string|max:255',
         ];
     }
 
@@ -210,6 +213,7 @@ class VentaController extends Controller
         $asesores = AsesorComercial::orderBy('nombre')->get();
         $compradores = Comprador::select('id', 'identificacion', 'nombre', 'telefono', 'direccion', 'correo')->get();
         $bancos = Catalogo::tipo('banco')->orderBy('valor')->pluck('valor');
+        $detallesExperiencia = Catalogo::tipo('detalle_experiencia')->orderBy('valor')->pluck('valor');
 
         $vehiculosJson = $vehiculos->map(fn (Vehiculo $v) => [
             'id' => $v->id,
@@ -236,7 +240,8 @@ class VentaController extends Controller
             'vehiculosJson',
             'asesoresJson',
             'compradores',
-            'bancos'
+            'bancos',
+            'detallesExperiencia'
         );
     }
 }

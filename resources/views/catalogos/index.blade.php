@@ -7,7 +7,7 @@
     <div class="mb-6">
         <a href="{{ route('vehiculos.index') }}" class="text-sm text-blue-400 hover:underline">&larr; Volver a Vehículos</a>
         <h1 class="text-2xl lg:text-3xl font-bold mt-2">Catálogos</h1>
-        <p class="text-gray-400 text-sm mt-0.5">Valores disponibles para seleccionar al crear un vehículo</p>
+        <p class="text-gray-400 text-sm mt-0.5">Valores disponibles para seleccionar en los formularios</p>
     </div>
 
     <div class="flex gap-2 mb-6 border-b border-gray-800 overflow-x-auto">

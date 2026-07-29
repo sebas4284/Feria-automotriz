@@ -14,6 +14,7 @@ class CatalogoController extends Controller
         'color' => 'Colores',
         'combustible' => 'Combustibles',
         'banco' => 'Bancos',
+        'detalle_experiencia' => 'Detalles de Experiencia',
     ];
 
     public function index(string $tipo)

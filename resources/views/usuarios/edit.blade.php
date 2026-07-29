@@ -49,7 +49,7 @@
                     class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 focus:outline-none focus:border-blue-500">
                     <option value="concesionario" @selected(old('rol', $usuario->rol) === 'concesionario')>Concesionario</option>
                     <option value="asesor" @selected(old('rol', $usuario->rol) === 'asesor')>Asesor</option>
-                    <option value="staff" @selected(old('rol', $usuario->rol) === 'staff')>Staff (Rifa y Turnos)</option>
+                    <option value="staff" @selected(old('rol', $usuario->rol) === 'staff')>Staff (Experiencia y Turnos)</option>
                     <option value="porteria" @selected(old('rol', $usuario->rol) === 'porteria')>Portería (check-in de vehículos)</option>
                     <option value="admin" @selected(old('rol', $usuario->rol) === 'admin')>Admin</option>
                 </select>

@@ -25,6 +25,7 @@ class Venta extends Model
         'retoma_descripcion',
         'observaciones',
         'participa_experiencia',
+        'detalle_experiencia',
     ];
 
     protected $casts = [
@@ -65,7 +66,7 @@ class Venta extends Model
 
     public function getBoletaAttribute(): string
     {
-        return 'RIFA-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+        return 'EXP-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
     }
 
     public function concesionarioColumn(): string

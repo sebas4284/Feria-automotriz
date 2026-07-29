@@ -8,7 +8,7 @@ class RifaController extends Controller
 {
     public function index()
     {
-        $ventas = Venta::with(['comprador', 'vehiculo'])
+        $ventas = Venta::with(['comprador', 'vehiculo', 'asesorComercial', 'concesionarioVende'])
             ->where('participa_experiencia', true)
             ->latest()
             ->get();

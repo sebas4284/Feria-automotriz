@@ -41,7 +41,7 @@
             <p class="text-2xl lg:text-3xl font-bold text-blue-400">{{ $totalLeads }}</p>
         </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">
-            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Rifa</p>
+            <p class="text-gray-400 text-xs lg:text-sm font-medium mb-1">Experiencia</p>
             <p class="text-2xl lg:text-3xl font-bold text-amber-400">{{ $totalRifa }}</p>
         </div>
     </div>

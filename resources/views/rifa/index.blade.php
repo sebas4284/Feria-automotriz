@@ -8,7 +8,7 @@
 <div class="lg:hidden space-y-5">
 
     <div>
-        <h1 class="text-2xl font-bold">Rifa / Experiencia</h1>
+        <h1 class="text-2xl font-bold">Experiencia</h1>
         <p class="text-gray-400 text-sm mt-0.5">Participantes registrados para el sorteo</p>
     </div>
 
@@ -30,7 +30,7 @@
     <div class="space-y-2">
         @forelse($ventas as $venta)
             <div x-show="matches($el)"
-                data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '')) }}"
+                data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '').' '.($venta->asesorComercial->nombre ?? '').' '.($venta->concesionarioVende->nombre ?? '').' '.($venta->detalle_experiencia ?? '')) }}"
                 class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <p class="font-semibold text-sm truncate">{{ $venta->comprador->nombre ?? '—' }}</p>
@@ -53,6 +53,18 @@
                         <p class="text-gray-600">Fecha</p>
                         <p>{{ $venta->fecha_venta?->format('d/m/Y') }}</p>
                     </div>
+                    <div>
+                        <p class="text-gray-600">Vendedor</p>
+                        <p>{{ $venta->asesorComercial->nombre ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Concesionario</p>
+                        <p>{{ $venta->concesionarioVende->nombre ?? '—' }}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-gray-600">Detalle</p>
+                        <p>{{ $venta->detalle_experiencia ?: '—' }}</p>
+                    </div>
                 </div>
             </div>
         @empty
@@ -71,7 +83,7 @@
 <div class="hidden lg:block">
 
     <div class="mb-6">
-        <h1 class="text-3xl font-bold">Rifa / Experiencia</h1>
+        <h1 class="text-3xl font-bold">Experiencia</h1>
         <p class="text-gray-400">Participantes registrados para el sorteo ({{ $ventas->count() }} boletas)</p>
     </div>
 
@@ -104,13 +116,16 @@
                     <th class="p-4 text-left hidden sm:table-cell">Cédula</th>
                     <th class="p-4 text-left hidden sm:table-cell">Teléfono</th>
                     <th class="p-4 text-left hidden md:table-cell">Vehículo</th>
+                    <th class="p-4 text-left hidden md:table-cell">Vendedor</th>
+                    <th class="p-4 text-left hidden md:table-cell">Concesionario</th>
+                    <th class="p-4 text-left hidden lg:table-cell">Detalle</th>
                     <th class="p-4 text-left">Fecha</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($ventas as $venta)
                     <tr x-show="matches($el)"
-                        data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '')) }}"
+                        data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->boleta.' '.($venta->comprador->identificacion ?? '').' '.($venta->comprador->telefono ?? '').' '.($venta->vehiculo->marca ?? '').' '.($venta->vehiculo->modelo ?? '').' '.($venta->asesorComercial->nombre ?? '').' '.($venta->concesionarioVende->nombre ?? '').' '.($venta->detalle_experiencia ?? '')) }}"
                         class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">
                             <span class="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full font-medium">{{ $venta->boleta }}</span>
@@ -119,15 +134,18 @@
                         <td class="p-4 hidden sm:table-cell">{{ $venta->comprador->identificacion ?? '—' }}</td>
                         <td class="p-4 hidden sm:table-cell">{{ $venta->comprador->telefono ?? '—' }}</td>
                         <td class="p-4 hidden md:table-cell">{{ $venta->vehiculo->marca ?? '' }} {{ $venta->vehiculo->modelo ?? '' }}</td>
+                        <td class="p-4 hidden md:table-cell">{{ $venta->asesorComercial->nombre ?? '—' }}</td>
+                        <td class="p-4 hidden md:table-cell">{{ $venta->concesionarioVende->nombre ?? '—' }}</td>
+                        <td class="p-4 hidden lg:table-cell">{{ $venta->detalle_experiencia ?: '—' }}</td>
                         <td class="p-4">{{ $venta->fecha_venta?->format('d/m/Y') }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-gray-500">No hay participantes registrados</td>
+                        <td colspan="9" class="p-8 text-center text-gray-500">No hay participantes registrados</td>
                     </tr>
                 @endforelse
                 <tr x-show="q.trim() !== '' && visibleCount === 0">
-                    <td colspan="6" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
+                    <td colspan="9" class="p-8 text-center text-gray-500">Sin resultados para tu búsqueda</td>
                 </tr>
             </tbody>
         </table>

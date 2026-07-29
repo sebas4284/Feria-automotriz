@@ -50,8 +50,11 @@
 
     @if($venta->participa_experiencia)
         <div class="mb-6 bg-amber-500/10 border border-amber-500/50 rounded-2xl p-6 text-center">
-            <p class="text-amber-400 text-sm mb-1">Boleta de la experiencia (rifa)</p>
+            <p class="text-amber-400 text-sm mb-1">Boleta de la experiencia</p>
             <p class="text-3xl font-bold text-amber-300 tracking-widest">{{ $venta->boleta }}</p>
+            @if($venta->detalle_experiencia)
+                <p class="text-sm text-amber-200 mt-2">{{ $venta->detalle_experiencia }}</p>
+            @endif
         </div>
     @endif
 

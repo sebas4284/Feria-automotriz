@@ -161,11 +161,28 @@
 
             <div class="flex items-center gap-3 md:pt-8">
                 <input type="checkbox" name="participa_experiencia" id="participa_experiencia" value="1"
-                    @checked(old('participa_experiencia', $venta->participa_experiencia ?? false))
+                    x-model="participaExperiencia"
                     class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-blue-500">
                 <label for="participa_experiencia" class="text-sm text-gray-400">
-                    ¿Participa en la experiencia (rifa)?
+                    ¿Participa en la experiencia?
                 </label>
+            </div>
+
+            <div x-show="participaExperiencia">
+                <label class="block mb-2 text-sm text-gray-400">Detalle de la experiencia</label>
+                @php $detalleActual = old('detalle_experiencia', $venta->detalle_experiencia ?? ''); @endphp
+                <select name="detalle_experiencia" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
+                    <option value="">Seleccione...</option>
+                    @foreach($detallesExperiencia as $d)
+                        <option value="{{ $d }}" @selected($detalleActual == $d)>{{ $d }}</option>
+                    @endforeach
+                    @if($detalleActual && ! $detallesExperiencia->contains($detalleActual))
+                        <option value="{{ $detalleActual }}" selected>{{ $detalleActual }}</option>
+                    @endif
+                </select>
+                <p class="text-xs text-gray-500 mt-1">
+                    ¿Falta un detalle? Agrégalo en <a href="{{ route('catalogos.index', 'detalle_experiencia') }}" class="text-blue-400 hover:underline">Catálogos</a>.
+                </p>
             </div>
 
             <div class="flex items-center gap-3">
@@ -233,6 +250,7 @@ function ventaForm() {
         asesorSeleccionado: {{ Js::from(old('asesor_comercial_id', $venta->asesor_comercial_id ?? '')) }},
         formaPago: {{ Js::from(old('forma_pago', $venta->forma_pago ?? '')) }},
         tieneRetoma: {{ Js::from((bool) old('tiene_retoma', $venta->tiene_retoma ?? false)) }},
+        participaExperiencia: {{ Js::from((bool) old('participa_experiencia', $venta->participa_experiencia ?? false)) }},
 
         buscarComprador() {
             const match = this.compradores.find(c => c.identificacion === this.comprador.identificacion);
