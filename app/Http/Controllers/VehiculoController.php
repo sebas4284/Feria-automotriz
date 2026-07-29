@@ -12,7 +12,15 @@ class VehiculoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Vehiculo::with('concesionario')->latest();
+        $user = $request->user();
+
+        $query = Vehiculo::with('concesionario');
+
+        if ($idPropio = $user->concesionarioIdPropio()) {
+            $query->orderByRaw('CASE WHEN concesionario_id = ? THEN 0 ELSE 1 END', [$idPropio]);
+        }
+
+        $query->latest();
 
         if ($request->filled('placa')) {
             $buscar = $request->placa;
@@ -67,7 +75,6 @@ class VehiculoController extends Controller
 
         $concesionarioCupo = null;
         $cupoUsadoActual = null;
-        $user = $request->user();
         $concesionarioIdCupo = $user->isAdmin() ? $request->concesionario_id : $user->concesionario_id;
 
         if ($concesionarioIdCupo) {

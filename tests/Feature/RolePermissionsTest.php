@@ -180,6 +180,46 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($userA)->get("/vehiculos/{$vehB->id}/edit")->assertForbidden();
     }
 
+    public function test_concesionario_sees_own_vehiculos_first_in_index(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $userA = $this->makeUser('concesionario', $concA);
+
+        // B se crea después de A, así que por "más reciente primero" saldría primero
+        // si no se priorizara el concesionario propio.
+        Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id]);
+        Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id]);
+
+        $this->actingAs($userA)->get('/vehiculos')->assertSeeInOrder(['AAA111', 'BBB222']);
+    }
+
+    public function test_asesor_sees_own_concesionario_vehiculos_first_in_index(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = AsesorComercial::create(['cedula' => '1', 'nombre' => 'Asesor Uno', 'concesionario_id' => $concA->id]);
+        $userAsesor = $this->makeAsesorUser($asesor);
+
+        Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id]);
+        Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id]);
+
+        $this->actingAs($userAsesor)->get('/vehiculos')->assertSeeInOrder(['AAA111', 'BBB222']);
+    }
+
+    public function test_admin_sees_vehiculos_in_default_latest_order(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'B', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = $this->makeUser('admin');
+
+        Vehiculo::create(['placa' => 'AAA111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concA->id]);
+        Vehiculo::create(['placa' => 'BBB222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $concB->id]);
+
+        // Sin concesionario propio, el admin sigue viendo el orden por defecto: más reciente primero.
+        $this->actingAs($admin)->get('/vehiculos')->assertSeeInOrder(['BBB222', 'AAA111']);
+    }
+
     public function test_concesionario_kpi_counts_are_scoped_to_own_vehiculos(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
