@@ -57,7 +57,7 @@ class VehiculoController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        if ($request->filled('ubicacion')) {
+        if ($request->filled('ubicacion') && ! $request->filled('placa')) {
             $query->where('ubicacion', $request->ubicacion);
         }
 

@@ -287,6 +287,34 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('DDD444');
     }
 
+    public function test_texto_de_busqueda_ignora_el_filtro_de_ubicacion(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'EEE555', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'ubicacion' => 'Dentro del área']);
+        Vehiculo::create(['placa' => 'EEE556', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'ubicacion' => 'Fuera del área']);
+
+        // Con texto de búsqueda ("EEE55"), el filtro de ubicación se ignora: deben verse ambos.
+        $response = $this->actingAs($admin)->get('/vehiculos?placa=EEE55&ubicacion=Dentro del área');
+
+        $response->assertOk();
+        $response->assertSee('EEE555');
+        $response->assertSee('EEE556');
+    }
+
+    public function test_filtro_de_ubicacion_solo_sin_texto_de_busqueda(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'FFF777', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'ubicacion' => 'Dentro del área']);
+        Vehiculo::create(['placa' => 'FFF778', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'ubicacion' => 'Fuera del área']);
+
+        // Sin texto de búsqueda, el filtro de ubicación sigue funcionando igual que antes.
+        $response = $this->actingAs($admin)->get('/vehiculos?ubicacion=Dentro del área');
+
+        $response->assertOk();
+        $response->assertSee('FFF777');
+        $response->assertDontSee('FFF778');
+    }
+
     public function test_concesionario_only_sees_own_clientes(): void
     {
         $concA = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
