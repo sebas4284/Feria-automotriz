@@ -340,6 +340,26 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($userConc)->get('/estadisticas')->assertOk();
     }
 
+    public function test_estadisticas_shows_leads_por_concesionario_only_to_admin(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'Concesionario A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'Concesionario B', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = $this->makeUser('admin');
+        $userA = $this->makeUser('concesionario', $concA);
+
+        Lead::create(['meta_lead_id' => 'l1', 'full_name' => 'Lead Uno', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $concA->id]);
+        Lead::create(['meta_lead_id' => 'l2', 'full_name' => 'Lead Dos', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $concA->id]);
+        Lead::create(['meta_lead_id' => 'l3', 'full_name' => 'Lead Tres', 'estado_gestion' => 'Nuevo', 'concesionario_id' => $concB->id]);
+
+        $adminResponse = $this->actingAs($admin)->get('/estadisticas');
+        $adminResponse->assertOk();
+        $adminResponse->assertSee('Leads por concesionario');
+        $adminResponse->assertSeeInOrder(['Concesionario A', '2']);
+        $adminResponse->assertSeeInOrder(['Concesionario B', '1']);
+
+        $this->actingAs($userA)->get('/estadisticas')->assertDontSee('Leads por concesionario');
+    }
+
     public function test_concesionarios_and_asesores_show_pages_work_for_admin(): void
     {
         $admin = $this->makeUser('admin');

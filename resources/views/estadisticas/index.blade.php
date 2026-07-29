@@ -103,6 +103,36 @@
 
     </div>
 
+    {{-- Leads por concesionario (solo admin) --}}
+    @if($isAdmin)
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-5">Leads por concesionario</h2>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="pb-3">Concesionario</th>
+                            <th class="pb-3">Leads recibidos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($leadsPorConcesionario as $fila)
+                            <tr class="border-t border-gray-800">
+                                <td class="py-3">{{ $fila->concesionario->nombre ?? 'Sin asignar' }}</td>
+                                <td class="py-3 font-medium text-blue-400">{{ $fila->total }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="2" class="py-6 text-center text-gray-500">Sin leads registrados</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
 </div>
 
 @endsection

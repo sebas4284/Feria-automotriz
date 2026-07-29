@@ -21,6 +21,14 @@ class EstadisticasController extends Controller
                 ->get()
             : null;
 
+        $leadsPorConcesionario = $isAdmin
+            ? Lead::selectRaw('concesionario_id, COUNT(*) as total')
+                ->groupBy('concesionario_id')
+                ->with('concesionario')
+                ->orderByDesc('total')
+                ->get()
+            : null;
+
         $leadsPorEstado = Lead::query()->visibleTo($user)
             ->selectRaw('estado_gestion, COUNT(*) as total')
             ->groupBy('estado_gestion')
@@ -39,6 +47,7 @@ class EstadisticasController extends Controller
         return view('estadisticas.index', compact(
             'isAdmin',
             'ventasPorConcesionario',
+            'leadsPorConcesionario',
             'leadsPorEstado',
             'leadsVendidos',
             'totalLeads',
