@@ -255,7 +255,7 @@ class TurnoRotacionTest extends TestCase
         $response->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
     }
 
-    public function test_pantalla_muestra_llegada_junto_al_nombre_y_la_lista_lateral(): void
+    public function test_pantalla_muestra_llegada_junto_al_nombre(): void
     {
         $admin = $this->makeUser('admin');
         $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
@@ -267,9 +267,27 @@ class TurnoRotacionTest extends TestCase
         $response = $this->actingAs($admin)->get('/turnos/pantalla');
 
         $response->assertOk();
-        $response->assertSee('Orden de llegada');
         $response->assertSeeInOrder(['En turno', 'Concesionario Uno', 'Llegada #1']);
         $response->assertSeeInOrder(['Se prepara', 'Concesionario Dos', 'Llegada #2']);
+    }
+
+    public function test_pantalla_llegadas_muestra_a_todos_los_concesionarios_con_su_numero(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+        $tres = Concesionario::create(['nombre' => 'Concesionario Tres', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+        Turno::create(['concesionario_id' => $tres->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(1)]);
+
+        $response = $this->actingAs($admin)->get('/turnos/pantalla/llegadas');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Concesionario Uno', '#1']);
+        $response->assertSeeInOrder(['Concesionario Dos', '#2']);
+        $response->assertSeeInOrder(['Concesionario Tres', '#3']);
     }
 
     public function test_deshacer_asignacion_restaura_el_turno_y_desasigna_al_cliente_oculto(): void

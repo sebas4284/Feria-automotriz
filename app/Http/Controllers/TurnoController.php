@@ -95,14 +95,39 @@ class TurnoController extends Controller
         $sePrepara = $proximos->get(1);
         $rondaActual = $turnos->rondaActual();
 
+        [$filaCompleta, $ordenLlegada] = $this->filaCompletaConOrden();
+
+        return view('turnos.pantalla', compact('asignaciones', 'enTurno', 'sePrepara', 'rondaActual', 'filaCompleta', 'ordenLlegada'));
+    }
+
+    /**
+     * Pantalla independiente (pensada para su propia TV/pestaña) que solo
+     * muestra el orden fijo de llegada de todos los concesionarios de hoy —
+     * separada de pantalla() porque con muchos concesionarios no cabía bien
+     * junto a "En turno"/"Se prepara".
+     */
+    public function pantallaLlegadas()
+    {
+        [$filaCompleta, $ordenLlegada] = $this->filaCompletaConOrden();
+
+        return view('turnos.pantalla-llegadas', compact('filaCompleta', 'ordenLlegada'));
+    }
+
+    /**
+     * Todos los concesionarios con turno hoy, ordenados por hora de llegada
+     * (orden fijo, no rota), junto con su número de orden ya calculado.
+     */
+    private function filaCompletaConOrden(): array
+    {
         $filaCompleta = Turno::with('concesionario')
             ->whereDate('fecha', today())
             ->whereHas('concesionario', fn ($q) => $q->where('activo', true))
             ->orderBy('llegada_at')
             ->get();
+
         $ordenLlegada = $filaCompleta->values()->mapWithKeys(fn ($t, $i) => [$t->concesionario_id => $i + 1]);
 
-        return view('turnos.pantalla', compact('asignaciones', 'enTurno', 'sePrepara', 'rondaActual', 'filaCompleta', 'ordenLlegada'));
+        return [$filaCompleta, $ordenLlegada];
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)

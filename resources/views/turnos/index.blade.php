@@ -15,10 +15,16 @@
             <h1 class="text-2xl font-bold">Turnos</h1>
             <p class="text-gray-400 text-sm mt-0.5">Llegada de concesionarios — hoy {{ now()->format('d/m/Y') }}</p>
         </div>
-        <a href="{{ route('turnos.pantalla') }}" target="_blank"
-            class="shrink-0 bg-gray-800 hover:bg-gray-700 text-xs px-3 py-2 rounded-xl transition">
-            Pantalla grande
-        </a>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('turnos.pantalla-llegadas') }}" target="_blank"
+                class="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-2 rounded-xl transition">
+                Orden de llegada
+            </a>
+            <a href="{{ route('turnos.pantalla') }}" target="_blank"
+                class="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-2 rounded-xl transition">
+                Pantalla grande
+            </a>
+        </div>
     </div>
 
     @if($rondaActual > 0)
@@ -168,6 +174,10 @@
                     <span class="text-lg font-bold text-blue-400">#{{ $rondaActual }}</span>
                 </div>
             @endif
+            <a href="{{ route('turnos.pantalla-llegadas') }}" target="_blank"
+                class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm transition">
+                Orden de llegada
+            </a>
             <a href="{{ route('turnos.pantalla') }}" target="_blank"
                 class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl text-sm transition">
                 Abrir pantalla grande

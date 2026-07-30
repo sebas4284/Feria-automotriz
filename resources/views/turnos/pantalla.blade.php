@@ -18,6 +18,10 @@
                 {{ now()->translatedFormat('l d \d\e F Y') }} / {{ now()->format('h:i A') }}
             </p>
             <div class="flex items-center gap-4">
+                <a href="{{ route('turnos.pantalla-llegadas') }}" target="_blank"
+                    class="text-sm lg:text-base text-gray-400 hover:text-white underline transition">
+                    Orden de llegada
+                </a>
                 @if($rondaActual > 0)
                     <span class="text-lg lg:text-xl text-gray-400">Ronda #{{ $rondaActual }}</span>
                 @endif
@@ -26,34 +30,21 @@
         </div>
 
         @if($enTurno || $sePrepara)
-            <div class="flex gap-6 mb-8 items-stretch">
-                <div class="flex-1 bg-blue-600 rounded-3xl p-8 text-center">
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="bg-blue-600 rounded-3xl p-8 text-center">
                     <p class="text-xl lg:text-2xl text-blue-200 font-medium mb-2">En turno</p>
                     <p class="text-4xl lg:text-6xl font-bold truncate">{{ $enTurno->nombre ?? '—' }}</p>
                     @if($enTurno)
                         <p class="text-lg lg:text-xl text-blue-200 mt-2">Llegada #{{ $ordenLlegada[$enTurno->id] ?? '—' }}</p>
                     @endif
                 </div>
-                <div class="flex-1 bg-gray-900 border border-gray-800 rounded-3xl p-8 text-center">
+                <div class="bg-gray-900 border border-gray-800 rounded-3xl p-8 text-center">
                     <p class="text-xl lg:text-2xl text-gray-500 font-medium mb-2">Se prepara</p>
                     <p class="text-4xl lg:text-6xl font-bold text-gray-300 truncate">{{ $sePrepara->nombre ?? '—' }}</p>
                     @if($sePrepara)
                         <p class="text-lg lg:text-xl text-gray-500 mt-2">Llegada #{{ $ordenLlegada[$sePrepara->id] ?? '—' }}</p>
                     @endif
                 </div>
-                @if($filaCompleta->isNotEmpty())
-                    <div class="w-64 shrink-0 bg-gray-900 border border-gray-800 rounded-3xl overflow-hidden flex flex-col">
-                        <div class="bg-gray-800 px-4 py-2.5 text-sm font-semibold">Orden de llegada</div>
-                        <div class="overflow-y-auto flex-1 divide-y divide-gray-800">
-                            @foreach($filaCompleta as $turno)
-                                <div class="px-4 py-2 flex items-center justify-between text-sm">
-                                    <span class="truncate">{{ $turno->concesionario->nombre }}</span>
-                                    <span class="text-gray-400 shrink-0 ml-2">#{{ $ordenLlegada[$turno->concesionario_id] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             </div>
         @endif
 

@@ -69,6 +69,10 @@ Route::get('/turnos/pantalla', [TurnoController::class, 'pantalla'])
     ->name('turnos.pantalla')
     ->middleware(['auth', 'role:admin,staff']);
 
+Route::get('/turnos/pantalla/llegadas', [TurnoController::class, 'pantallaLlegadas'])
+    ->name('turnos.pantalla-llegadas')
+    ->middleware(['auth', 'role:admin,staff']);
+
 Route::post('/turnos/{concesionario}/check-in', [TurnoController::class, 'checkIn'])
     ->name('turnos.check-in')
     ->middleware(['auth', 'role:admin,staff']);
