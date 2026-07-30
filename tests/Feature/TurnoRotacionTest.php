@@ -94,6 +94,33 @@ class TurnoRotacionTest extends TestCase
         $despues->assertSeeInOrder(['Concesionario Dos', 'Concesionario Uno']);
     }
 
+    public function test_numero_de_llegada_es_fijo_y_no_cambia_cuando_rota_el_turno(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        // Uno llegó primero: Llegada #1 y Turno #1.
+        $antes = $this->actingAs($admin)->get('/turnos');
+        $antes->assertSeeInOrder(['Concesionario Uno', 'Llegada #1', 'Turno #1']);
+        $antes->assertSeeInOrder(['Concesionario Dos', 'Llegada #2', 'Turno #2']);
+
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $uno->id,
+        ])->assertOk();
+
+        // Tras atenderlo, el Turno # de Uno rota al final, pero su Llegada # sigue siendo #1.
+        $despues = $this->actingAs($admin)->get('/turnos');
+        $despues->assertSeeInOrder(['Concesionario Uno', 'Llegada #1', 'Turno #2']);
+        $despues->assertSeeInOrder(['Concesionario Dos', 'Llegada #2', 'Turno #1']);
+    }
+
     public function test_pantalla_muestra_mensaje_de_espera_sin_clientes_hoy(): void
     {
         $admin = $this->makeUser('admin');

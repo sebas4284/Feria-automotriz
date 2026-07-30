@@ -4,6 +4,7 @@
 
 @php
     $posiciones = $enFila->values()->mapWithKeys(fn($c, $i) => [$c->id => $i + 1]);
+    $ordenLlegada = $turnosHoy->sortBy('llegada_at')->values()->mapWithKeys(fn($t, $i) => [$t->concesionario_id => $i + 1]);
 @endphp
 
 {{-- ===================== VISTA MÓVIL ===================== --}}
@@ -54,7 +55,7 @@
                         <p class="font-semibold text-sm truncate">{{ $c->nombre }}</p>
                         @if($turno)
                             <p class="text-xs text-gray-500 mt-0.5">
-                                Turno #{{ $posiciones[$c->id] ?? '—' }} · llegó {{ $turno->llegada_at->format('H:i') }}
+                                Llegada #{{ $ordenLlegada[$c->id] ?? '—' }} · Turno #{{ $posiciones[$c->id] ?? '—' }} · llegó {{ $turno->llegada_at->format('H:i') }}
                             </p>
                         @else
                             <p class="text-xs text-gray-600 mt-0.5">No ha llegado</p>
@@ -207,6 +208,7 @@
                 <tr>
                     <th class="p-4 text-left">Concesionario</th>
                     <th class="p-4 text-left">Estado</th>
+                    <th class="p-4 text-left">N° Llegada</th>
                     <th class="p-4 text-left">Turno</th>
                     <th class="p-4 text-left">Llegada</th>
                     <th class="p-4 text-left">Acción</th>
@@ -234,6 +236,7 @@
                                 <span class="text-xs bg-gray-700 text-gray-400 px-3 py-1 rounded-full">No ha llegado</span>
                             @endif
                         </td>
+                        <td class="p-4">{{ $turno ? '#' . ($ordenLlegada[$c->id] ?? '—') : '—' }}</td>
                         <td class="p-4">{{ $turno ? '#' . ($posiciones[$c->id] ?? '—') : '—' }}</td>
                         <td class="p-4">{{ $turno?->llegada_at->format('H:i') ?? '—' }}</td>
                         <td class="p-4">
