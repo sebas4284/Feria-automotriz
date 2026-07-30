@@ -254,4 +254,82 @@ class TurnoRotacionTest extends TestCase
         $response->assertSee('Se prepara');
         $response->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
     }
+
+    public function test_pantalla_muestra_llegada_junto_al_nombre_y_la_lista_lateral(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $response = $this->actingAs($admin)->get('/turnos/pantalla');
+
+        $response->assertOk();
+        $response->assertSee('Orden de llegada');
+        $response->assertSeeInOrder(['En turno', 'Concesionario Uno', 'Llegada #1']);
+        $response->assertSeeInOrder(['Se prepara', 'Concesionario Dos', 'Llegada #2']);
+    }
+
+    public function test_deshacer_asignacion_restaura_el_turno_y_desasigna_al_cliente_oculto(): void
+    {
+        $admin = $this->makeUser('admin');
+        $uno = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        $dos = Concesionario::create(['nombre' => 'Concesionario Dos', 'peso_asignacion' => 1, 'activo' => true]);
+
+        Turno::create(['concesionario_id' => $uno->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(10)]);
+        Turno::create(['concesionario_id' => $dos->id, 'fecha' => today(), 'llegada_at' => now()->subMinutes(5)]);
+
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        // Antes de asignar: Uno va primero.
+        $this->actingAs($admin)->get('/turnos')->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $uno->id,
+        ])->assertOk();
+
+        // Tras asignar: Uno rota al final, y aparece el botón de deshacer (↺).
+        $conAsignacion = $this->actingAs($admin)->get('/turnos');
+        $conAsignacion->assertSeeInOrder(['Concesionario Dos', 'Concesionario Uno']);
+        $conAsignacion->assertSee('↺');
+
+        $this->actingAs($admin)->post("/turnos/{$uno->id}/deshacer-asignacion")->assertRedirect();
+
+        // Tras deshacer: Uno recupera su lugar, el cliente queda sin concesionario...
+        $this->assertNull($cliente->fresh()->concesionario_id);
+        $this->assertTrue((bool) $cliente->fresh()->oculto_en_turnos);
+
+        // ...pero no vuelve a aparecer como pendiente ni en "Clientes sin cita de hoy".
+        $despues = $this->actingAs($admin)->get('/turnos');
+        $despues->assertSeeInOrder(['Concesionario Uno', 'Concesionario Dos']);
+        $despues->assertDontSee('Pendiente Uno');
+
+        // El cliente sigue existiendo (se ve en el listado general de Clientes).
+        $this->actingAs($admin)->get('/clientes')->assertSee('Pendiente Uno');
+    }
+
+    public function test_deshacer_asignacion_no_disponible_despues_de_saltar_turno(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Uno', 'peso_asignacion' => 1, 'activo' => true]);
+        Turno::create(['concesionario_id' => $conc->id, 'fecha' => today(), 'llegada_at' => now()]);
+
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $conc->id,
+        ])->assertOk();
+
+        // Después de asignar, saltar el turno invalida el "deshacer" de la asignación anterior.
+        $this->actingAs($admin)->post("/turnos/{$conc->id}/saltar")->assertRedirect();
+
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $conc->id, 'tiene_asignacion_deshacible' => false]);
+
+        $response = $this->actingAs($admin)->get('/turnos');
+        $response->assertDontSee('↺');
+    }
 }

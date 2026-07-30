@@ -65,6 +65,15 @@
                     @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                         @if($turno)
                             <div class="flex items-center gap-2 shrink-0">
+                                @if($turno->tiene_asignacion_deshacible)
+                                    <form action="{{ route('turnos.deshacer-asignacion', $c) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" title="Deshacer última asignación (recupera su turno anterior)"
+                                            class="px-3 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-bold transition">
+                                            ↺
+                                        </button>
+                                    </form>
+                                @endif
                                 <form action="{{ route('turnos.saltar', $c) }}" method="POST">
                                     @csrf
                                     <button type="submit" title="Saltar turno (pasa al final)"
@@ -243,6 +252,15 @@
                             @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                                 @if($turno)
                                     <div class="flex items-center gap-2">
+                                        @if($turno->tiene_asignacion_deshacible)
+                                            <form action="{{ route('turnos.deshacer-asignacion', $c) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" title="Deshacer última asignación (recupera su turno anterior)"
+                                                    class="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/40 text-purple-400 text-xs font-bold transition">
+                                                    ↺
+                                                </button>
+                                            </form>
+                                        @endif
                                         <form action="{{ route('turnos.saltar', $c) }}" method="POST">
                                             @csrf
                                             <button type="submit" title="Saltar turno (pasa al final)"

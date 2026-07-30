@@ -11,6 +11,8 @@ class Turno extends Model
         'fecha',
         'llegada_at',
         'ultima_asignacion_at',
+        'ultima_asignacion_at_previa',
+        'tiene_asignacion_deshacible',
         'veces_asignado',
         'veces_procesado',
     ];
@@ -19,6 +21,8 @@ class Turno extends Model
         'fecha' => 'date',
         'llegada_at' => 'datetime',
         'ultima_asignacion_at' => 'datetime',
+        'ultima_asignacion_at_previa' => 'datetime',
+        'tiene_asignacion_deshacible' => 'boolean',
     ];
 
     public function concesionario()

@@ -81,6 +81,10 @@ Route::post('/turnos/{concesionario}/saltar', [TurnoController::class, 'saltarTu
     ->name('turnos.saltar')
     ->middleware(['auth', 'role:admin,staff']);
 
+Route::post('/turnos/{concesionario}/deshacer-asignacion', [TurnoController::class, 'deshacerAsignacion'])
+    ->name('turnos.deshacer-asignacion')
+    ->middleware(['auth', 'role:admin,staff']);
+
 Route::post('/turnos/asignar-cliente', [TurnoController::class, 'asignarCliente'])
     ->name('turnos.asignar-cliente')
     ->middleware(['auth', 'role:admin,staff']);

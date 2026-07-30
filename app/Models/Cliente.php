@@ -16,6 +16,7 @@ class Cliente extends Model
         'telefono',
         'cita',
         'concesionario_id',
+        'oculto_en_turnos',
         'medio_entero',
         'observaciones',
         'user_id'
@@ -23,6 +24,7 @@ class Cliente extends Model
 
     protected $casts = [
         'cita' => 'boolean',
+        'oculto_en_turnos' => 'boolean',
     ];
 
     public function ventas()

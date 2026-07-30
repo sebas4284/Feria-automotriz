@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Cliente;
 use App\Models\Concesionario;
 use App\Models\Turno;
 use Illuminate\Support\Collection;
@@ -57,20 +58,30 @@ class TurnoAssignmentService
 
     public function registrarAsignacion(Concesionario $concesionario): void
     {
-        Turno::where('concesionario_id', $concesionario->id)
+        $turno = Turno::where('concesionario_id', $concesionario->id)
             ->whereDate('fecha', today())
-            ->update([
-                'ultima_asignacion_at' => now(),
-                'veces_asignado' => DB::raw('veces_asignado + 1'),
-                'veces_procesado' => DB::raw('veces_procesado + 1'),
-            ]);
+            ->first();
+
+        if (! $turno) {
+            return;
+        }
+
+        $turno->update([
+            'ultima_asignacion_at_previa' => $turno->ultima_asignacion_at,
+            'tiene_asignacion_deshacible' => true,
+            'ultima_asignacion_at' => now(),
+            'veces_asignado' => $turno->veces_asignado + 1,
+            'veces_procesado' => $turno->veces_procesado + 1,
+        ]);
     }
 
     /**
      * Salta el turno de este concesionario sin registrarle una asignación
      * real: lo manda al final de la fila (misma mecánica que ser atendido)
      * pero sin sumar a veces_asignado, para no inflar sus estadísticas de
-     * atención real. Sí cuenta para el conteo de rondas.
+     * atención real. Sí cuenta para el conteo de rondas. Invalida cualquier
+     * "deshacer" pendiente de una asignación anterior, ya que la fila volvió
+     * a moverse después de esa asignación.
      */
     public function enviarAlFinal(Concesionario $concesionario): void
     {
@@ -78,8 +89,43 @@ class TurnoAssignmentService
             ->whereDate('fecha', today())
             ->update([
                 'ultima_asignacion_at' => now(),
+                'ultima_asignacion_at_previa' => null,
+                'tiene_asignacion_deshacible' => false,
                 'veces_procesado' => DB::raw('veces_procesado + 1'),
             ]);
+    }
+
+    /**
+     * Deshace la última asignación real de este concesionario: restaura su
+     * posición de turno anterior y desasigna al cliente que se le había
+     * asignado (queda oculto de las listas de Turnos, pero no se borra).
+     * No hace nada si la última acción no fue una asignación (p. ej. si
+     * después se le saltó el turno).
+     */
+    public function deshacerAsignacion(Concesionario $concesionario): void
+    {
+        $turno = Turno::where('concesionario_id', $concesionario->id)
+            ->whereDate('fecha', today())
+            ->first();
+
+        if (! $turno || ! $turno->tiene_asignacion_deshacible) {
+            return;
+        }
+
+        Cliente::where('concesionario_id', $concesionario->id)
+            ->where('cita', false)
+            ->whereDate('created_at', today())
+            ->latest('updated_at')
+            ->first()
+            ?->update(['concesionario_id' => null, 'oculto_en_turnos' => true]);
+
+        $turno->update([
+            'ultima_asignacion_at' => $turno->ultima_asignacion_at_previa,
+            'ultima_asignacion_at_previa' => null,
+            'tiene_asignacion_deshacible' => false,
+            'veces_asignado' => max(0, $turno->veces_asignado - 1),
+            'veces_procesado' => max(0, $turno->veces_procesado - 1),
+        ]);
     }
 
     /**

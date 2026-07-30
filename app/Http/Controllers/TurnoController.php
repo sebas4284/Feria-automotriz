@@ -33,6 +33,7 @@ class TurnoController extends Controller
 
         $clientesHoy = Cliente::with('concesionario')
             ->where('cita', false)
+            ->where('oculto_en_turnos', false)
             ->whereDate('created_at', today())
             ->latest()
             ->get();
@@ -94,7 +95,14 @@ class TurnoController extends Controller
         $sePrepara = $proximos->get(1);
         $rondaActual = $turnos->rondaActual();
 
-        return view('turnos.pantalla', compact('asignaciones', 'enTurno', 'sePrepara', 'rondaActual'));
+        $filaCompleta = Turno::with('concesionario')
+            ->whereDate('fecha', today())
+            ->whereHas('concesionario', fn ($q) => $q->where('activo', true))
+            ->orderBy('llegada_at')
+            ->get();
+        $ordenLlegada = $filaCompleta->values()->mapWithKeys(fn ($t, $i) => [$t->concesionario_id => $i + 1]);
+
+        return view('turnos.pantalla', compact('asignaciones', 'enTurno', 'sePrepara', 'rondaActual', 'filaCompleta', 'ordenLlegada'));
     }
 
     public function checkIn(Concesionario $concesionario, TurnoAssignmentService $turnos)
@@ -121,5 +129,17 @@ class TurnoController extends Controller
         $turnos->enviarAlFinal($concesionario);
 
         return back()->with('success', "Se saltó el turno de {$concesionario->nombre}, pasa al final de la fila");
+    }
+
+    /**
+     * Deshace la última asignación real de cliente de este concesionario:
+     * recupera la posición de turno que tenía antes y desasigna al cliente
+     * (sin borrarlo, solo lo oculta de las listas de Turnos).
+     */
+    public function deshacerAsignacion(Concesionario $concesionario, TurnoAssignmentService $turnos)
+    {
+        $turnos->deshacerAsignacion($concesionario);
+
+        return back()->with('success', "Se deshizo la última asignación de {$concesionario->nombre}");
     }
 }
