@@ -720,6 +720,26 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($staff)->delete("/clientes/{$cliente->id}")->assertForbidden();
     }
 
+    public function test_staff_sees_all_concesionarios_and_can_assign_one_when_registering_a_cliente_con_cita(): void
+    {
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Elegido', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($staff)->get('/clientes/create')->assertOk()->assertSee('Concesionario Elegido');
+
+        $this->actingAs($staff)->post('/clientes', [
+            'nombre' => 'Cliente Con Cita De Staff',
+            'telefono' => '3002223344',
+            'cita' => '1',
+            'concesionario_id' => $conc->id,
+        ])->assertRedirect(route('clientes.index'));
+
+        $this->assertDatabaseHas('clientes', [
+            'nombre' => 'Cliente Con Cita De Staff',
+            'concesionario_id' => $conc->id,
+        ]);
+    }
+
     public function test_turnos_screen_shows_todays_walkin_clients_and_their_concesionario(): void
     {
         $admin = $this->makeUser('admin');

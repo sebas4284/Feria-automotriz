@@ -173,7 +173,7 @@ class ClienteController extends Controller
     {
         $user = auth()->user();
 
-        return $user->isAdmin()
+        return ($user->isAdmin() || $user->isStaff())
             ? Concesionario::where('activo', true)->orderBy('nombre')->get()
             : Concesionario::where('id', $user->concesionario_id)->get();
     }
@@ -182,6 +182,6 @@ class ClienteController extends Controller
     {
         $user = $request->user();
 
-        return $user->isAdmin() ? $request->concesionario_id : $user->concesionario_id;
+        return ($user->isAdmin() || $user->isStaff()) ? $request->concesionario_id : $user->concesionario_id;
     }
 }
