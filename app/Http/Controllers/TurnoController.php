@@ -47,6 +47,18 @@ class TurnoController extends Controller
     }
 
     /**
+     * Quita a un cliente pendiente de la lista de "Pendientes por asignar"
+     * sin asignarlo a ningún concesionario — sigue existiendo (se ve en el
+     * listado general de Clientes), solo se oculta de Turnos.
+     */
+    public function quitarPendiente(Cliente $cliente)
+    {
+        $cliente->update(['oculto_en_turnos' => true]);
+
+        return back()->with('success', "Se quitó a {$cliente->nombre} de pendientes por asignar");
+    }
+
+    /**
      * Asigna un cliente pendiente (sin cita, sin concesionario) a uno
      * específico — se dispara al soltarlo (drag & drop) sobre su tarjeta
      * en /turnos. Avanza la cola de ese concesionario igual que "rotar()".

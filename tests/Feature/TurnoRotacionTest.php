@@ -192,6 +192,25 @@ class TurnoRotacionTest extends TestCase
         $response->assertSee('Pendientes por asignar');
     }
 
+    public function test_quitar_pendiente_lo_oculta_de_turnos_pero_no_lo_borra(): void
+    {
+        $admin = $this->makeUser('admin');
+        $cliente = Cliente::create(['nombre' => 'Pendiente A Quitar', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($admin)->get('/turnos')->assertSee('Pendiente A Quitar');
+
+        $this->actingAs($admin)->post("/turnos/pendiente/{$cliente->id}/quitar")->assertRedirect();
+
+        $this->assertTrue((bool) $cliente->fresh()->oculto_en_turnos);
+        $this->assertNull($cliente->fresh()->concesionario_id);
+
+        // La primera petición aún trae el flash de éxito, que menciona el nombre del cliente;
+        // se consume con esta primera llamada antes de verificar que ya no aparece en la lista.
+        $this->actingAs($admin)->get('/turnos');
+        $this->actingAs($admin)->get('/turnos')->assertDontSee('Pendiente A Quitar');
+        $this->actingAs($admin)->get('/clientes')->assertSee('Pendiente A Quitar');
+    }
+
     public function test_saltar_turno_manda_al_final_sin_contar_como_asignacion_real(): void
     {
         $admin = $this->makeUser('admin');

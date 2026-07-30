@@ -116,7 +116,17 @@
             <div class="space-y-2">
                 @foreach($pendientes as $cliente)
                     <div class="bg-gray-900/60 border border-amber-500/30 rounded-xl p-3">
-                        <p class="font-medium text-sm mb-2">{{ $cliente->nombre }}</p>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <p class="font-medium text-sm">{{ $cliente->nombre }}</p>
+                            <form action="{{ route('turnos.quitar-pendiente', $cliente) }}" method="POST">
+                                @csrf
+                                <button type="submit" title="Quitar de pendientes"
+                                    onclick="return confirm('¿Quitar a {{ $cliente->nombre }} de pendientes por asignar?')"
+                                    class="text-gray-500 hover:text-red-400 transition text-xs font-bold px-1 shrink-0">
+                                    ✕
+                                </button>
+                            </form>
+                        </div>
                         <div class="flex gap-2">
                             <select id="asignar-select-{{ $cliente->id }}"
                                 class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm">
@@ -212,9 +222,19 @@
                 @foreach($pendientes as $cliente)
                     <div draggable="true"
                         ondragstart="event.dataTransfer.setData('text/plain', '{{ $cliente->id }}')"
-                        class="cursor-grab active:cursor-grabbing bg-amber-500/10 border border-dashed border-amber-500/50 rounded-2xl px-4 py-3 select-none">
-                        <p class="font-medium text-sm">{{ $cliente->nombre }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $cliente->created_at->format('H:i') }}</p>
+                        class="cursor-grab active:cursor-grabbing bg-amber-500/10 border border-dashed border-amber-500/50 rounded-2xl px-4 py-3 select-none flex items-start gap-2">
+                        <div class="min-w-0">
+                            <p class="font-medium text-sm">{{ $cliente->nombre }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $cliente->created_at->format('H:i') }}</p>
+                        </div>
+                        <form action="{{ route('turnos.quitar-pendiente', $cliente) }}" method="POST" class="shrink-0">
+                            @csrf
+                            <button type="submit" title="Quitar de pendientes"
+                                onclick="return confirm('¿Quitar a {{ $cliente->nombre }} de pendientes por asignar?')"
+                                class="text-gray-500 hover:text-red-400 transition text-xs font-bold px-1">
+                                ✕
+                            </button>
+                        </form>
                     </div>
                 @endforeach
             </div>
