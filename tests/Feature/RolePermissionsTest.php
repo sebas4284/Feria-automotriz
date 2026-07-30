@@ -423,6 +423,46 @@ class RolePermissionsTest extends TestCase
         $this->assertEquals('Disponible', $vehiculo->fresh()->estado);
     }
 
+    public function test_ventas_index_shows_placa_concesionario_y_asesor(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'Concesionario Vendedor', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => '999', 'nombre' => 'Asesor Vendedor', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'VTA123', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCV1', 'nombre' => 'Comprador Venta']);
+        $admin = $this->makeUser('admin');
+
+        \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/ventas');
+
+        $response->assertOk();
+        $response->assertSee('VTA123');
+        $response->assertSee('Concesionario Vendedor');
+        $response->assertSee('Asesor Vendedor');
+    }
+
+    public function test_ventas_create_form_renders_with_buscador_de_vehiculo(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'BUS123', 'marca' => 'Mazda', 'modelo' => 2024, 'estado' => 'Disponible']);
+
+        $response = $this->actingAs($admin)->get('/ventas/create');
+
+        $response->assertOk();
+        $response->assertSee('Buscar por placa, marca o línea...');
+        $response->assertDontSee('<select name="vehiculo_id"', false);
+    }
+
     public function test_asesor_only_sees_leads_assigned_to_them(): void
     {
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);

@@ -78,7 +78,7 @@
 
         <div class="space-y-2">
             @forelse($ventas as $venta)
-                <div x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa) }}"
+                <div x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa.' '.($venta->concesionarioVende->nombre ?? '').' '.($venta->asesorComercial->nombre ?? '')) }}"
                     class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3.5 hover:border-gray-700 transition">
                     <a href="{{ route('ventas.show', $venta) }}" class="block">
                         <div class="flex items-center justify-between gap-2 mb-2">
@@ -93,7 +93,7 @@
                             <p class="text-emerald-400 font-bold text-sm shrink-0">$ {{ number_format($venta->valor, 0, ',', '.') }}</p>
                         </div>
                         <div class="flex items-center justify-between pl-10">
-                            <p class="text-xs text-gray-400">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</p>
+                            <p class="text-xs text-gray-400">{{ $venta->vehiculo->placa }} · {{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</p>
                             <div class="flex items-center gap-2">
                                 @if($venta->forma_pago)
                                     <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">{{ $venta->forma_pago }}</span>
@@ -103,6 +103,10 @@
                                 @endif
                                 <p class="text-xs text-gray-600">{{ $venta->fecha_venta?->format('d/m/Y') }}</p>
                             </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pl-10 mt-2 text-xs text-gray-500">
+                            <p class="truncate">Concesionario: <span class="text-gray-300">{{ $venta->concesionarioVende->nombre ?? '—' }}</span></p>
+                            <p class="truncate">Asesor: <span class="text-gray-300">{{ $venta->asesorComercial->nombre ?? '—' }}</span></p>
                         </div>
                     </a>
                     <div class="flex gap-2 pt-3 mt-3 border-t border-gray-800">
@@ -176,7 +180,10 @@
             <thead class="bg-gray-800">
                 <tr>
                     <th class="p-4 text-left">Comprador</th>
+                    <th class="p-4 text-left">Placa</th>
                     <th class="p-4 text-left">Vehículo</th>
+                    <th class="p-4 text-left hidden lg:table-cell">Concesionario</th>
+                    <th class="p-4 text-left hidden xl:table-cell">Asesor</th>
                     <th class="p-4 text-left">Valor</th>
                     <th class="p-4 text-left">Fecha</th>
                     <th class="p-4 text-left">Acciones</th>
@@ -184,10 +191,13 @@
             </thead>
             <tbody>
                 @forelse($ventas as $venta)
-                    <tr x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa) }}"
+                    <tr x-show="matches($el)" data-search="{{ mb_strtolower(($venta->comprador->nombre ?? '').' '.$venta->vehiculo->marca.' '.$venta->vehiculo->modelo.' '.$venta->vehiculo->placa.' '.($venta->concesionarioVende->nombre ?? '').' '.($venta->asesorComercial->nombre ?? '')) }}"
                         class="border-t border-gray-800 hover:bg-gray-800/40 transition">
                         <td class="p-4">{{ $venta->comprador->nombre ?? '—' }}</td>
+                        <td class="p-4 font-mono">{{ $venta->vehiculo->placa }}</td>
                         <td class="p-4">{{ $venta->vehiculo->marca }} {{ $venta->vehiculo->modelo }}</td>
+                        <td class="p-4 hidden lg:table-cell">{{ $venta->concesionarioVende->nombre ?? '—' }}</td>
+                        <td class="p-4 hidden xl:table-cell">{{ $venta->asesorComercial->nombre ?? '—' }}</td>
                         <td class="p-4 text-emerald-400 font-bold">$ {{ number_format($venta->valor, 0, ',', '.') }}</td>
                         <td class="p-4 text-gray-400">{{ $venta->fecha_venta?->format('d/m/Y') }}</td>
                         <td class="p-4">
@@ -200,11 +210,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center p-8 text-gray-400">No hay ventas registradas</td>
+                        <td colspan="8" class="text-center p-8 text-gray-400">No hay ventas registradas</td>
                     </tr>
                 @endforelse
                 <tr x-show="q.trim() !== '' && visibleCount === 0">
-                    <td colspan="5" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
+                    <td colspan="8" class="text-center p-8 text-gray-400">Sin resultados para tu búsqueda</td>
                 </tr>
             </tbody>
         </table>

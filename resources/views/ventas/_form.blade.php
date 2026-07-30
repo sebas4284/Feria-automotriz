@@ -86,13 +86,27 @@
 
             <div>
                 <label class="block mb-2 text-sm text-gray-400">Vehículo (placa)</label>
-                <select name="vehiculo_id" x-model="vehiculoId" @change="onVehiculoChange()"
-                    class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3" required>
-                    <option value="">Seleccione...</option>
-                    @foreach($vehiculos as $vehiculo)
-                        <option value="{{ $vehiculo->id }}">{{ $vehiculo->placa }} — {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</option>
-                    @endforeach
-                </select>
+                <div class="relative" @click.outside="mostrarSugerenciasVehiculo = false">
+                    <input type="hidden" name="vehiculo_id" :value="vehiculoId">
+                    <input type="text" x-model="vehiculoQuery" autocomplete="off"
+                        @input="vehiculoId = ''; mostrarSugerenciasVehiculo = true"
+                        @focus="mostrarSugerenciasVehiculo = true"
+                        placeholder="Buscar por placa, marca o línea..."
+                        class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3" required>
+                    <div x-show="mostrarSugerenciasVehiculo && vehiculoQuery.trim() !== ''" x-cloak
+                        class="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-xl max-h-60 overflow-y-auto shadow-lg">
+                        <template x-for="v in vehiculosFiltrados" :key="v.id">
+                            <button type="button" @click="seleccionarVehiculo(v)"
+                                class="w-full text-left px-4 py-2.5 hover:bg-gray-700 text-sm border-b border-gray-700 last:border-b-0">
+                                <span x-text="v.placa" class="font-mono font-bold"></span>
+                                <span x-text="' — ' + v.marca + ' ' + v.modelo"></span>
+                            </button>
+                        </template>
+                        <div x-show="vehiculosFiltrados.length === 0" class="px-4 py-3 text-sm text-gray-500">
+                            Sin resultados
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -244,6 +258,8 @@ function ventaForm() {
             correo: {{ Js::from(old('comprador_correo', $venta->comprador->correo ?? '')) }},
         },
         vehiculoId: {{ Js::from(old('vehiculo_id', $venta->vehiculo_id ?? '')) }},
+        vehiculoQuery: '',
+        mostrarSugerenciasVehiculo: false,
         valor: {{ Js::from(old('valor', $venta->valor ?? '')) }},
         concesionarioTiene: {{ Js::from($venta->vehiculo->concesionario->nombre ?? '') }},
         concesionarioVende: {{ Js::from(old('concesionario_vende_id', $venta->concesionario_vende_id ?? '')) }},
@@ -251,6 +267,30 @@ function ventaForm() {
         formaPago: {{ Js::from(old('forma_pago', $venta->forma_pago ?? '')) }},
         tieneRetoma: {{ Js::from((bool) old('tiene_retoma', $venta->tiene_retoma ?? false)) }},
         participaExperiencia: {{ Js::from((bool) old('participa_experiencia', $venta->participa_experiencia ?? false)) }},
+
+        init() {
+            const v = this.vehiculos.find(v => v.id == this.vehiculoId);
+            if (v) {
+                this.vehiculoQuery = `${v.placa} — ${v.marca} ${v.modelo}`;
+            }
+        },
+
+        get vehiculosFiltrados() {
+            const q = this.vehiculoQuery.trim().toLowerCase();
+            if (!q) return [];
+            return this.vehiculos.filter(v =>
+                v.placa.toLowerCase().includes(q) ||
+                v.marca.toLowerCase().includes(q) ||
+                String(v.modelo).toLowerCase().includes(q)
+            ).slice(0, 20);
+        },
+
+        seleccionarVehiculo(v) {
+            this.vehiculoId = v.id;
+            this.vehiculoQuery = `${v.placa} — ${v.marca} ${v.modelo}`;
+            this.mostrarSugerenciasVehiculo = false;
+            this.onVehiculoChange();
+        },
 
         buscarComprador() {
             const match = this.compradores.find(c => c.identificacion === this.comprador.identificacion);
