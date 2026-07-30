@@ -14,7 +14,7 @@ class ClientePolicy
 
     public function view(User $user, Cliente $cliente): bool
     {
-        return $user->isAdmin() || $cliente->concesionario_id === $user->concesionario_id;
+        return $user->isAdmin() || $user->isStaff() || $cliente->concesionario_id === $user->concesionario_id;
     }
 
     public function create(User $user): bool
@@ -24,11 +24,15 @@ class ClientePolicy
 
     public function update(User $user, Cliente $cliente): bool
     {
-        return $this->view($user, $cliente);
+        if ($user->isStaff()) {
+            return false;
+        }
+
+        return $user->isAdmin() || $cliente->concesionario_id === $user->concesionario_id;
     }
 
     public function delete(User $user, Cliente $cliente): bool
     {
-        return $this->view($user, $cliente);
+        return $this->update($user, $cliente);
     }
 }

@@ -14,10 +14,12 @@
             </div>
 
             <div class="flex gap-2 shrink-0">
-                <a href="{{ route('clientes.edit', $cliente) }}"
-                    class="bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl transition font-medium text-sm">
-                    Editar
-                </a>
+                @can('update', $cliente)
+                    <a href="{{ route('clientes.edit', $cliente) }}"
+                        class="bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl transition font-medium text-sm">
+                        Editar
+                    </a>
+                @endcan
                 <a href="{{ route('clientes.index') }}"
                     class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl transition text-sm">
                     Volver
@@ -95,16 +97,18 @@
         </div>
 
         <!-- Botón de eliminación -->
-        <div class="mt-8">
-            <form action="{{ route('clientes.destroy', $cliente) }}" method="POST" class="inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')"
-                    class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-xl font-medium transition">
-                    🗑️ Eliminar Cliente
-                </button>
-            </form>
-        </div>
+        @can('delete', $cliente)
+            <div class="mt-8">
+                <form action="{{ route('clientes.destroy', $cliente) }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este cliente?')"
+                        class="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-xl font-medium transition">
+                        🗑️ Eliminar Cliente
+                    </button>
+                </form>
+            </div>
+        @endcan
 
     </div>
 

@@ -686,7 +686,6 @@ class RolePermissionsTest extends TestCase
         $staff = $this->makeUser('staff');
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
 
-        $this->actingAs($staff)->get('/clientes')->assertForbidden();
         $this->actingAs($staff)->get('/ventas')->assertForbidden();
         $this->actingAs($staff)->get('/leads')->assertForbidden();
         $this->actingAs($staff)->get('/vehiculos')->assertForbidden();
@@ -694,6 +693,31 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($staff)->get('/estadisticas')->assertForbidden();
         $this->actingAs($staff)->get('/concesionarios')->assertForbidden();
         $this->actingAs($staff)->get('/usuarios')->assertForbidden();
+    }
+
+    public function test_staff_can_register_and_view_clientes_but_not_edit_or_delete(): void
+    {
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $cliente = Cliente::create(['nombre' => 'Cliente De Otro', 'telefono' => '3000000000', 'cita' => true, 'concesionario_id' => $conc->id]);
+
+        // Ve la lista completa (no queda vacía por no tener concesionario propio) y el formulario de registro.
+        $this->actingAs($staff)->get('/clientes')->assertOk()->assertSee('Cliente De Otro');
+        $this->actingAs($staff)->get('/clientes/create')->assertOk();
+
+        // Puede registrar un cliente nuevo (walk-in, sin cita).
+        $this->actingAs($staff)->post('/clientes', [
+            'nombre' => 'Walkin Registrado Por Staff',
+            'telefono' => '3001112233',
+            'cita' => '0',
+        ])->assertRedirect(route('clientes.index'));
+        $this->assertDatabaseHas('clientes', ['nombre' => 'Walkin Registrado Por Staff', 'concesionario_id' => null]);
+
+        // Puede ver el detalle de cualquier cliente, pero no editarlo ni eliminarlo.
+        $this->actingAs($staff)->get("/clientes/{$cliente->id}")->assertOk();
+        $this->actingAs($staff)->get("/clientes/{$cliente->id}/edit")->assertForbidden();
+        $this->actingAs($staff)->put("/clientes/{$cliente->id}", ['nombre' => 'Hackeado', 'telefono' => '1'])->assertForbidden();
+        $this->actingAs($staff)->delete("/clientes/{$cliente->id}")->assertForbidden();
     }
 
     public function test_turnos_screen_shows_todays_walkin_clients_and_their_concesionario(): void

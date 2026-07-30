@@ -5,17 +5,21 @@
 @php
     $avatarColors = ['bg-blue-600','bg-purple-600','bg-green-600','bg-amber-600','bg-red-600','bg-teal-600','bg-pink-600','bg-indigo-600'];
 
-    function clienteColor($nombre, $colors) {
-        return $colors[abs(crc32($nombre)) % count($colors)];
+    if (! function_exists('clienteColor')) {
+        function clienteColor($nombre, $colors) {
+            return $colors[abs(crc32($nombre)) % count($colors)];
+        }
     }
 
-    function clienteInitials($nombre) {
-        $words = array_filter(explode(' ', $nombre));
-        $initials = '';
-        foreach (array_slice(array_values($words), 0, 2) as $w) {
-            $initials .= strtoupper($w[0]);
+    if (! function_exists('clienteInitials')) {
+        function clienteInitials($nombre) {
+            $words = array_filter(explode(' ', $nombre));
+            $initials = '';
+            foreach (array_slice(array_values($words), 0, 2) as $w) {
+                $initials .= strtoupper($w[0]);
+            }
+            return $initials;
         }
-        return $initials;
     }
 
     $nuevosEsteMes = $clientes->filter(fn($c) => $c->created_at->isCurrentMonth())->count();
@@ -257,9 +261,11 @@
                             </td>
                             <td class="p-4">
                                 @include('partials._acciones', [
-                                    'modelo' => $cliente,
-                                    'ruta'   => 'clientes',
-                                    'label'  => 'cliente',
+                                    'modelo'      => $cliente,
+                                    'ruta'        => 'clientes',
+                                    'label'       => 'cliente',
+                                    'sinEditar'   => auth()->user()->cannot('update', $cliente),
+                                    'sinEliminar' => auth()->user()->cannot('delete', $cliente),
                                 ])
                             </td>
                         </tr>

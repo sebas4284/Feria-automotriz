@@ -100,6 +100,11 @@ Route::delete('/porteria/{vehiculo}/ingreso', [PorteriaController::class, 'quita
 
 //Clientes
 Route::resource('clientes', ClienteController::class)
+    ->only(['index', 'create', 'store', 'show'])
+    ->middleware(['auth', 'role:admin,concesionario,staff']);
+
+Route::resource('clientes', ClienteController::class)
+    ->only(['edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);
 //Vehiculos
 Route::resource('vehiculos', VehiculoController::class)

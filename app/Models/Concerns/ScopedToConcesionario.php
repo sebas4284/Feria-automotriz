@@ -9,7 +9,7 @@ trait ScopedToConcesionario
 {
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        if ($user->isAdmin()) {
+        if ($user->isAdmin() || $user->isStaff()) {
             return $query;
         }
 
