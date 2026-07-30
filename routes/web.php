@@ -71,15 +71,15 @@ Route::get('/turnos/pantalla', [TurnoController::class, 'pantalla'])
 
 Route::post('/turnos/{concesionario}/check-in', [TurnoController::class, 'checkIn'])
     ->name('turnos.check-in')
-    ->middleware(['auth', 'role:admin']);
+    ->middleware(['auth', 'role:admin,staff']);
 
 Route::delete('/turnos/{concesionario}/check-in', [TurnoController::class, 'checkOut'])
     ->name('turnos.check-out')
-    ->middleware(['auth', 'role:admin']);
+    ->middleware(['auth', 'role:admin,staff']);
 
 Route::post('/turnos/{concesionario}/saltar', [TurnoController::class, 'saltarTurno'])
     ->name('turnos.saltar')
-    ->middleware(['auth', 'role:admin']);
+    ->middleware(['auth', 'role:admin,staff']);
 
 Route::post('/turnos/asignar-cliente', [TurnoController::class, 'asignarCliente'])
     ->name('turnos.asignar-cliente')

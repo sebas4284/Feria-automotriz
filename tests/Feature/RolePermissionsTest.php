@@ -669,7 +669,7 @@ class RolePermissionsTest extends TestCase
         $this->assertDatabaseHas('turnos', ['concesionario_id' => $a->id, 'ultima_asignacion_at' => null]);
     }
 
-    public function test_staff_can_view_rifa_and_turnos_but_not_operate_turnos(): void
+    public function test_staff_can_view_rifa_and_operate_turnos(): void
     {
         $staff = $this->makeUser('staff');
         $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
@@ -677,8 +677,28 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($staff)->get('/rifa')->assertOk();
         $this->actingAs($staff)->get('/turnos')->assertOk();
 
-        $this->actingAs($staff)->post("/turnos/{$conc->id}/check-in")->assertForbidden();
-        $this->actingAs($staff)->delete("/turnos/{$conc->id}/check-in")->assertForbidden();
+        $this->actingAs($staff)->post("/turnos/{$conc->id}/check-in")->assertRedirect();
+        $this->assertDatabaseHas('turnos', ['concesionario_id' => $conc->id]);
+
+        $this->actingAs($staff)->post("/turnos/{$conc->id}/saltar")->assertRedirect();
+
+        $this->actingAs($staff)->delete("/turnos/{$conc->id}/check-in")->assertRedirect();
+        $this->assertDatabaseMissing('turnos', ['concesionario_id' => $conc->id]);
+    }
+
+    public function test_staff_can_assign_a_pendiente_cliente_to_a_concesionario_en_fila(): void
+    {
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        Turno::create(['concesionario_id' => $conc->id, 'fecha' => today(), 'llegada_at' => now()]);
+        $cliente = Cliente::create(['nombre' => 'Pendiente Uno', 'cita' => false, 'concesionario_id' => null]);
+
+        $this->actingAs($staff)->postJson('/turnos/asignar-cliente', [
+            'cliente_id' => $cliente->id,
+            'concesionario_id' => $conc->id,
+        ])->assertOk();
+
+        $this->assertSame($conc->id, $cliente->fresh()->concesionario_id);
     }
 
     public function test_staff_cannot_access_anything_else(): void

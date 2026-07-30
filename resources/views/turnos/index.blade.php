@@ -61,7 +61,7 @@
                         @endif
                     </div>
 
-                    @if(auth()->user()->isAdmin())
+                    @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                         @if($turno)
                             <div class="flex items-center gap-2 shrink-0">
                                 <form action="{{ route('turnos.saltar', $c) }}" method="POST">
@@ -96,8 +96,27 @@
 
     @if($pendientes->isNotEmpty())
         <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
-            <p class="text-amber-400 text-sm font-medium mb-1">{{ $pendientes->count() }} cliente(s) pendiente(s) por asignar</p>
-            <p class="text-xs text-gray-400">En un monitor grande (mouse) puedes arrastrarlos al concesionario. Desde el celular, pídele a alguien en escritorio que los asigne en {{ route('turnos.index') }}.</p>
+            <p class="text-amber-400 text-sm font-medium mb-3">{{ $pendientes->count() }} cliente(s) pendiente(s) por asignar</p>
+            <div class="space-y-2">
+                @foreach($pendientes as $cliente)
+                    <div class="bg-gray-900/60 border border-amber-500/30 rounded-xl p-3">
+                        <p class="font-medium text-sm mb-2">{{ $cliente->nombre }}</p>
+                        <div class="flex gap-2">
+                            <select id="asignar-select-{{ $cliente->id }}"
+                                class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                                <option value="">Elegir concesionario...</option>
+                                @foreach($enFila as $c)
+                                    <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" onclick="asignarClienteSeleccionado({{ $cliente->id }})"
+                                class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-medium transition shrink-0">
+                                Asignar
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 
@@ -218,7 +237,7 @@
                         <td class="p-4">{{ $turno ? '#' . ($posiciones[$c->id] ?? '—') : '—' }}</td>
                         <td class="p-4">{{ $turno?->llegada_at->format('H:i') ?? '—' }}</td>
                         <td class="p-4">
-                            @if(auth()->user()->isAdmin())
+                            @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
                                 @if($turno)
                                     <div class="flex items-center gap-2">
                                         <form action="{{ route('turnos.saltar', $c) }}" method="POST">
@@ -290,11 +309,7 @@
 </div>
 
 <script>
-    async function asignarClienteArrastrado(event, concesionarioId) {
-        event.preventDefault();
-        const clienteId = event.dataTransfer.getData('text/plain');
-        if (!clienteId) return;
-
+    async function asignarCliente(clienteId, concesionarioId) {
         const response = await fetch("{{ route('turnos.asignar-cliente') }}", {
             method: 'POST',
             headers: {
@@ -311,6 +326,23 @@
         }
 
         window.location.reload();
+    }
+
+    function asignarClienteArrastrado(event, concesionarioId) {
+        event.preventDefault();
+        const clienteId = event.dataTransfer.getData('text/plain');
+        if (!clienteId) return;
+        asignarCliente(clienteId, concesionarioId);
+    }
+
+    function asignarClienteSeleccionado(clienteId) {
+        const select = document.getElementById(`asignar-select-${clienteId}`);
+        const concesionarioId = select.value;
+        if (!concesionarioId) {
+            alert('Elige un concesionario primero.');
+            return;
+        }
+        asignarCliente(clienteId, concesionarioId);
     }
 
     setTimeout(() => window.location.reload(), 15000);
