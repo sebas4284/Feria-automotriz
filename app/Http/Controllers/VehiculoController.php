@@ -65,6 +65,26 @@ class VehiculoController extends Controller
             $query->where('concesionario_id', $request->concesionario_id);
         }
 
+        if ($request->filled('color')) {
+            $query->where('color', $request->color);
+        }
+
+        if ($request->filled('combustible')) {
+            $query->where('combustible', $request->combustible);
+        }
+
+        if ($request->filled('transmision')) {
+            $query->where('transmision', $request->transmision);
+        }
+
+        if ($request->filled('kilometraje_min')) {
+            $query->where('kilometraje', '>=', $request->kilometraje_min);
+        }
+
+        if ($request->filled('kilometraje_max')) {
+            $query->where('kilometraje', '<=', $request->kilometraje_max);
+        }
+
         $vehiculos      = $query->get();
         $marcas         = Vehiculo::distinct()->orderBy('marca')->pluck('marca');
         $concesionarios = Concesionario::where('activo', true)->orderBy('nombre')->get();
@@ -72,6 +92,11 @@ class VehiculoController extends Controller
         $precioMax      = (int) (Vehiculo::max('precio_expocar') ?? 200_000_000);
         $modeloMin      = (int) (Vehiculo::min('modelo') ?? 2000);
         $modeloMax      = (int) (Vehiculo::max('modelo') ?? now()->year);
+        $colores        = Catalogo::tipo('color')->orderBy('valor')->pluck('valor');
+        $combustibles   = Catalogo::tipo('combustible')->orderBy('valor')->pluck('valor');
+        $transmisiones  = Vehiculo::whereNotNull('transmision')->where('transmision', '!=', '')->distinct()->orderBy('transmision')->pluck('transmision');
+        $kilometrajeMin = (int) (Vehiculo::min('kilometraje') ?? 0);
+        $kilometrajeMax = (int) (Vehiculo::max('kilometraje') ?? 300_000);
 
         $concesionarioCupo = null;
         $cupoUsadoActual = null;
@@ -85,6 +110,7 @@ class VehiculoController extends Controller
         return view('vehiculos.index', compact(
             'vehiculos', 'marcas', 'concesionarios',
             'precioMin', 'precioMax', 'modeloMin', 'modeloMax',
+            'colores', 'combustibles', 'transmisiones', 'kilometrajeMin', 'kilometrajeMax',
             'concesionarioCupo', 'cupoUsadoActual'
         ));
     }

@@ -287,6 +287,58 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('DDD444');
     }
 
+    public function test_vehiculos_index_can_be_filtered_by_rango_de_precio(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'PRE111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'precio_expocar' => 50_000_000]);
+        Vehiculo::create(['placa' => 'PRE222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'precio_expocar' => 150_000_000]);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?precio_min=40000000&precio_max=100000000');
+
+        $response->assertOk();
+        $response->assertSee('PRE111');
+        $response->assertDontSee('PRE222');
+    }
+
+    public function test_vehiculos_index_can_be_filtered_by_rango_de_modelo(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'MOD111', 'marca' => 'M', 'modelo' => 2018, 'estado' => 'Disponible']);
+        Vehiculo::create(['placa' => 'MOD222', 'marca' => 'M', 'modelo' => 2023, 'estado' => 'Disponible']);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?modelo_desde=2020&modelo_hasta=2024');
+
+        $response->assertOk();
+        $response->assertSee('MOD222');
+        $response->assertDontSee('MOD111');
+    }
+
+    public function test_vehiculos_index_can_be_filtered_by_color_combustible_y_transmision(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'CCT111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'color' => 'Rojo', 'combustible' => 'Gasolina', 'transmision' => 'Automática']);
+        Vehiculo::create(['placa' => 'CCT222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'color' => 'Azul', 'combustible' => 'Diésel', 'transmision' => 'Mecánica']);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?color=Rojo&combustible=Gasolina&transmision=Automática');
+
+        $response->assertOk();
+        $response->assertSee('CCT111');
+        $response->assertDontSee('CCT222');
+    }
+
+    public function test_vehiculos_index_can_be_filtered_by_rango_de_kilometraje(): void
+    {
+        $admin = $this->makeUser('admin');
+        Vehiculo::create(['placa' => 'KM1111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'kilometraje' => 5_000]);
+        Vehiculo::create(['placa' => 'KM2222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'kilometraje' => 80_000]);
+
+        $response = $this->actingAs($admin)->get('/vehiculos?kilometraje_min=1000&kilometraje_max=10000');
+
+        $response->assertOk();
+        $response->assertSee('KM1111');
+        $response->assertDontSee('KM2222');
+    }
+
     public function test_texto_de_busqueda_ignora_el_filtro_de_ubicacion(): void
     {
         $admin = $this->makeUser('admin');

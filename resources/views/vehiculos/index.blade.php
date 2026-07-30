@@ -8,6 +8,12 @@
         'Reservado'  => ['badge' => 'bg-yellow-500/20 text-yellow-400','dot' => 'bg-yellow-400'],
         'Vendido'    => ['badge' => 'bg-red-500/20 text-red-400',      'dot' => 'bg-red-400'],
     ];
+
+    $camposFiltro = [
+        'placa', 'marca', 'estado', 'ubicacion', 'concesionario_id',
+        'modelo_desde', 'modelo_hasta', 'precio_min', 'precio_max',
+        'color', 'combustible', 'transmision', 'kilometraje_min', 'kilometraje_max',
+    ];
 @endphp
 
 <div x-data="liveSearch('{{ addslashes(request('placa', '')) }}')">
@@ -106,7 +112,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                 </svg>
                 Filtros
-                @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
+                @if(request()->hasAny($camposFiltro))
                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
                 @endif
             </div>
@@ -159,10 +165,67 @@
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Precio desde</label>
+                        <input type="number" name="precio_min" value="{{ request('precio_min') }}" placeholder="{{ number_format($precioMin, 0, ',', '.') }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Precio hasta</label>
+                        <input type="number" name="precio_max" value="{{ request('precio_max') }}" placeholder="{{ number_format($precioMax, 0, ',', '.') }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Año desde</label>
+                        <input type="number" name="modelo_desde" value="{{ request('modelo_desde') }}" placeholder="{{ $modeloMin }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Año hasta</label>
+                        <input type="number" name="modelo_hasta" value="{{ request('modelo_hasta') }}" placeholder="{{ $modeloMax }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Color</label>
+                        <select name="color" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Todos</option>
+                            @foreach($colores as $color)
+                                <option value="{{ $color }}" {{ request('color') == $color ? 'selected' : '' }}>{{ $color }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Combustible</label>
+                        <select name="combustible" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Todos</option>
+                            @foreach($combustibles as $combustible)
+                                <option value="{{ $combustible }}" {{ request('combustible') == $combustible ? 'selected' : '' }}>{{ $combustible }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Transmisión</label>
+                        <select name="transmision" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">Todas</option>
+                            @foreach($transmisiones as $transmision)
+                                <option value="{{ $transmision }}" {{ request('transmision') == $transmision ? 'selected' : '' }}>{{ $transmision }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Kilometraje mín.</label>
+                        <input type="number" name="kilometraje_min" value="{{ request('kilometraje_min') }}" placeholder="{{ number_format($kilometrajeMin, 0, ',', '.') }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Kilometraje máx.</label>
+                        <input type="number" name="kilometraje_max" value="{{ request('kilometraje_max') }}" placeholder="{{ number_format($kilometrajeMax, 0, ',', '.') }}"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 py-2 rounded-xl text-sm font-medium transition">Aplicar</button>
-                    @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
+                    @if(request()->hasAny($camposFiltro))
                         <a href="{{ route('vehiculos.index') }}" class="px-4 py-2 bg-gray-800 rounded-xl text-sm text-gray-400 hover:text-white transition">Limpiar</a>
                     @endif
                 </div>
@@ -338,10 +401,67 @@
                     @endforeach
                 </select>
             </div>
+            <div class="w-28">
+                <label class="block text-xs text-gray-400 mb-1">Precio desde</label>
+                <input type="number" name="precio_min" value="{{ request('precio_min') }}" placeholder="{{ number_format($precioMin, 0, ',', '.') }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="w-28">
+                <label class="block text-xs text-gray-400 mb-1">Precio hasta</label>
+                <input type="number" name="precio_max" value="{{ request('precio_max') }}" placeholder="{{ number_format($precioMax, 0, ',', '.') }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="w-24">
+                <label class="block text-xs text-gray-400 mb-1">Año desde</label>
+                <input type="number" name="modelo_desde" value="{{ request('modelo_desde') }}" placeholder="{{ $modeloMin }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="w-24">
+                <label class="block text-xs text-gray-400 mb-1">Año hasta</label>
+                <input type="number" name="modelo_hasta" value="{{ request('modelo_hasta') }}" placeholder="{{ $modeloMax }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="w-32">
+                <label class="block text-xs text-gray-400 mb-1">Color</label>
+                <select name="color" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todos</option>
+                    @foreach($colores as $color)
+                        <option value="{{ $color }}" {{ request('color') == $color ? 'selected' : '' }}>{{ $color }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-36">
+                <label class="block text-xs text-gray-400 mb-1">Combustible</label>
+                <select name="combustible" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todos</option>
+                    @foreach($combustibles as $combustible)
+                        <option value="{{ $combustible }}" {{ request('combustible') == $combustible ? 'selected' : '' }}>{{ $combustible }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-32">
+                <label class="block text-xs text-gray-400 mb-1">Transmisión</label>
+                <select name="transmision" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="">Todas</option>
+                    @foreach($transmisiones as $transmision)
+                        <option value="{{ $transmision }}" {{ request('transmision') == $transmision ? 'selected' : '' }}>{{ $transmision }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-32">
+                <label class="block text-xs text-gray-400 mb-1">Km mín.</label>
+                <input type="number" name="kilometraje_min" value="{{ request('kilometraje_min') }}" placeholder="{{ number_format($kilometrajeMin, 0, ',', '.') }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="w-32">
+                <label class="block text-xs text-gray-400 mb-1">Km máx.</label>
+                <input type="number" name="kilometraje_max" value="{{ request('kilometraje_max') }}" placeholder="{{ number_format($kilometrajeMax, 0, ',', '.') }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            </div>
 
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-sm font-medium transition">Aplicar</button>
 
-            @if(request()->hasAny(['placa','marca','estado','ubicacion','concesionario_id']))
+            @if(request()->hasAny($camposFiltro))
                 <a href="{{ route('vehiculos.index') }}" class="text-xs text-gray-400 hover:text-white transition px-1 py-1.5">✕ Limpiar</a>
             @endif
         </div>
