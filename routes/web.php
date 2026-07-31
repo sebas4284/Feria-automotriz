@@ -47,6 +47,10 @@ Route::resource(
     ConcesionarioController::class
 )->middleware(['auth', 'role:admin']);
 
+Route::get('/ventas/eliminadas', [VentaController::class, 'eliminadas'])
+    ->name('ventas.eliminadas')
+    ->middleware(['auth', 'role:admin']);
+
 Route::resource('ventas', VentaController::class)
     ->middleware(['auth', 'role:admin,concesionario']);
 

@@ -25,15 +25,11 @@
                 </a>
             @endcan
             @can('delete', $venta)
-                <form action="{{ route('ventas.destroy', $venta) }}" method="POST"
-                    onsubmit="return confirm('¿Eliminar esta venta?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                        class="bg-red-500/20 hover:bg-red-500/40 text-red-400 px-4 py-2.5 rounded-xl transition font-medium text-sm">
-                        Eliminar
-                    </button>
-                </form>
+                @include('ventas._eliminar_boton', [
+                    'venta' => $venta,
+                    'clase' => 'bg-red-500/20 hover:bg-red-500/40 text-red-400 px-4 py-2.5 rounded-xl transition font-medium text-sm',
+                    'contenido' => 'Eliminar',
+                ])
             @endcan
             <a href="{{ route('ventas.index') }}"
                 class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl transition text-sm">

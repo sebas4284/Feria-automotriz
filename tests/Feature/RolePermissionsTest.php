@@ -606,9 +606,79 @@ class RolePermissionsTest extends TestCase
             'participa_experiencia' => false,
         ]);
 
-        $this->actingAs($admin)->delete("/ventas/{$venta->id}")->assertRedirect(route('ventas.index'));
+        $this->actingAs($admin)->delete("/ventas/{$venta->id}", ['motivo' => 'Venta duplicada por error'])
+            ->assertRedirect(route('ventas.index'));
 
         $this->assertEquals('Disponible', $vehiculo->fresh()->estado);
+    }
+
+    public function test_eliminar_venta_sin_motivo_falla_validacion(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'M1', 'nombre' => 'Asesor Motivo', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'MOT001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCMOT1', 'nombre' => 'Comprador Motivo']);
+        $admin = $this->makeUser('admin');
+
+        $venta = \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $this->actingAs($admin)->delete("/ventas/{$venta->id}")->assertSessionHasErrors('motivo');
+
+        $this->assertDatabaseHas('ventas', ['id' => $venta->id]);
+    }
+
+    public function test_eliminar_venta_con_motivo_registra_el_borrado(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'M2', 'nombre' => 'Asesor Motivo 2', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'MOT002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCMOT2', 'nombre' => 'Comprador Motivo Dos']);
+        $admin = $this->makeUser('admin');
+
+        $venta = \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete("/ventas/{$venta->id}", ['motivo' => 'Cliente se retractó de la compra'])
+            ->assertRedirect(route('ventas.index'));
+
+        $this->assertDatabaseMissing('ventas', ['id' => $venta->id]);
+
+        $registro = \App\Models\VentaEliminada::first();
+        $this->assertNotNull($registro);
+        $this->assertEquals('MOT002', $registro->vehiculo_placa);
+        $this->assertEquals('Comprador Motivo Dos', $registro->comprador_nombre);
+        $this->assertEquals('Cliente se retractó de la compra', $registro->motivo);
+        $this->assertEquals($admin->id, $registro->eliminado_por);
+    }
+
+    public function test_ventas_eliminadas_solo_es_accesible_para_admin(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concesionarioUser = $this->makeUser('concesionario', $conc);
+
+        $this->actingAs($admin)->get('/ventas/eliminadas')->assertOk();
+        $this->actingAs($concesionarioUser)->get('/ventas/eliminadas')->assertForbidden();
     }
 
     public function test_venta_cruzada_es_visible_para_el_concesionario_dueno_del_vehiculo(): void
@@ -646,8 +716,16 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}/edit")->assertForbidden();
         $this->actingAs($usuarioDueno)->delete("/ventas/{$venta->id}")->assertForbidden();
 
-        // Quien la vendió sí puede editarla/eliminarla.
+        // El listado tampoco le muestra los botones de Editar/Eliminar al dueño.
+        $listadoDueno = $this->actingAs($usuarioDueno)->get('/ventas');
+        $listadoDueno->assertDontSee("/ventas/{$venta->id}/edit", false);
+        $listadoDueno->assertDontSee('name="motivo"', false);
+
+        // Quien la vendió sí puede editarla/eliminarla, y el listado se lo muestra.
         $this->actingAs($usuarioVendedor)->get("/ventas/{$venta->id}/edit")->assertOk();
+        $listadoVendedor = $this->actingAs($usuarioVendedor)->get('/ventas');
+        $listadoVendedor->assertSee("/ventas/{$venta->id}/edit", false);
+        $listadoVendedor->assertSee('name="motivo"', false);
 
         // El dashboard del dueño también cuenta esta venta cruzada.
         $this->actingAs($usuarioDueno)->get('/dashboard')->assertOk();

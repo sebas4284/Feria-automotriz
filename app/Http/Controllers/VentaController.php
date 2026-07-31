@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\Comprador;
 use App\Models\Concesionario;
 use App\Models\Venta;
+use App\Models\VentaEliminada;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -146,9 +147,27 @@ class VentaController extends Controller
             ->with('success', 'Venta actualizada correctamente');
     }
 
-    public function destroy(Venta $venta)
+    public function destroy(Request $request, Venta $venta)
     {
         $this->authorize('delete', $venta);
+
+        $validated = $request->validate(['motivo' => 'required|string|max:500']);
+
+        VentaEliminada::create([
+            'venta_id' => $venta->id,
+            'vehiculo_placa' => $venta->vehiculo->placa ?? null,
+            'vehiculo_marca' => $venta->vehiculo->marca ?? null,
+            'vehiculo_modelo' => $venta->vehiculo->modelo ?? null,
+            'comprador_nombre' => $venta->comprador->nombre ?? null,
+            'concesionario_vende_nombre' => $venta->concesionarioVende->nombre ?? null,
+            'asesor_nombre' => $venta->asesorComercial->nombre ?? null,
+            'valor' => $venta->valor,
+            'fecha_venta' => $venta->fecha_venta,
+            'motivo' => $validated['motivo'],
+            'datos' => $venta->toArray(),
+            'eliminado_por' => auth()->id(),
+            'eliminado_por_nombre' => auth()->user()->name,
+        ]);
 
         $venta->vehiculo?->update(['estado' => 'Disponible']);
         $venta->delete();
@@ -156,6 +175,13 @@ class VentaController extends Controller
         return redirect()
             ->route('ventas.index')
             ->with('success', 'Venta eliminada correctamente');
+    }
+
+    public function eliminadas()
+    {
+        $eliminadas = VentaEliminada::latest()->get();
+
+        return view('ventas.eliminadas', compact('eliminadas'));
     }
 
     private function rules(): array
