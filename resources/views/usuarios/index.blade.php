@@ -9,6 +9,7 @@
         'asesor'        => ['badge' => 'bg-teal-500/20 text-teal-400',     'label' => 'Asesor'],
         'staff'         => ['badge' => 'bg-amber-500/20 text-amber-400',   'label' => 'Staff'],
         'porteria'      => ['badge' => 'bg-cyan-500/20 text-cyan-400',     'label' => 'Portería'],
+        'aseguradora'   => ['badge' => 'bg-pink-500/20 text-pink-400',     'label' => 'Aseguradora'],
     ];
 @endphp
 

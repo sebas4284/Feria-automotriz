@@ -533,6 +533,14 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($admin)->get('/usuarios/create')->assertOk();
     }
 
+    public function test_usuarios_index_muestra_usuario_aseguradora_sin_error(): void
+    {
+        $admin = $this->makeUser('admin');
+        $this->makeUser('aseguradora');
+
+        $this->actingAs($admin)->get('/usuarios')->assertOk()->assertSee('Aseguradora');
+    }
+
     public function test_usuarios_index_shows_asesors_dealership_not_their_own_name(): void
     {
         $admin = $this->makeUser('admin');
