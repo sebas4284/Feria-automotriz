@@ -74,7 +74,7 @@
     </div>
 
     <script>
-        window.liveRefresh('pantalla-live', 4000);
+        document.addEventListener('DOMContentLoaded', () => window.liveRefresh('pantalla-live', 4000));
     </script>
 
 </body>

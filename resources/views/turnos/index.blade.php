@@ -400,7 +400,7 @@
         asignarCliente(clienteId, concesionarioId);
     }
 
-    window.liveRefresh('turnos-live', 4000);
+    document.addEventListener('DOMContentLoaded', () => window.liveRefresh('turnos-live', 4000));
 </script>
 
 @endsection

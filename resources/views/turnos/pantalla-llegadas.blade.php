@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        window.liveRefresh('llegadas-live', 4000);
+        document.addEventListener('DOMContentLoaded', () => window.liveRefresh('llegadas-live', 4000));
     </script>
 
 </body>
