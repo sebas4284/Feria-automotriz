@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\ScopedToConcesionario;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Venta extends Model
@@ -72,5 +73,22 @@ class Venta extends Model
     public function concesionarioColumn(): string
     {
         return 'concesionario_vende_id';
+    }
+
+    /**
+     * Además de las ventas que gestionó el concesionario, incluye las
+     * ventas cruzadas: cuando otro concesionario vendió un vehículo de
+     * su propio inventario (ej. venta en feria de un auto ajeno).
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isAdmin() || $user->isStaff()) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where('concesionario_vende_id', $user->concesionario_id)
+                ->orWhereHas('vehiculo', fn (Builder $vq) => $vq->where('concesionario_id', $user->concesionario_id));
+        });
     }
 }

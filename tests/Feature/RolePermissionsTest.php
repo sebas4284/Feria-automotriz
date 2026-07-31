@@ -475,6 +475,49 @@ class RolePermissionsTest extends TestCase
         $this->assertEquals('Disponible', $vehiculo->fresh()->estado);
     }
 
+    public function test_venta_cruzada_es_visible_para_el_concesionario_dueno_del_vehiculo(): void
+    {
+        $vendedor = Concesionario::create(['nombre' => 'Magnata', 'peso_asignacion' => 1, 'activo' => true]);
+        $dueno = Concesionario::create(['nombre' => 'Eurocars', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => '456', 'nombre' => 'Asesor Vendedor', 'concesionario_id' => $vendedor->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'CRZ001', 'marca' => 'Mazda', 'modelo' => 2026, 'estado' => 'Vendido', 'concesionario_id' => $dueno->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CC2', 'nombre' => 'Comprador Dos']);
+        $admin = $this->makeUser('admin');
+
+        $venta = \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $vendedor->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 118_000_000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $usuarioDueno = $this->makeUser('concesionario', $dueno);
+        $usuarioVendedor = $this->makeUser('concesionario', $vendedor);
+        $usuarioAjeno = $this->makeUser('concesionario', Concesionario::create(['nombre' => 'Otro', 'peso_asignacion' => 1, 'activo' => true]));
+
+        // El dueño del vehículo y quien lo vendió ven la venta en su listado.
+        $this->actingAs($usuarioDueno)->get('/ventas')->assertSee('CRZ001');
+        $this->actingAs($usuarioVendedor)->get('/ventas')->assertSee('CRZ001');
+        $this->actingAs($usuarioAjeno)->get('/ventas')->assertDontSee('CRZ001');
+
+        // El dueño puede consultarla pero no editarla ni eliminarla.
+        $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}")->assertOk();
+        $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}/edit")->assertForbidden();
+        $this->actingAs($usuarioDueno)->delete("/ventas/{$venta->id}")->assertForbidden();
+
+        // Quien la vendió sí puede editarla/eliminarla.
+        $this->actingAs($usuarioVendedor)->get("/ventas/{$venta->id}/edit")->assertOk();
+
+        // El dashboard del dueño también cuenta esta venta cruzada.
+        $this->actingAs($usuarioDueno)->get('/dashboard')->assertOk();
+        $this->assertEquals(1, \App\Models\Venta::visibleTo($usuarioDueno)->count());
+    }
+
     public function test_ventas_index_shows_placa_concesionario_y_asesor(): void
     {
         $conc = Concesionario::create(['nombre' => 'Concesionario Vendedor', 'peso_asignacion' => 1, 'activo' => true]);
