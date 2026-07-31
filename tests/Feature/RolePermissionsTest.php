@@ -384,6 +384,97 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($concesionarioUser)->get('/vehiculos/eliminados')->assertForbidden();
     }
 
+    public function test_no_se_puede_cambiar_estado_de_vehiculo_con_venta_a_disponible(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Venta', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'V1', 'nombre' => 'Asesor Venta', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'BLK001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCBLK1', 'nombre' => 'Comprador Bloqueo']);
+        \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $payload = [
+            'concesionario_id' => $conc->id,
+            'placa' => 'BLK001',
+            'marca' => 'M',
+            'linea' => 'X',
+            'modelo' => 2024,
+            'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
+        ];
+
+        $this->actingAs($admin)->put("/vehiculos/{$vehiculo->id}", $payload)->assertRedirect();
+
+        $this->assertEquals('Vendido', $vehiculo->fresh()->estado);
+    }
+
+    public function test_no_se_puede_eliminar_vehiculo_con_venta_registrada(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Venta2', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'V2', 'nombre' => 'Asesor Venta2', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'BLK002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCBLK2', 'nombre' => 'Comprador Bloqueo 2']);
+        \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $this->actingAs($admin)->delete("/vehiculos/{$vehiculo->id}")->assertRedirect();
+
+        $this->assertDatabaseHas('vehiculos', ['id' => $vehiculo->id]);
+        $this->assertDatabaseHas('ventas', ['vehiculo_id' => $vehiculo->id]);
+    }
+
+    public function test_vehiculo_estado_invalido_falla_validacion(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Estado', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($admin)->post('/vehiculos', [
+            'concesionario_id' => $conc->id,
+            'placa' => 'EST001',
+            'marca' => 'M',
+            'linea' => 'X',
+            'modelo' => 2024,
+            'estado' => 'Agotado',
+            'ubicacion' => 'Dentro del área',
+        ])->assertSessionHasErrors('estado');
+    }
+
+    public function test_vehiculo_modelo_invalido_falla_validacion(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Modelo', 'peso_asignacion' => 1, 'activo' => true]);
+
+        $this->actingAs($admin)->post('/vehiculos', [
+            'concesionario_id' => $conc->id,
+            'placa' => 'MOD001',
+            'marca' => 'M',
+            'linea' => 'X',
+            'modelo' => 'abc',
+            'estado' => 'Disponible',
+            'ubicacion' => 'Dentro del área',
+        ])->assertSessionHasErrors('modelo');
+    }
+
     public function test_texto_de_busqueda_ignora_el_filtro_de_ubicacion(): void
     {
         $admin = $this->makeUser('admin');
@@ -589,6 +680,68 @@ class RolePermissionsTest extends TestCase
         $response->assertSee('VTA123');
         $response->assertSee('Concesionario Vendedor');
         $response->assertSee('Asesor Vendedor');
+    }
+
+    public function test_venta_no_sobreescribe_comprador_existente_con_nombre_distinto(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'C1', 'nombre' => 'Asesor Comprador', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'CMP001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+        \App\Models\Comprador::create(['identificacion' => 'CC-DUP-1', 'nombre' => 'Juan Perez', 'telefono' => '3000000000']);
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post('/ventas', [
+            'comprador_identificacion' => 'CC-DUP-1',
+            'comprador_nombre' => 'Otra Persona Distinta',
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 50000000,
+            'fecha_venta' => now()->format('Y-m-d'),
+            'forma_pago' => 'Contado',
+        ])->assertSessionHasErrors('comprador_identificacion');
+
+        $comprador = \App\Models\Comprador::where('identificacion', 'CC-DUP-1')->first();
+        $this->assertEquals('Juan Perez', $comprador->nombre);
+        $this->assertEquals('Disponible', $vehiculo->fresh()->estado);
+    }
+
+    public function test_venta_valor_cero_falla_validacion(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'V0', 'nombre' => 'Asesor Cero', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'VAL000', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post('/ventas', [
+            'comprador_identificacion' => 'CC-VAL-0',
+            'comprador_nombre' => 'Comprador Cero',
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 0,
+            'fecha_venta' => now()->format('Y-m-d'),
+            'forma_pago' => 'Contado',
+        ])->assertSessionHasErrors('valor');
+    }
+
+    public function test_venta_fecha_futura_falla_validacion(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'VF1', 'nombre' => 'Asesor Futuro', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'FUT001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+        $admin = $this->makeUser('admin');
+
+        $this->actingAs($admin)->post('/ventas', [
+            'comprador_identificacion' => 'CC-FUT-1',
+            'comprador_nombre' => 'Comprador Futuro',
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 50000000,
+            'fecha_venta' => now()->addDays(5)->format('Y-m-d'),
+            'forma_pago' => 'Contado',
+        ])->assertSessionHasErrors('fecha_venta');
     }
 
     public function test_ventas_create_form_renders_with_buscador_de_vehiculo(): void

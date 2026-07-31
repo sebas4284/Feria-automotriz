@@ -386,7 +386,7 @@
         @input="prFasecolda = parseCop($event.target.value)"
         placeholder="$ 0"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-    <input type="hidden" name="pr_fasecolda" :value="prFasecolda">
+    <input type="hidden" name="pr_fasecolda" value="{{ old('pr_fasecolda', $vehiculo->pr_fasecolda ?? '') }}" :value="prFasecolda">
 </div>
 
 <div>
@@ -398,7 +398,7 @@
         @input="normal = parseCop($event.target.value)"
         placeholder="$ 0"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-    <input type="hidden" name="precio_normal" :value="normal">
+    <input type="hidden" name="precio_normal" value="{{ old('precio_normal', $vehiculo->precio_normal ?? '') }}" :value="normal">
 </div>
 
 <div>
@@ -410,7 +410,7 @@
         @input="bono = parseCop($event.target.value)"
         placeholder="$ 0"
         class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3">
-    <input type="hidden" name="bono_descuento" :value="bono">
+    <input type="hidden" name="bono_descuento" value="{{ old('bono_descuento', $vehiculo->bono_descuento ?? '') }}" :value="bono">
 </div>
 
 <div>
@@ -420,7 +420,7 @@
         :value="cop(expocar)"
         readonly
         class="w-full bg-gray-900 text-gray-400 cursor-not-allowed border border-gray-700 rounded-xl px-4 py-3">
-    <input type="hidden" name="precio_expocar" :value="expocar">
+    <input type="hidden" name="precio_expocar" value="{{ (float) old('precio_normal', $vehiculo->precio_normal ?? 0) - (float) old('bono_descuento', $vehiculo->bono_descuento ?? 0) }}" :value="expocar">
 </div>
 
 <div>

@@ -148,7 +148,7 @@ class VehiculoController extends Controller
 
             'version' => 'nullable|string|max:255',
 
-            'modelo' => 'required',
+            'modelo' => 'required|integer|digits:4|min:1995|max:' . (now()->year + 1),
 
             'color' => 'nullable|string|max:255',
 
@@ -156,13 +156,13 @@ class VehiculoController extends Controller
 
             'tipo_vehiculo' => 'nullable|string|max:255',
 
-            'cc' => 'nullable|integer',
+            'cc' => 'nullable|integer|min:0',
 
             'combustible' => 'nullable|string|max:255',
 
             'transmision' => 'nullable|string|max:255',
 
-            'kilometraje' => 'nullable|integer',
+            'kilometraje' => 'nullable|integer|min:0',
 
             'fecha_matricula' => 'nullable|date',
 
@@ -178,23 +178,25 @@ class VehiculoController extends Controller
 
             'cod_fasecolda' => 'nullable|string|max:255',
 
-            'pr_fasecolda' => 'nullable|numeric',
+            'pr_fasecolda' => 'nullable|numeric|min:0',
 
-            'precio_normal' => 'nullable|numeric',
+            'precio_normal' => 'nullable|numeric|min:0',
 
-            'bono_descuento' => 'nullable|numeric',
+            'bono_descuento' => 'nullable|numeric|min:0|lte:precio_normal',
 
             'precio_expocar' => 'nullable|numeric',
 
-            'estado' => 'required|string',
+            'estado' => 'required|in:Disponible,Reservado,Vendido',
 
             'ubicacion' => 'required|in:Dentro del área,Fuera del área',
         ], [
             'placa.size' => 'La placa debe tener exactamente 6 caracteres (ej: ABC123). Corrígela e intenta de nuevo.',
             'placa.unique' => 'Esta placa ya está registrada en otro vehículo.',
+            'bono_descuento.lte' => 'El bono/descuento no puede ser mayor que el precio normal.',
         ]);
 
         $data = $request->except('foto');
+        unset($data['ingresado_at']);
         $data['concesionario_id'] = $this->resolveConcesionarioId($request);
         $data['marca'] = mb_strtoupper($data['marca']);
         $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
@@ -253,6 +255,12 @@ class VehiculoController extends Controller
     {
         $this->authorize('update', $vehiculo);
 
+        if ($request->estado !== 'Vendido' && $vehiculo->ventas()->exists()) {
+            return back()
+                ->withInput()
+                ->with('error', 'Este vehículo tiene una venta registrada; para cambiar su estado primero resuelve la venta desde el módulo de Ventas.');
+        }
+
         $request->validate([
 
             'concesionario_id' => 'nullable|exists:concesionarios,id',
@@ -269,7 +277,7 @@ class VehiculoController extends Controller
 
             'version' => 'nullable|string|max:255',
 
-            'modelo' => 'required',
+            'modelo' => 'required|integer|digits:4|min:1995|max:' . (now()->year + 1),
 
             'color' => 'nullable|string|max:255',
 
@@ -277,13 +285,13 @@ class VehiculoController extends Controller
 
             'tipo_vehiculo' => 'nullable|string|max:255',
 
-            'cc' => 'nullable|integer',
+            'cc' => 'nullable|integer|min:0',
 
             'combustible' => 'nullable|string|max:255',
 
             'transmision' => 'nullable|string|max:255',
 
-            'kilometraje' => 'nullable|integer',
+            'kilometraje' => 'nullable|integer|min:0',
 
             'fecha_matricula' => 'nullable|date',
 
@@ -299,23 +307,25 @@ class VehiculoController extends Controller
 
             'cod_fasecolda' => 'nullable|string|max:255',
 
-            'pr_fasecolda' => 'nullable|numeric',
+            'pr_fasecolda' => 'nullable|numeric|min:0',
 
-            'precio_normal' => 'nullable|numeric',
+            'precio_normal' => 'nullable|numeric|min:0',
 
-            'bono_descuento' => 'nullable|numeric',
+            'bono_descuento' => 'nullable|numeric|min:0|lte:precio_normal',
 
             'precio_expocar' => 'nullable|numeric',
 
-            'estado' => 'required|string',
+            'estado' => 'required|in:Disponible,Reservado,Vendido',
 
             'ubicacion' => 'required|in:Dentro del área,Fuera del área',
         ], [
             'placa.size' => 'La placa debe tener exactamente 6 caracteres (ej: ABC123). Corrígela e intenta de nuevo.',
             'placa.unique' => 'Esta placa ya está registrada en otro vehículo.',
+            'bono_descuento.lte' => 'El bono/descuento no puede ser mayor que el precio normal.',
         ]);
 
         $data = $request->except('foto');
+        unset($data['ingresado_at']);
         $data['concesionario_id'] = $this->resolveConcesionarioId($request, $vehiculo);
         $data['marca'] = mb_strtoupper($data['marca']);
         $data['precio_expocar'] = $this->calcularPrecioExpocar($data);
@@ -343,6 +353,10 @@ class VehiculoController extends Controller
     public function destroy(Vehiculo $vehiculo)
     {
         $this->authorize('delete', $vehiculo);
+
+        if ($vehiculo->ventas()->exists()) {
+            return back()->with('error', 'No se puede eliminar: este vehículo tiene una venta registrada. Resuelve la venta desde el módulo de Ventas primero.');
+        }
 
         VehiculoEliminado::create([
             'vehiculo_id' => $vehiculo->id,

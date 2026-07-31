@@ -146,6 +146,7 @@
             <div>
                 <label class="block mb-2 text-sm text-gray-400">Fecha</label>
                 <input type="date" name="fecha_venta" value="{{ old('fecha_venta', optional($venta->fecha_venta ?? null)->format('Y-m-d') ?? date('Y-m-d')) }}"
+                    max="{{ now()->format('Y-m-d') }}"
                     class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3" required>
             </div>
 

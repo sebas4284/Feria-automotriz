@@ -11,6 +11,7 @@ use App\Models\Venta;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class VentaController extends Controller
 {
@@ -37,32 +38,40 @@ class VentaController extends Controller
 
         $validated = $request->validate($this->rules());
 
-        $vehiculo = Vehiculo::findOrFail($validated['vehiculo_id']);
+        $venta = DB::transaction(function () use ($validated, $request) {
+            $vehiculo = Vehiculo::lockForUpdate()->findOrFail($validated['vehiculo_id']);
 
-        if ($vehiculo->estado !== 'Disponible') {
+            if ($vehiculo->estado !== 'Disponible') {
+                return null;
+            }
+
+            $comprador = $this->updateOrCreateComprador($validated);
+
+            $venta = Venta::create([
+                'cliente_id' => $validated['cliente_id'] ?? null,
+                'comprador_id' => $comprador->id,
+                'vehiculo_id' => $vehiculo->id,
+                'concesionario_vende_id' => $validated['concesionario_vende_id'],
+                'user_id' => auth()->id(),
+                'asesor_comercial_id' => $validated['asesor_comercial_id'],
+                'valor' => $validated['valor'],
+                'fecha_venta' => $validated['fecha_venta'],
+                'forma_pago' => $validated['forma_pago'],
+                'observaciones' => $validated['observaciones'] ?? null,
+                'participa_experiencia' => $request->boolean('participa_experiencia'),
+                'detalle_experiencia' => $validated['detalle_experiencia'] ?? null,
+            ] + $this->pagoExtra($validated, $request));
+
+            $vehiculo->update(['estado' => 'Vendido']);
+
+            return $venta;
+        });
+
+        if (! $venta) {
             return back()
                 ->withInput()
                 ->with('error', 'Este vehículo ya no está disponible para la venta.');
         }
-
-        $comprador = $this->updateOrCreateComprador($validated);
-
-        $venta = Venta::create([
-            'cliente_id' => $validated['cliente_id'] ?? null,
-            'comprador_id' => $comprador->id,
-            'vehiculo_id' => $vehiculo->id,
-            'concesionario_vende_id' => $validated['concesionario_vende_id'],
-            'user_id' => auth()->id(),
-            'asesor_comercial_id' => $validated['asesor_comercial_id'],
-            'valor' => $validated['valor'],
-            'fecha_venta' => $validated['fecha_venta'],
-            'forma_pago' => $validated['forma_pago'],
-            'observaciones' => $validated['observaciones'] ?? null,
-            'participa_experiencia' => $request->boolean('participa_experiencia'),
-            'detalle_experiencia' => $validated['detalle_experiencia'] ?? null,
-        ] + $this->pagoExtra($validated, $request));
-
-        $vehiculo->update(['estado' => 'Vendido']);
 
         return redirect()
             ->route('ventas.show', $venta)
@@ -95,23 +104,19 @@ class VentaController extends Controller
 
         $nuevoVehiculoId = (int) $validated['vehiculo_id'];
 
-        if ($nuevoVehiculoId !== $venta->vehiculo_id) {
-            $nuevoVehiculo = Vehiculo::findOrFail($nuevoVehiculoId);
-
-            if ($nuevoVehiculo->estado !== 'Disponible') {
-                return back()
-                    ->withInput()
-                    ->with('error', 'El vehículo seleccionado ya no está disponible.');
-            }
-        }
-
-        $comprador = $this->updateOrCreateComprador($validated);
-
-        DB::transaction(function () use ($validated, $venta, $nuevoVehiculoId, $comprador, $request) {
+        $bloqueado = DB::transaction(function () use ($validated, $venta, $nuevoVehiculoId, $request) {
             if ($nuevoVehiculoId !== $venta->vehiculo_id) {
+                $nuevoVehiculo = Vehiculo::lockForUpdate()->findOrFail($nuevoVehiculoId);
+
+                if ($nuevoVehiculo->estado !== 'Disponible') {
+                    return true;
+                }
+
                 $venta->vehiculo?->update(['estado' => 'Disponible']);
-                Vehiculo::find($nuevoVehiculoId)?->update(['estado' => 'Vendido']);
+                $nuevoVehiculo->update(['estado' => 'Vendido']);
             }
+
+            $comprador = $this->updateOrCreateComprador($validated);
 
             $venta->update([
                 'cliente_id' => $validated['cliente_id'] ?? null,
@@ -126,7 +131,15 @@ class VentaController extends Controller
                 'participa_experiencia' => $request->boolean('participa_experiencia'),
                 'detalle_experiencia' => $validated['detalle_experiencia'] ?? null,
             ] + $this->pagoExtra($validated, $request));
+
+            return false;
         });
+
+        if ($bloqueado) {
+            return back()
+                ->withInput()
+                ->with('error', 'El vehículo seleccionado ya no está disponible.');
+        }
 
         return redirect()
             ->route('ventas.show', $venta)
@@ -157,12 +170,12 @@ class VentaController extends Controller
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'concesionario_vende_id' => 'required|exists:concesionarios,id',
             'asesor_comercial_id' => 'required|exists:asesores_comerciales,id',
-            'valor' => 'required|numeric|min:0',
-            'fecha_venta' => 'required|date',
+            'valor' => 'required|numeric|gt:0',
+            'fecha_venta' => 'required|date|before_or_equal:today',
             'forma_pago' => 'required|in:Contado,Credito,Credito y Contado',
             'banco' => 'nullable|string|max:255|required_if:forma_pago,Credito|required_if:forma_pago,Credito y Contado',
             'tiene_retoma' => 'nullable|boolean',
-            'retoma_valor' => 'nullable|numeric|min:0|required_if:tiene_retoma,1',
+            'retoma_valor' => 'nullable|numeric|min:0|lte:valor|required_if:tiene_retoma,1',
             'retoma_descripcion' => 'nullable|string|max:255|required_if:tiene_retoma,1',
             'observaciones' => 'nullable|string',
             'detalle_experiencia' => 'nullable|string|max:255',
@@ -188,6 +201,14 @@ class VentaController extends Controller
 
     private function updateOrCreateComprador(array $validated): Comprador
     {
+        $existente = Comprador::where('identificacion', $validated['comprador_identificacion'])->first();
+
+        if ($existente && mb_strtolower(trim($existente->nombre)) !== mb_strtolower(trim($validated['comprador_nombre']))) {
+            throw ValidationException::withMessages([
+                'comprador_identificacion' => "Ya existe un comprador con esa identificación registrado como \"{$existente->nombre}\". Verifica el número de identificación o el nombre.",
+            ]);
+        }
+
         return Comprador::updateOrCreate(
             ['identificacion' => $validated['comprador_identificacion']],
             [
