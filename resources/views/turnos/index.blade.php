@@ -7,6 +7,8 @@
     $ordenLlegada = $turnosHoy->sortBy('llegada_at')->values()->mapWithKeys(fn($t, $i) => [$t->concesionario_id => $i + 1]);
 @endphp
 
+<div id="turnos-live">
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
@@ -359,6 +361,8 @@
 
 </div>
 
+</div>
+
 <script>
     async function asignarCliente(clienteId, concesionarioId) {
         const response = await fetch("{{ route('turnos.asignar-cliente') }}", {
@@ -396,7 +400,7 @@
         asignarCliente(clienteId, concesionarioId);
     }
 
-    setTimeout(() => window.location.reload(), 15000);
+    window.liveRefresh('turnos-live', 4000);
 </script>
 
 @endsection

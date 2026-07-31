@@ -89,6 +89,11 @@ class User extends Authenticatable
         return $this->rol === 'porteria';
     }
 
+    public function isAseguradora(): bool
+    {
+        return $this->rol === 'aseguradora';
+    }
+
     public function concesionarioIdPropio(): ?int
     {
         return $this->concesionario_id ?? $this->asesorComercial?->concesionario_id;

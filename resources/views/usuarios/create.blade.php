@@ -50,6 +50,7 @@
                         <option value="asesor" @selected(old('rol') === 'asesor')>Asesor</option>
                         <option value="staff" @selected(old('rol') === 'staff')>Staff (Experiencia y Turnos)</option>
                         <option value="porteria" @selected(old('rol') === 'porteria')>Portería (check-in de vehículos)</option>
+                        <option value="aseguradora" @selected(old('rol') === 'aseguradora')>Aseguradora (solo ventas)</option>
                         <option value="admin" @selected(old('rol') === 'admin')>Admin</option>
                     </select>
                 </div>

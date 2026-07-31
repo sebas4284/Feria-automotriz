@@ -31,7 +31,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'rol' => 'required|in:admin,concesionario,asesor,staff,porteria',
+            'rol' => 'required|in:admin,concesionario,asesor,staff,porteria,aseguradora',
             'concesionario_id' => 'nullable|required_if:rol,concesionario|exists:concesionarios,id',
             'asesor_comercial_id' => 'nullable|required_if:rol,asesor|exists:asesores_comerciales,id',
         ]);
@@ -64,7 +64,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $usuario->id,
             'password' => 'nullable|string|min:8',
-            'rol' => 'required|in:admin,concesionario,asesor,staff,porteria',
+            'rol' => 'required|in:admin,concesionario,asesor,staff,porteria,aseguradora',
             'concesionario_id' => 'nullable|required_if:rol,concesionario|exists:concesionarios,id',
             'asesor_comercial_id' => 'nullable|required_if:rol,asesor|exists:asesores_comerciales,id',
         ]);

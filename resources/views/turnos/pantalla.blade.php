@@ -11,7 +11,7 @@
 
 <body class="bg-gray-950 text-white min-h-screen p-10">
 
-    <div class="w-full max-w-5xl mx-auto">
+    <div id="pantalla-live" class="w-full max-w-5xl mx-auto">
 
         <div class="flex items-center justify-between mb-8">
             <p class="text-2xl lg:text-3xl text-gray-400">
@@ -74,7 +74,7 @@
     </div>
 
     <script>
-        setTimeout(() => window.location.reload(), 5000);
+        window.liveRefresh('pantalla-live', 4000);
     </script>
 
 </body>

@@ -34,6 +34,10 @@ Route::get('/', function () {
         return redirect()->route('porteria.index');
     }
 
+    if (auth()->user()->isAseguradora()) {
+        return redirect()->route('ventas.index');
+    }
+
     return redirect()->route('dashboard');
 });
 
@@ -52,7 +56,12 @@ Route::get('/ventas/eliminadas', [VentaController::class, 'eliminadas'])
     ->middleware(['auth', 'role:admin']);
 
 Route::resource('ventas', VentaController::class)
+    ->only(['create', 'store', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);
+
+Route::resource('ventas', VentaController::class)
+    ->only(['index', 'show'])
+    ->middleware(['auth', 'role:admin,concesionario,aseguradora']);
 
 //Asesores comerciales
 Route::resource('asesores', AsesorComercialController::class)

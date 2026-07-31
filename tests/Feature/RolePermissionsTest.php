@@ -681,6 +681,69 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($concesionarioUser)->get('/ventas/eliminadas')->assertForbidden();
     }
 
+    public function test_aseguradora_ve_todas_las_ventas_pero_no_puede_crear_editar_ni_eliminar(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'Concesionario A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'Concesionario B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorA = \App\Models\AsesorComercial::create(['cedula' => 'AS1', 'nombre' => 'Asesor A', 'concesionario_id' => $concA->id]);
+        $asesorB = \App\Models\AsesorComercial::create(['cedula' => 'AS2', 'nombre' => 'Asesor B', 'concesionario_id' => $concB->id]);
+        $vehiculoA = Vehiculo::create(['placa' => 'ASG001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concA->id]);
+        $vehiculoB = Vehiculo::create(['placa' => 'ASG002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concB->id]);
+        $compradorA = \App\Models\Comprador::create(['identificacion' => 'CCASG1', 'nombre' => 'Comprador A']);
+        $compradorB = \App\Models\Comprador::create(['identificacion' => 'CCASG2', 'nombre' => 'Comprador B']);
+        $admin = $this->makeUser('admin');
+
+        $ventaA = \App\Models\Venta::create([
+            'comprador_id' => $compradorA->id,
+            'vehiculo_id' => $vehiculoA->id,
+            'concesionario_vende_id' => $concA->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesorA->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorB->id,
+            'vehiculo_id' => $vehiculoB->id,
+            'concesionario_vende_id' => $concB->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesorB->id,
+            'valor' => 2000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $aseguradora = $this->makeUser('aseguradora');
+
+        $response = $this->actingAs($aseguradora)->get('/ventas');
+        $response->assertOk();
+        $response->assertSee('ASG001');
+        $response->assertSee('ASG002');
+
+        $this->actingAs($aseguradora)->get("/ventas/{$ventaA->id}")->assertOk();
+        $this->actingAs($aseguradora)->get('/ventas/create')->assertForbidden();
+        $this->actingAs($aseguradora)->post('/ventas', [])->assertForbidden();
+        $this->actingAs($aseguradora)->get("/ventas/{$ventaA->id}/edit")->assertForbidden();
+        $this->actingAs($aseguradora)->put("/ventas/{$ventaA->id}", [])->assertForbidden();
+        $this->actingAs($aseguradora)->delete("/ventas/{$ventaA->id}", ['motivo' => 'x'])->assertForbidden();
+    }
+
+    public function test_aseguradora_solo_accede_a_ventas(): void
+    {
+        $aseguradora = $this->makeUser('aseguradora');
+
+        $this->actingAs($aseguradora)->get('/vehiculos')->assertForbidden();
+        $this->actingAs($aseguradora)->get('/clientes')->assertForbidden();
+        $this->actingAs($aseguradora)->get('/turnos')->assertForbidden();
+        $this->actingAs($aseguradora)->get('/dashboard')->assertForbidden();
+        $this->actingAs($aseguradora)->get('/estadisticas')->assertForbidden();
+
+        $this->actingAs($aseguradora)->get('/')->assertRedirect(route('ventas.index'));
+    }
+
     public function test_venta_cruzada_es_visible_para_el_concesionario_dueno_del_vehiculo(): void
     {
         $vendedor = Concesionario::create(['nombre' => 'Magnata', 'peso_asignacion' => 1, 'activo' => true]);

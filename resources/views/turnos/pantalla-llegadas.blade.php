@@ -11,7 +11,7 @@
 
 <body class="bg-gray-950 text-white min-h-screen p-10">
 
-    <div class="w-full max-w-6xl mx-auto">
+    <div id="llegadas-live" class="w-full max-w-6xl mx-auto">
 
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        setTimeout(() => window.location.reload(), 5000);
+        window.liveRefresh('llegadas-live', 4000);
     </script>
 
 </body>

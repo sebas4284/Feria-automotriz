@@ -82,7 +82,7 @@ class Venta extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
-        if ($user->isAdmin() || $user->isStaff()) {
+        if ($user->isAdmin() || $user->isStaff() || $user->isAseguradora()) {
             return $query;
         }
 

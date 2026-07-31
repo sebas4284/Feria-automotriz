@@ -31,6 +31,7 @@ class AuthenticatedSessionController extends Controller
         $home = match (true) {
             $request->user()->isAsesor() => 'leads.index',
             $request->user()->isPorteria() => 'porteria.index',
+            $request->user()->isAseguradora() => 'ventas.index',
             default => 'dashboard',
         };
 

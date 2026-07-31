@@ -15,6 +15,7 @@ class VentaPolicy
     public function view(User $user, Venta $venta): bool
     {
         return $user->isAdmin()
+            || $user->isAseguradora()
             || $this->esConcesionarioVendedor($user, $venta)
             || $venta->vehiculo?->concesionario_id === $user->concesionario_id;
     }
