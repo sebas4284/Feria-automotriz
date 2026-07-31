@@ -10,6 +10,7 @@ class Concesionario extends Model
 {
     protected $fillable = [
     'nombre',
+    'sheet_tab_id',
     'nit',
     'ciudad',
     'telefono',

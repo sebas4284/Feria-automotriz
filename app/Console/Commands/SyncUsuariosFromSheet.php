@@ -39,6 +39,7 @@ class SyncUsuariosFromSheet extends Command
 
         foreach ($meta->getSheets() as $sheet) {
             $nombrePestana = $sheet->getProperties()->getTitle();
+            $sheetTabId = $sheet->getProperties()->getSheetId();
 
             if ($tabFiltro !== null && strtolower(trim($nombrePestana)) !== strtolower(trim($tabFiltro))) {
                 continue;
@@ -58,7 +59,7 @@ class SyncUsuariosFromSheet extends Command
             $headers = $values[$indiceEncabezado];
             $filas = array_slice($values, $indiceEncabezado + 1);
 
-            $stats = $importer->import($nombrePestana, $headers, $filas);
+            $stats = $importer->import($nombrePestana, $sheetTabId, $headers, $filas);
 
             $totales['concesionarios_creados'] += $stats['concesionarios_creados'];
             $totales['usuarios_creados'] += $stats['usuarios_creados'];

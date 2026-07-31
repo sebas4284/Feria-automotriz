@@ -19,7 +19,7 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $importer->import('Growcars', self::HEADERS, [
+        $importer->import('Growcars', 1001, self::HEADERS, [
             ['Luis Quintero', 'luis@example.com', '12345678', '16936701', 'Asesor', 'GROWCARS'],
         ]);
 
@@ -38,7 +38,7 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $importer->import('Magnata', self::HEADERS, [
+        $importer->import('Magnata', 1002, self::HEADERS, [
             ['Laura Muñoz', 'laura@example.com', '12345678', '1007619557', 'CONCESIONARIO', 'MAGNATA'],
         ]);
 
@@ -55,7 +55,7 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $importer->import('Autos Dicar', self::HEADERS, [
+        $importer->import('Autos Dicar', 1003, self::HEADERS, [
             ['Carolina Pamplona', 'carolina@example.com', '12345678', '31.570.756', 'Asesor', 'AUTOS DICAR'],
             ['Alirio Merchan', 'alirio@example.com', '12345678', 'Ppt: 854950', 'Asesor', 'AUTOS DICAR'],
         ]);
@@ -68,7 +68,7 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $importer->import('Ezel Automotriz', self::HEADERS, [
+        $importer->import('Ezel Automotriz', 1004, self::HEADERS, [
             ['Efrain Lezama', 'efrain@example.com', '1234', '94520676', 'Concesionario', 'EZEL AUTOMOTRIZ'],
         ]);
 
@@ -81,7 +81,7 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $stats = $importer->import('Financars', self::HEADERS, [
+        $stats = $importer->import('Financars', 1005, self::HEADERS, [
             ['Edwin', '', '12345678', '', 'Asesor', 'FINANCARS'],
             ['Nancy Cardenas', 'nancy@example.com', '12345678', '38640764', 'Administracion', 'FINANCARS'],
         ]);
@@ -94,14 +94,14 @@ class UsuariosSheetImporterTest extends TestCase
     {
         $importer = app(UsuariosSheetImporter::class);
 
-        $importer->import('Eurocars', self::HEADERS, [
+        $importer->import('Eurocars', 1006, self::HEADERS, [
             ['Dahiana', 'dahiana@example.com', '12345678', '1005978881', 'Concesionario', 'EUROCARS'],
         ]);
 
         $user = User::where('email', 'dahiana@example.com')->firstOrFail();
         $user->update(['password' => 'contraseña-elegida-por-el-usuario']);
 
-        $importer->import('Eurocars', self::HEADERS, [
+        $importer->import('Eurocars', 1006, self::HEADERS, [
             ['Dahiana', 'dahiana@example.com', '12345678', '1005978881', 'Concesionario', 'EUROCARS'],
         ]);
 
@@ -110,5 +110,55 @@ class UsuariosSheetImporterTest extends TestCase
 
         $user->refresh();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('contraseña-elegida-por-el-usuario', $user->password));
+    }
+
+    public function test_renombrar_el_concesionario_no_lo_desengancha_de_la_pestana(): void
+    {
+        $importer = app(UsuariosSheetImporter::class);
+
+        $importer->import('MH Group', 2001, self::HEADERS, [
+            ['Mauricio', 'mauricio@example.com', '12345678', '999888777', 'Concesionario', 'MH GROUP'],
+        ]);
+
+        $concesionario = Concesionario::where('sheet_tab_id', 2001)->firstOrFail();
+        $concesionario->update(['nombre' => 'MH Group Renombrado']);
+
+        // La pestaña del Sheet sigue con el nombre viejo, pero el sheet_tab_id
+        // es el mismo: debe seguir enganchando al mismo concesionario, sin
+        // crear un duplicado ni revertir el nombre.
+        $importer->import('MH Group', 2001, self::HEADERS, [
+            ['Mauricio', 'mauricio@example.com', '12345678', '999888777', 'Concesionario', 'MH GROUP'],
+            ['Nuevo Asesor', 'asesor@example.com', '12345678', '111222333', 'Asesor', 'MH GROUP'],
+        ]);
+
+        $this->assertDatabaseCount('concesionarios', 1);
+        $concesionario->refresh();
+        $this->assertSame('MH Group Renombrado', $concesionario->nombre);
+
+        $user = User::where('email', 'mauricio@example.com')->firstOrFail();
+        $this->assertSame($concesionario->id, $user->concesionario_id);
+
+        $asesor = AsesorComercial::where('cedula', '111222333')->firstOrFail();
+        $this->assertSame($concesionario->id, $asesor->concesionario_id);
+    }
+
+    public function test_dos_pestanas_con_el_mismo_nombre_pero_distinto_sheet_tab_id_no_se_mezclan(): void
+    {
+        $importer = app(UsuariosSheetImporter::class);
+
+        $importer->import('Autos Prueba', 3001, self::HEADERS, [
+            ['Persona Uno', 'uno@example.com', '12345678', '111111111', 'Concesionario', 'AUTOS PRUEBA'],
+        ]);
+
+        $importer->import('Autos Prueba', 3002, self::HEADERS, [
+            ['Persona Dos', 'dos@example.com', '12345678', '222222222', 'Concesionario', 'AUTOS PRUEBA'],
+        ]);
+
+        $this->assertDatabaseCount('concesionarios', 2);
+
+        $userUno = User::where('email', 'uno@example.com')->firstOrFail();
+        $userDos = User::where('email', 'dos@example.com')->firstOrFail();
+
+        $this->assertNotSame($userUno->concesionario_id, $userDos->concesionario_id);
     }
 }
