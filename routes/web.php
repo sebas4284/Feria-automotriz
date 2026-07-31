@@ -119,6 +119,10 @@ Route::resource('clientes', ClienteController::class)
     ->only(['edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);
 //Vehiculos
+Route::get('/vehiculos/eliminados', [VehiculoController::class, 'eliminados'])
+    ->name('vehiculos.eliminados')
+    ->middleware(['auth', 'role:admin']);
+
 Route::resource('vehiculos', VehiculoController::class)
     ->middleware(['auth', 'role:admin,concesionario,asesor']);
 

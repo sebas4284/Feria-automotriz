@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Catalogo;
 use App\Models\Vehiculo;
+use App\Models\VehiculoEliminado;
 use Illuminate\Http\Request;
 use App\Models\Concesionario;
 use Illuminate\Support\Facades\Storage;
@@ -343,6 +344,21 @@ class VehiculoController extends Controller
     {
         $this->authorize('delete', $vehiculo);
 
+        VehiculoEliminado::create([
+            'vehiculo_id' => $vehiculo->id,
+            'placa' => $vehiculo->placa,
+            'marca' => $vehiculo->marca,
+            'linea' => $vehiculo->linea,
+            'modelo' => $vehiculo->modelo,
+            'concesionario_nombre' => $vehiculo->concesionario->nombre ?? null,
+            'precio_expocar' => $vehiculo->precio_expocar,
+            'kilometraje' => $vehiculo->kilometraje,
+            'estado' => $vehiculo->estado,
+            'datos' => $vehiculo->toArray(),
+            'eliminado_por' => auth()->id(),
+            'eliminado_por_nombre' => auth()->user()->name,
+        ]);
+
         if ($vehiculo->foto) {
             Storage::disk('public')->delete($vehiculo->foto);
         }
@@ -352,6 +368,13 @@ class VehiculoController extends Controller
         return redirect()
             ->route('vehiculos.index')
             ->with('success', 'Vehículo eliminado correctamente');
+    }
+
+    public function eliminados()
+    {
+        $eliminados = VehiculoEliminado::latest()->get();
+
+        return view('vehiculos.eliminados', compact('eliminados'));
     }
 
     private function cupoUsado(int $concesionarioId, ?int $excluirVehiculoId = null): int

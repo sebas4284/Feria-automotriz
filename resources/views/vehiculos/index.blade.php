@@ -330,6 +330,10 @@
                     class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
                     Gestionar catálogos
                 </a>
+                <a href="{{ route('vehiculos.eliminados') }}"
+                    class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
+                    Vehículos eliminados
+                </a>
             @endif
             @can('create', App\Models\Vehiculo::class)
                 @include('partials._boton-crear', ['href' => route('vehiculos.create'), 'texto' => 'Nuevo Vehículo'])

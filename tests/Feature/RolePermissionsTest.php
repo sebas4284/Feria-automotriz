@@ -339,6 +339,38 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('KM2222');
     }
 
+    public function test_eliminar_vehiculo_registra_el_borrado_y_lo_quita_del_inventario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario X', 'peso_asignacion' => 1, 'activo' => true]);
+        $vehiculo = Vehiculo::create(['placa' => 'DEL123', 'marca' => 'Kia', 'linea' => 'Rio', 'modelo' => 2020, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+
+        $this->actingAs($admin)->delete("/vehiculos/{$vehiculo->id}")->assertRedirect(route('vehiculos.index'));
+
+        $this->assertDatabaseMissing('vehiculos', ['id' => $vehiculo->id]);
+
+        $registro = \App\Models\VehiculoEliminado::first();
+        $this->assertNotNull($registro);
+        $this->assertEquals('DEL123', $registro->placa);
+        $this->assertEquals('Kia', $registro->marca);
+        $this->assertEquals('Concesionario X', $registro->concesionario_nombre);
+        $this->assertEquals($admin->id, $registro->eliminado_por);
+        $this->assertEquals($admin->name, $registro->eliminado_por_nombre);
+    }
+
+    public function test_vehiculos_eliminados_solo_es_accesible_para_admin(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Y', 'peso_asignacion' => 1, 'activo' => true]);
+        $concesionarioUser = $this->makeUser('concesionario', $conc);
+        $vehiculo = Vehiculo::create(['placa' => 'DEL456', 'marca' => 'Renault', 'modelo' => 2021, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+
+        $this->actingAs($admin)->delete("/vehiculos/{$vehiculo->id}");
+
+        $this->actingAs($admin)->get('/vehiculos/eliminados')->assertOk()->assertSee('DEL456');
+        $this->actingAs($concesionarioUser)->get('/vehiculos/eliminados')->assertForbidden();
+    }
+
     public function test_texto_de_busqueda_ignora_el_filtro_de_ubicacion(): void
     {
         $admin = $this->makeUser('admin');
