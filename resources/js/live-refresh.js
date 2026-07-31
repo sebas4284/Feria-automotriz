@@ -1,4 +1,4 @@
-export function liveRefresh(containerId, intervalMs = 4000) {
+export function liveRefresh(containerId, intervalMs = 4000, fallbackReloadMs = 300000) {
     setInterval(async () => {
         try {
             const res = await fetch(window.location.href, {
@@ -18,4 +18,10 @@ export function liveRefresh(containerId, intervalMs = 4000) {
             // silencioso: se reintenta en el siguiente ciclo
         }
     }, intervalMs);
+
+    // Red de seguridad: si la actualización parcial llegara a fallar sin que
+    // nadie lo note (bug futuro, error de red persistente, etc.), una
+    // recarga completa periódica evita que la pantalla se quede pegada
+    // indefinidamente sin intervención manual.
+    setInterval(() => window.location.reload(), fallbackReloadMs);
 }
