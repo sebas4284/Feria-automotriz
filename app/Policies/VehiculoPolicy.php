@@ -29,6 +29,6 @@ class VehiculoPolicy
 
     public function delete(User $user, Vehiculo $vehiculo): bool
     {
-        return $this->update($user, $vehiculo);
+        return $user->isAdmin();
     }
 }

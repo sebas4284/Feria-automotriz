@@ -358,6 +358,19 @@ class RolePermissionsTest extends TestCase
         $this->assertEquals($admin->name, $registro->eliminado_por_nombre);
     }
 
+    public function test_solo_admin_puede_eliminar_vehiculos(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'Concesionario Z', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => '789', 'nombre' => 'Asesor Z', 'concesionario_id' => $conc->id]);
+        $usuarioConcesionario = $this->makeUser('concesionario', $conc);
+        $usuarioAsesor = $this->makeAsesorUser($asesor);
+        $vehiculo = Vehiculo::create(['placa' => 'NOD123', 'marca' => 'Chevrolet', 'modelo' => 2022, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+
+        $this->actingAs($usuarioConcesionario)->delete("/vehiculos/{$vehiculo->id}")->assertForbidden();
+        $this->actingAs($usuarioAsesor)->delete("/vehiculos/{$vehiculo->id}")->assertForbidden();
+        $this->assertDatabaseHas('vehiculos', ['id' => $vehiculo->id]);
+    }
+
     public function test_vehiculos_eliminados_solo_es_accesible_para_admin(): void
     {
         $admin = $this->makeUser('admin');
