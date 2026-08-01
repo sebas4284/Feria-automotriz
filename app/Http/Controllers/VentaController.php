@@ -185,6 +185,72 @@ class VentaController extends Controller
         return view('ventas.eliminadas', compact('eliminadas'));
     }
 
+    public function analisis()
+    {
+        $totalVentas = Venta::count();
+        $valorTotal = Venta::sum('valor');
+        $promedioVenta = $totalVentas > 0 ? $valorTotal / $totalVentas : 0;
+
+        $ventasPorDia = Venta::selectRaw('fecha_venta, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+            ->groupBy('fecha_venta')
+            ->orderBy('fecha_venta')
+            ->get();
+
+        $porFormaPago = Venta::selectRaw('forma_pago, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+            ->groupBy('forma_pago')
+            ->get();
+
+        $porAsesor = Venta::selectRaw('asesor_comercial_id, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+            ->with('asesorComercial')
+            ->groupBy('asesor_comercial_id')
+            ->orderByDesc('total_ventas')
+            ->get();
+
+        // Ranking por concesionario: separa "vendidas como vendedor" de "de su
+        // inventario, vendidas por otro concesionario" (venta cruzada).
+        $ventas = Venta::with('vehiculo:id,concesionario_id')->get(['id', 'vehiculo_id', 'concesionario_vende_id', 'valor']);
+
+        $porConcesionario = [];
+        foreach ($ventas as $venta) {
+            $vendedorId = $venta->concesionario_vende_id;
+            $duenoId = $venta->vehiculo?->concesionario_id;
+
+            $porConcesionario[$vendedorId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'cruzadas_ventas' => 0, 'cruzadas_valor' => 0];
+            $porConcesionario[$vendedorId]['vendidas_ventas']++;
+            $porConcesionario[$vendedorId]['vendidas_valor'] += $venta->valor;
+
+            if ($duenoId && $duenoId !== $vendedorId) {
+                $porConcesionario[$duenoId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'cruzadas_ventas' => 0, 'cruzadas_valor' => 0];
+                $porConcesionario[$duenoId]['cruzadas_ventas']++;
+                $porConcesionario[$duenoId]['cruzadas_valor'] += $venta->valor;
+            }
+        }
+
+        $nombres = Concesionario::whereIn('id', array_keys($porConcesionario))->pluck('nombre', 'id');
+
+        $rankingConcesionarios = collect($porConcesionario)->map(fn ($d, $id) => [
+            'nombre' => $nombres[$id] ?? 'Sin concesionario',
+            'vendidas_ventas' => $d['vendidas_ventas'],
+            'vendidas_valor' => $d['vendidas_valor'],
+            'cruzadas_ventas' => $d['cruzadas_ventas'],
+            'cruzadas_valor' => $d['cruzadas_valor'],
+            'total_ventas' => $d['vendidas_ventas'] + $d['cruzadas_ventas'],
+            'total_valor' => $d['vendidas_valor'] + $d['cruzadas_valor'],
+        ])->sortByDesc('total_ventas')->values();
+
+        // Informe de ventas cruzadas (detalle línea por línea)
+        $ventasCruzadas = Venta::with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
+            ->get()
+            ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
+            ->values();
+
+        return view('ventas.analisis', compact(
+            'totalVentas', 'valorTotal', 'promedioVenta',
+            'ventasPorDia', 'porFormaPago', 'porAsesor',
+            'rankingConcesionarios', 'ventasCruzadas'
+        ));
+    }
+
     private function rules(): array
     {
         return [

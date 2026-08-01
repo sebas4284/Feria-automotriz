@@ -55,6 +55,10 @@ Route::get('/ventas/eliminadas', [VentaController::class, 'eliminadas'])
     ->name('ventas.eliminadas')
     ->middleware(['auth', 'role:admin']);
 
+Route::get('/ventas/analisis', [VentaController::class, 'analisis'])
+    ->name('ventas.analisis')
+    ->middleware(['auth', 'role:admin']);
+
 Route::resource('ventas', VentaController::class)
     ->only(['create', 'store', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);

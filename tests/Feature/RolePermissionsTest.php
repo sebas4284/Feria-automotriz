@@ -689,6 +689,105 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($concesionarioUser)->get('/ventas/eliminadas')->assertForbidden();
     }
 
+    public function test_ventas_analisis_solo_es_accesible_para_admin(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concesionarioUser = $this->makeUser('concesionario', $conc);
+
+        $this->actingAs($admin)->get('/ventas/analisis')->assertOk();
+        $this->actingAs($concesionarioUser)->get('/ventas/analisis')->assertForbidden();
+    }
+
+    public function test_ventas_analisis_distingue_vendidas_de_cruzadas_por_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $concA = Concesionario::create(['nombre' => 'Analisis A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'Analisis B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'ANA1', 'nombre' => 'Asesor Analisis', 'concesionario_id' => $concA->id]);
+        $vehiculoPropio = Vehiculo::create(['placa' => 'ANA001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concA->id]);
+        $vehiculoAjeno = Vehiculo::create(['placa' => 'ANA002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concB->id]);
+        $compradorUno = \App\Models\Comprador::create(['identificacion' => 'CCANA1', 'nombre' => 'Comprador Analisis Uno']);
+        $compradorDos = \App\Models\Comprador::create(['identificacion' => 'CCANA2', 'nombre' => 'Comprador Analisis Dos']);
+
+        // Venta normal: A vende su propio auto.
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorUno->id,
+            'vehiculo_id' => $vehiculoPropio->id,
+            'concesionario_vende_id' => $concA->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        // Venta cruzada: A vende un auto de B.
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorDos->id,
+            'vehiculo_id' => $vehiculoAjeno->id,
+            'concesionario_vende_id' => $concA->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 2000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/ventas/analisis');
+
+        $response->assertOk();
+        // A: 2 vendidas (como vendedor), 0 cruzadas.
+        // B: 0 vendidas, 1 cruzada (de su inventario, vendida por A).
+        $response->assertSeeInOrder(['Analisis A', 'Analisis B']);
+        $response->assertSee('ANA002');
+        $response->assertDontSee('ANA001');
+    }
+
+    public function test_ventas_index_muestra_ventas_y_valor_de_hoy(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Hoy Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'HOY1', 'nombre' => 'Asesor Hoy', 'concesionario_id' => $conc->id]);
+        $vehiculoHoy = Vehiculo::create(['placa' => 'HOY001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $vehiculoAyer = Vehiculo::create(['placa' => 'HOY002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $compradorHoy = \App\Models\Comprador::create(['identificacion' => 'CCHOY1', 'nombre' => 'Comprador Hoy']);
+        $compradorAyer = \App\Models\Comprador::create(['identificacion' => 'CCHOY2', 'nombre' => 'Comprador Ayer']);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorHoy->id,
+            'vehiculo_id' => $vehiculoHoy->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 50_000_000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorAyer->id,
+            'vehiculo_id' => $vehiculoAyer->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 30_000_000,
+            'fecha_venta' => now()->subDay(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/ventas');
+
+        $response->assertOk();
+        $response->assertSee('Ventas hoy');
+        $response->assertSee('Valor vendido hoy');
+        $response->assertSee('$ 50.000.000');
+    }
+
     public function test_aseguradora_ve_todas_las_ventas_pero_no_puede_crear_editar_ni_eliminar(): void
     {
         $concA = Concesionario::create(['nombre' => 'Concesionario A', 'peso_asignacion' => 1, 'activo' => true]);

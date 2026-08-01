@@ -32,6 +32,8 @@
         $totalMes   = $ventas->filter(fn($v) => $v->fecha_venta?->isCurrentMonth())->count();
         $ingresosMes = $ventas->filter(fn($v) => $v->fecha_venta?->isCurrentMonth())->sum('valor');
         $totalIngresosAll = $ventas->sum('valor');
+        $ventasHoy = $ventas->filter(fn($v) => $v->fecha_venta?->isToday())->count();
+        $valorHoy  = $ventas->filter(fn($v) => $v->fecha_venta?->isToday())->sum('valor');
     @endphp
 
     <div class="grid grid-cols-2 gap-3">
@@ -52,6 +54,17 @@
             </div>
             <p class="text-2xl font-bold">{{ $ventas->count() }}</p>
             <p class="text-xs text-gray-500 mt-1">Ventas totales</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-amber-400">{{ $ventasHoy }}</p>
+            <p class="text-xs text-gray-500 mt-1">Ventas hoy</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-amber-400">$ {{ number_format($valorHoy, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 mt-1">Valor vendido hoy</p>
         </div>
     </div>
 
@@ -152,6 +165,10 @@
         </div>
         <div class="flex items-center gap-3">
             @if(auth()->user()->isAdmin())
+                <a href="{{ route('ventas.analisis') }}"
+                    class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
+                    Análisis de ventas
+                </a>
                 <a href="{{ route('ventas.eliminadas') }}"
                     class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
                     Ventas eliminadas
@@ -161,7 +178,15 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-amber-400">{{ $ventasHoy }}</p>
+            <p class="text-xs text-gray-500 mt-1">Ventas hoy</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+            <p class="text-2xl font-bold text-amber-400">$ {{ number_format($valorHoy, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-500 mt-1">Valor vendido hoy</p>
+        </div>
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4">
             <p class="text-2xl font-bold text-emerald-400">$ {{ number_format($ingresosMes, 0, ',', '.') }}</p>
             <p class="text-xs text-gray-500 mt-1">Ingresos este mes</p>
