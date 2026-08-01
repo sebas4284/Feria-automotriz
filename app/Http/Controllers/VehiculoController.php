@@ -17,11 +17,21 @@ class VehiculoController extends Controller
 
         $query = Vehiculo::with('concesionario');
 
-        if ($idPropio = $user->concesionarioIdPropio()) {
-            $query->orderByRaw('CASE WHEN concesionario_id = ? THEN 0 ELSE 1 END', [$idPropio]);
-        }
+        $tieneFiltros = $request->anyFilled([
+            'placa', 'marca', 'modelo_desde', 'modelo_hasta', 'precio_min', 'precio_max',
+            'estado', 'ubicacion', 'concesionario_id', 'color', 'combustible', 'transmision',
+            'kilometraje_min', 'kilometraje_max',
+        ]);
 
-        $query->latest();
+        if ($tieneFiltros) {
+            $query->orderBy('precio_expocar');
+        } else {
+            if ($idPropio = $user->concesionarioIdPropio()) {
+                $query->orderByRaw('CASE WHEN concesionario_id = ? THEN 0 ELSE 1 END', [$idPropio]);
+            }
+
+            $query->latest();
+        }
 
         if ($request->filled('placa')) {
             $buscar = $request->placa;

@@ -339,6 +339,25 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('KM2222');
     }
 
+    public function test_vehiculos_index_ordena_por_precio_ascendente_cuando_hay_filtros(): void
+    {
+        $concA = Concesionario::create(['nombre' => 'Precio A', 'peso_asignacion' => 1, 'activo' => true]);
+        $userA = $this->makeUser('concesionario', $concA);
+
+        // Se crean en orden de precio descendente y el más caro es el propio del usuario,
+        // para confirmar que el orden por precio manda incluso sobre "propio primero".
+        Vehiculo::create(['placa' => 'ORD111', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'precio_expocar' => 150_000_000, 'concesionario_id' => $concA->id]);
+        Vehiculo::create(['placa' => 'ORD222', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'precio_expocar' => 50_000_000]);
+        Vehiculo::create(['placa' => 'ORD333', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'precio_expocar' => 100_000_000]);
+
+        // Sin filtros: el propio (ORD111) va primero pese a ser el más caro.
+        $this->actingAs($userA)->get('/vehiculos')->assertSeeInOrder(['ORD111', 'ORD333', 'ORD222']);
+
+        // Con un filtro activo (modelo): orden estrictamente por precio ascendente.
+        $this->actingAs($userA)->get('/vehiculos?modelo_desde=2020')
+            ->assertSeeInOrder(['ORD222', 'ORD333', 'ORD111']);
+    }
+
     public function test_eliminar_vehiculo_registra_el_borrado_y_lo_quita_del_inventario(): void
     {
         $admin = $this->makeUser('admin');
