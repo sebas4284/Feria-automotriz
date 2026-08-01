@@ -174,6 +174,12 @@
                     Ventas eliminadas
                 </a>
             @endif
+            @if(auth()->user()->isConcesionario())
+                <a href="{{ route('ventas.mi-analisis') }}"
+                    class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
+                    Mi análisis
+                </a>
+            @endif
             @include('partials._boton-crear', ['href' => route('ventas.create'), 'texto' => 'Nueva Venta'])
         </div>
     </div>

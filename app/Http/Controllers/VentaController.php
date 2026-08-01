@@ -187,29 +187,96 @@ class VentaController extends Controller
 
     public function analisis()
     {
-        $totalVentas = Venta::count();
-        $valorTotal = Venta::sum('valor');
+        $ventas = Venta::with('vehiculo:id,concesionario_id')->get(['id', 'vehiculo_id', 'concesionario_vende_id', 'valor']);
+
+        $ventasCruzadas = Venta::with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
+            ->get()
+            ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
+            ->values();
+
+        return view('ventas.analisis', $this->calcularResumenVentas(Venta::query()) + [
+            'porAsesor' => $this->rankingAsesores(),
+            'rankingConcesionarios' => $this->rankingPorConcesionario($ventas),
+            'ventasCruzadas' => $ventasCruzadas,
+            'esGlobal' => true,
+        ]);
+    }
+
+    public function analisisPropio(Request $request)
+    {
+        $user = $request->user();
+
+        $ventasCruzadas = Venta::visibleTo($user)
+            ->with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
+            ->get()
+            ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
+            ->values();
+
+        return view('ventas.analisis', $this->calcularResumenVentas(Venta::visibleTo($user)) + [
+            'porAsesor' => $this->rankingAsesores($user->concesionarioIdPropio()),
+            'rankingConcesionarios' => null,
+            'ventasCruzadas' => $ventasCruzadas,
+            'esGlobal' => false,
+        ]);
+    }
+
+    private function calcularResumenVentas($query): array
+    {
+        $totalVentas = (clone $query)->count();
+        $valorTotal = (clone $query)->sum('valor');
         $promedioVenta = $totalVentas > 0 ? $valorTotal / $totalVentas : 0;
 
-        $ventasPorDia = Venta::selectRaw('fecha_venta, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+        $ventasPorDia = (clone $query)
+            ->selectRaw('fecha_venta, COUNT(*) as total_ventas, SUM(valor) as total_valor')
             ->groupBy('fecha_venta')
             ->orderBy('fecha_venta')
             ->get();
 
-        $porFormaPago = Venta::selectRaw('forma_pago, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+        $porFormaPagoRaw = (clone $query)
+            ->selectRaw('forma_pago, COUNT(*) as total_ventas, SUM(valor) as total_valor')
             ->groupBy('forma_pago')
             ->get();
 
-        $porAsesor = Venta::selectRaw('asesor_comercial_id, COUNT(*) as total_ventas, SUM(valor) as total_valor')
-            ->with('asesorComercial')
-            ->groupBy('asesor_comercial_id')
+        // Se agrupa "Credito" y "Credito y Contado" en PHP (no con SQL
+        // CASE/IF) para que funcione igual en SQLite (tests) y MySQL (prod).
+        $porFormaPago = $porFormaPagoRaw
+            ->groupBy(fn ($item) => $item->forma_pago === 'Contado' ? 'Contado' : 'Crédito')
+            ->map(fn ($grupo, $etiqueta) => (object) [
+                'forma_pago' => $etiqueta,
+                'total_ventas' => $grupo->sum('total_ventas'),
+                'total_valor' => $grupo->sum('total_valor'),
+            ])->values();
+
+        $porBanco = (clone $query)
+            ->whereNotNull('banco')
+            ->selectRaw('banco, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+            ->groupBy('banco')
             ->orderByDesc('total_ventas')
             ->get();
 
-        // Ranking por concesionario: separa "vendidas como vendedor" de "de su
-        // inventario, vendidas por otro concesionario" (venta cruzada).
-        $ventas = Venta::with('vehiculo:id,concesionario_id')->get(['id', 'vehiculo_id', 'concesionario_vende_id', 'valor']);
+        return compact('totalVentas', 'valorTotal', 'promedioVenta', 'ventasPorDia', 'porFormaPago', 'porBanco');
+    }
 
+    private function rankingAsesores(?int $concesionarioId = null)
+    {
+        $query = Venta::selectRaw('asesor_comercial_id, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+            ->with('asesorComercial.concesionario')
+            ->groupBy('asesor_comercial_id')
+            ->orderByDesc('total_ventas');
+
+        if ($concesionarioId) {
+            $query->whereHas('asesorComercial', fn ($q) => $q->where('concesionario_id', $concesionarioId));
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Ranking por concesionario: separa "vendidas como vendedor" de "de su
+     * inventario, vendidas por otro concesionario" (venta cruzada).
+     */
+    private function rankingPorConcesionario($ventas)
+    {
         $porConcesionario = [];
         foreach ($ventas as $venta) {
             $vendedorId = $venta->concesionario_vende_id;
@@ -228,7 +295,7 @@ class VentaController extends Controller
 
         $nombres = Concesionario::whereIn('id', array_keys($porConcesionario))->pluck('nombre', 'id');
 
-        $rankingConcesionarios = collect($porConcesionario)->map(fn ($d, $id) => [
+        return collect($porConcesionario)->map(fn ($d, $id) => [
             'nombre' => $nombres[$id] ?? 'Sin concesionario',
             'vendidas_ventas' => $d['vendidas_ventas'],
             'vendidas_valor' => $d['vendidas_valor'],
@@ -237,18 +304,6 @@ class VentaController extends Controller
             'total_ventas' => $d['vendidas_ventas'] + $d['cruzadas_ventas'],
             'total_valor' => $d['vendidas_valor'] + $d['cruzadas_valor'],
         ])->sortByDesc('total_ventas')->values();
-
-        // Informe de ventas cruzadas (detalle línea por línea)
-        $ventasCruzadas = Venta::with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
-            ->get()
-            ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
-            ->values();
-
-        return view('ventas.analisis', compact(
-            'totalVentas', 'valorTotal', 'promedioVenta',
-            'ventasPorDia', 'porFormaPago', 'porAsesor',
-            'rankingConcesionarios', 'ventasCruzadas'
-        ));
     }
 
     private function rules(): array

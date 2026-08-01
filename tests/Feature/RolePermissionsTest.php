@@ -746,6 +746,128 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('ANA001');
     }
 
+    public function test_ventas_analisis_une_credito_y_credito_y_contado_y_muestra_banco(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Credito Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'CRE1', 'nombre' => 'Asesor Credito', 'concesionario_id' => $conc->id]);
+        $vehiculoUno = Vehiculo::create(['placa' => 'CRE001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $vehiculoDos = Vehiculo::create(['placa' => 'CRE002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $compradorUno = \App\Models\Comprador::create(['identificacion' => 'CCCRE1', 'nombre' => 'Comprador Credito Uno']);
+        $compradorDos = \App\Models\Comprador::create(['identificacion' => 'CCCRE2', 'nombre' => 'Comprador Credito Dos']);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorUno->id,
+            'vehiculo_id' => $vehiculoUno->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 10_000_000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Credito',
+            'banco' => 'Bancolombia',
+            'participa_experiencia' => false,
+        ]);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorDos->id,
+            'vehiculo_id' => $vehiculoDos->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 20_000_000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Credito y Contado',
+            'banco' => 'Davivienda',
+            'participa_experiencia' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/ventas/analisis');
+
+        $response->assertOk();
+        $response->assertDontSee('Credito y Contado');
+        $response->assertSee('Crédito');
+        $response->assertSee('Bancolombia');
+        $response->assertSee('Davivienda');
+    }
+
+    public function test_ventas_analisis_ranking_de_asesores_muestra_su_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Concesionario Del Asesor', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'RKA1', 'nombre' => 'Asesor Con Concesionario', 'concesionario_id' => $conc->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'RKA001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $comprador = \App\Models\Comprador::create(['identificacion' => 'CCRKA1', 'nombre' => 'Comprador Ranking Asesor']);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $comprador->id,
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/ventas/analisis');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Asesor Con Concesionario', 'Concesionario Del Asesor']);
+    }
+
+    public function test_mi_analisis_muestra_solo_las_ventas_propias_del_concesionario(): void
+    {
+        $admin = $this->makeUser('admin');
+        $concPropio = Concesionario::create(['nombre' => 'Propio Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $concAjeno = Concesionario::create(['nombre' => 'Ajeno Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesorPropio = \App\Models\AsesorComercial::create(['cedula' => 'PRO1', 'nombre' => 'Asesor Propio', 'concesionario_id' => $concPropio->id]);
+        $asesorAjeno = \App\Models\AsesorComercial::create(['cedula' => 'AJE1', 'nombre' => 'Asesor Ajeno', 'concesionario_id' => $concAjeno->id]);
+        $vehiculoPropio = Vehiculo::create(['placa' => 'PRO001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concPropio->id]);
+        $vehiculoAjeno = Vehiculo::create(['placa' => 'AJE001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concAjeno->id]);
+        $compradorPropio = \App\Models\Comprador::create(['identificacion' => 'CCPRO1', 'nombre' => 'Comprador Propio']);
+        $compradorAjeno = \App\Models\Comprador::create(['identificacion' => 'CCAJE1', 'nombre' => 'Comprador Ajeno']);
+
+        // Venta propia (vendida y con auto propio).
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorPropio->id,
+            'vehiculo_id' => $vehiculoPropio->id,
+            'concesionario_vende_id' => $concPropio->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesorPropio->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        // Venta totalmente ajena (ni la vendió ni es el dueño) — no debe verla.
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorAjeno->id,
+            'vehiculo_id' => $vehiculoAjeno->id,
+            'concesionario_vende_id' => $concAjeno->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesorAjeno->id,
+            'valor' => 2000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $usuarioPropio = $this->makeUser('concesionario', $concPropio);
+
+        $response = $this->actingAs($usuarioPropio)->get('/ventas/mi-analisis');
+
+        $response->assertOk();
+        $response->assertSee('Mi Análisis de Ventas');
+        $response->assertSee('Asesor Propio');
+        $response->assertDontSee('Asesor Ajeno');
+        $response->assertDontSee('AJE001');
+
+        $this->actingAs($admin)->get('/ventas/mi-analisis')->assertForbidden();
+    }
+
     public function test_ventas_index_muestra_ventas_y_valor_de_hoy(): void
     {
         $admin = $this->makeUser('admin');

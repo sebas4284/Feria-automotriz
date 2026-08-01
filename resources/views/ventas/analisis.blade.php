@@ -6,8 +6,8 @@
 
     <div class="mb-6">
         <a href="{{ route('ventas.index') }}" class="text-sm text-blue-400 hover:underline">&larr; Volver a Ventas</a>
-        <h1 class="text-2xl lg:text-3xl font-bold mt-2">Análisis de Ventas</h1>
-        <p class="text-gray-400 mt-1 text-sm">Resumen general del evento</p>
+        <h1 class="text-2xl lg:text-3xl font-bold mt-2">{{ $esGlobal ? 'Análisis de Ventas' : 'Mi Análisis de Ventas' }}</h1>
+        <p class="text-gray-400 mt-1 text-sm">{{ $esGlobal ? 'Resumen general del evento' : 'Resumen de tus ventas' }}</p>
     </div>
 
     {{-- KPIs generales --}}
@@ -189,6 +189,38 @@
         </div>
     </div>
 
+    {{-- Créditos por banco --}}
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden mb-8">
+        <div class="p-5 border-b border-gray-800">
+            <h2 class="text-lg font-semibold">Créditos por banco</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
+                    <tr>
+                        <th class="p-4">Banco</th>
+                        <th class="p-4">Ventas</th>
+                        <th class="p-4">Valor</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800">
+                    @forelse($porBanco as $item)
+                        <tr>
+                            <td class="p-4">{{ $item->banco }}</td>
+                            <td class="p-4">{{ $item->total_ventas }}</td>
+                            <td class="p-4 text-emerald-400">$ {{ number_format($item->total_valor, 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-gray-500">Sin créditos registrados todavía</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if($esGlobal)
     {{-- Ranking de concesionarios --}}
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden mb-8">
         <div class="p-5 border-b border-gray-800">
@@ -224,17 +256,19 @@
             </table>
         </div>
     </div>
+    @endif
 
     {{-- Ranking de asesores --}}
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden mb-8">
         <div class="p-5 border-b border-gray-800">
-            <h2 class="text-lg font-semibold">Ranking de asesores comerciales</h2>
+            <h2 class="text-lg font-semibold">{{ $esGlobal ? 'Ranking de asesores comerciales' : 'Tus asesores comerciales' }}</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
                         <th class="p-4">Asesor</th>
+                        <th class="p-4">Concesionario</th>
                         <th class="p-4">Ventas</th>
                         <th class="p-4">Valor</th>
                     </tr>
@@ -243,12 +277,13 @@
                     @forelse($porAsesor as $item)
                         <tr>
                             <td class="p-4">{{ $item->asesorComercial->nombre ?? '—' }}</td>
+                            <td class="p-4">{{ $item->asesorComercial->concesionario->nombre ?? '—' }}</td>
                             <td class="p-4">{{ $item->total_ventas }}</td>
                             <td class="p-4 text-emerald-400">$ {{ number_format($item->total_valor, 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="p-8 text-center text-gray-500">Sin datos todavía</td>
+                            <td colspan="4" class="p-8 text-center text-gray-500">Sin datos todavía</td>
                         </tr>
                     @endforelse
                 </tbody>

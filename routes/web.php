@@ -59,6 +59,10 @@ Route::get('/ventas/analisis', [VentaController::class, 'analisis'])
     ->name('ventas.analisis')
     ->middleware(['auth', 'role:admin']);
 
+Route::get('/ventas/mi-analisis', [VentaController::class, 'analisisPropio'])
+    ->name('ventas.mi-analisis')
+    ->middleware(['auth', 'role:concesionario']);
+
 Route::resource('ventas', VentaController::class)
     ->only(['create', 'store', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);
