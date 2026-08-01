@@ -868,6 +868,58 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($admin)->get('/ventas/mi-analisis')->assertForbidden();
     }
 
+    public function test_ventas_analisis_filtra_por_rango_de_fechas(): void
+    {
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Fecha Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'FEC1', 'nombre' => 'Asesor Fecha', 'concesionario_id' => $conc->id]);
+        $vehiculoAyer = Vehiculo::create(['placa' => 'FEC001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $vehiculoHoy = Vehiculo::create(['placa' => 'FEC002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $conc->id]);
+        $compradorAyer = \App\Models\Comprador::create(['identificacion' => 'CCFEC1', 'nombre' => 'Comprador Fecha Ayer']);
+        $compradorHoy = \App\Models\Comprador::create(['identificacion' => 'CCFEC2', 'nombre' => 'Comprador Fecha Hoy']);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorAyer->id,
+            'vehiculo_id' => $vehiculoAyer->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now()->subDay(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorHoy->id,
+            'vehiculo_id' => $vehiculoHoy->id,
+            'concesionario_vende_id' => $conc->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 5000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        $hoy = now()->format('Y-m-d');
+
+        $sinFiltro = $this->actingAs($admin)->get('/ventas/analisis');
+        $sinFiltro->assertOk();
+        $sinFiltro->assertSee('6.000');
+
+        $conFiltro = $this->actingAs($admin)->get("/ventas/analisis?fecha_desde={$hoy}&fecha_hasta={$hoy}");
+        $conFiltro->assertOk();
+        $conFiltro->assertSee('5.000');
+        $conFiltro->assertDontSee('1.000');
+
+        $usuarioPropio = $this->makeUser('concesionario', $conc);
+        $miAnalisisFiltrado = $this->actingAs($usuarioPropio)->get("/ventas/mi-analisis?fecha_desde={$hoy}&fecha_hasta={$hoy}");
+        $miAnalisisFiltrado->assertOk();
+        $miAnalisisFiltrado->assertSee('5.000');
+        $miAnalisisFiltrado->assertDontSee('1.000');
+    }
+
     public function test_ventas_index_muestra_ventas_y_valor_de_hoy(): void
     {
         $admin = $this->makeUser('admin');

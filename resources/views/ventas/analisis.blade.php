@@ -10,6 +10,21 @@
         <p class="text-gray-400 mt-1 text-sm">{{ $esGlobal ? 'Resumen general del evento' : 'Resumen de tus ventas' }}</p>
     </div>
 
+    <form method="GET" class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-wrap items-end gap-3">
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">Desde</label>
+            <input type="date" name="fecha_desde" value="{{ $fechaDesde }}" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">Hasta</label>
+            <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-sm font-medium transition">Filtrar</button>
+        @if($fechaDesde || $fechaHasta)
+            <a href="{{ url()->current() }}" class="text-xs text-gray-400 hover:text-white transition px-1 py-1.5">✕ Limpiar</a>
+        @endif
+    </form>
+
     {{-- KPIs generales --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 lg:p-5">

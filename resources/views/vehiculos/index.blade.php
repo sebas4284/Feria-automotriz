@@ -154,7 +154,7 @@
                             <option value="Dentro del área" {{ request('ubicacion') == 'Dentro del área' ? 'selected' : '' }}>Dentro del área</option>
                             <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
                         </select>
-                        <p x-show="q.trim() !== ''" class="text-xs text-amber-400 mt-1">Se ignora mientras haya texto en Buscar</p>
+                        <p x-show="q.trim() !== ''" x-cloak class="text-xs text-amber-400 mt-1">Se ignora mientras haya texto en Buscar</p>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">Concesionario</label>
@@ -394,7 +394,7 @@
                     <option value="Dentro del área" {{ request('ubicacion') == 'Dentro del área' ? 'selected' : '' }}>Dentro del área</option>
                     <option value="Fuera del área"  {{ request('ubicacion') == 'Fuera del área'  ? 'selected' : '' }}>Fuera del área</option>
                 </select>
-                <p x-show="q.trim() !== ''" class="text-xs text-amber-400 mt-1">Se ignora mientras haya texto en Buscar</p>
+                <p x-show="q.trim() !== ''" x-cloak class="text-xs text-amber-400 mt-1">Se ignora mientras haya texto en Buscar</p>
             </div>
             <div class="w-44">
                 <label class="block text-xs text-gray-400 mb-1">Concesionario</label>

@@ -294,4 +294,8 @@
 
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => window.scrollRestore());
+</script>
+
 @endsection

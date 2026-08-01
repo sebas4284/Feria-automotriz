@@ -185,20 +185,25 @@ class VentaController extends Controller
         return view('ventas.eliminadas', compact('eliminadas'));
     }
 
-    public function analisis()
+    public function analisis(Request $request)
     {
-        $ventas = Venta::with('vehiculo:id,concesionario_id')->get(['id', 'vehiculo_id', 'concesionario_vende_id', 'valor']);
+        $query = $this->aplicarFiltroFecha(Venta::query(), $request);
 
-        $ventasCruzadas = Venta::with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
+        $ventas = (clone $query)->with('vehiculo:id,concesionario_id')->get(['id', 'vehiculo_id', 'concesionario_vende_id', 'valor']);
+
+        $ventasCruzadas = (clone $query)
+            ->with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
             ->get()
             ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
             ->values();
 
-        return view('ventas.analisis', $this->calcularResumenVentas(Venta::query()) + [
-            'porAsesor' => $this->rankingAsesores(),
+        return view('ventas.analisis', $this->calcularResumenVentas($query) + [
+            'porAsesor' => $this->rankingAsesores(null, $query),
             'rankingConcesionarios' => $this->rankingPorConcesionario($ventas),
             'ventasCruzadas' => $ventasCruzadas,
             'esGlobal' => true,
+            'fechaDesde' => $request->fecha_desde,
+            'fechaHasta' => $request->fecha_hasta,
         ]);
     }
 
@@ -206,18 +211,29 @@ class VentaController extends Controller
     {
         $user = $request->user();
 
-        $ventasCruzadas = Venta::visibleTo($user)
+        $query = $this->aplicarFiltroFecha(Venta::visibleTo($user), $request);
+
+        $ventasCruzadas = (clone $query)
             ->with(['vehiculo.concesionario', 'concesionarioVende', 'comprador'])
             ->get()
             ->filter(fn ($v) => $v->vehiculo && $v->vehiculo->concesionario_id !== $v->concesionario_vende_id)
             ->values();
 
-        return view('ventas.analisis', $this->calcularResumenVentas(Venta::visibleTo($user)) + [
-            'porAsesor' => $this->rankingAsesores($user->concesionarioIdPropio()),
+        return view('ventas.analisis', $this->calcularResumenVentas($query) + [
+            'porAsesor' => $this->rankingAsesores($user->concesionarioIdPropio(), $query),
             'rankingConcesionarios' => null,
             'ventasCruzadas' => $ventasCruzadas,
             'esGlobal' => false,
+            'fechaDesde' => $request->fecha_desde,
+            'fechaHasta' => $request->fecha_hasta,
         ]);
+    }
+
+    private function aplicarFiltroFecha($query, Request $request)
+    {
+        return $query
+            ->when($request->filled('fecha_desde'), fn ($q) => $q->whereDate('fecha_venta', '>=', $request->fecha_desde))
+            ->when($request->filled('fecha_hasta'), fn ($q) => $q->whereDate('fecha_venta', '<=', $request->fecha_hasta));
     }
 
     private function calcularResumenVentas($query): array
@@ -257,9 +273,10 @@ class VentaController extends Controller
         return compact('totalVentas', 'valorTotal', 'promedioVenta', 'ventasPorDia', 'porFormaPago', 'porBanco');
     }
 
-    private function rankingAsesores(?int $concesionarioId = null)
+    private function rankingAsesores(?int $concesionarioId = null, $query = null)
     {
-        $query = Venta::selectRaw('asesor_comercial_id, COUNT(*) as total_ventas, SUM(valor) as total_valor')
+        $query = (clone ($query ?? Venta::query()))
+            ->selectRaw('asesor_comercial_id, COUNT(*) as total_ventas, SUM(valor) as total_valor')
             ->with('asesorComercial.concesionario')
             ->groupBy('asesor_comercial_id')
             ->orderByDesc('total_ventas');
