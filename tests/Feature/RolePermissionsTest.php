@@ -752,6 +752,67 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($aseguradora)->get('/')->assertRedirect(route('ventas.index'));
     }
 
+    public function test_ventas_create_solo_muestra_vehiculos_del_propio_concesionario(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'Dueño Propio', 'peso_asignacion' => 1, 'activo' => true]);
+        $otro = Concesionario::create(['nombre' => 'Otro Dueño', 'peso_asignacion' => 1, 'activo' => true]);
+        Vehiculo::create(['placa' => 'PRO001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+        Vehiculo::create(['placa' => 'AJE001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $otro->id]);
+        $usuario = $this->makeUser('concesionario', $conc);
+
+        $response = $this->actingAs($usuario)->get('/ventas/create');
+
+        $response->assertOk();
+        $response->assertSee('PRO001');
+        $response->assertDontSee('AJE001');
+    }
+
+    public function test_no_se_puede_reportar_venta_de_vehiculo_de_otro_concesionario(): void
+    {
+        $conc = Concesionario::create(['nombre' => 'Dueño Real', 'peso_asignacion' => 1, 'activo' => true]);
+        $otro = Concesionario::create(['nombre' => 'No Dueño', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'ND1', 'nombre' => 'Asesor No Dueño', 'concesionario_id' => $otro->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'NOD100', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $conc->id]);
+        $usuarioAjeno = $this->makeUser('concesionario', $otro);
+
+        $this->actingAs($usuarioAjeno)->post('/ventas', [
+            'comprador_identificacion' => 'CCNOD1',
+            'comprador_nombre' => 'Comprador No Dueño',
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $otro->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 50000000,
+            'fecha_venta' => now()->format('Y-m-d'),
+            'forma_pago' => 'Contado',
+        ])->assertForbidden();
+
+        $this->assertDatabaseCount('ventas', 0);
+        $this->assertSame('Disponible', $vehiculo->fresh()->estado);
+    }
+
+    public function test_dueno_puede_reportar_venta_atribuyendola_a_otro_concesionario_vendedor(): void
+    {
+        $dueno = Concesionario::create(['nombre' => 'Dueño Cruzado', 'peso_asignacion' => 1, 'activo' => true]);
+        $vendedor = Concesionario::create(['nombre' => 'Vendedor Cruzado', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'CRZ1', 'nombre' => 'Asesor Cruzado', 'concesionario_id' => $vendedor->id]);
+        $vehiculo = Vehiculo::create(['placa' => 'DUE001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Disponible', 'concesionario_id' => $dueno->id]);
+        $usuarioDueno = $this->makeUser('concesionario', $dueno);
+
+        $this->actingAs($usuarioDueno)->post('/ventas', [
+            'comprador_identificacion' => 'CCDUE1',
+            'comprador_nombre' => 'Comprador Dueño',
+            'vehiculo_id' => $vehiculo->id,
+            'concesionario_vende_id' => $vendedor->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 50000000,
+            'fecha_venta' => now()->format('Y-m-d'),
+            'forma_pago' => 'Contado',
+        ])->assertRedirect();
+
+        $venta = \App\Models\Venta::where('vehiculo_id', $vehiculo->id)->firstOrFail();
+        $this->assertSame($vendedor->id, $venta->concesionario_vende_id);
+    }
+
     public function test_venta_cruzada_es_visible_para_el_concesionario_dueno_del_vehiculo(): void
     {
         $vendedor = Concesionario::create(['nombre' => 'Magnata', 'peso_asignacion' => 1, 'activo' => true]);
@@ -782,21 +843,21 @@ class RolePermissionsTest extends TestCase
         $this->actingAs($usuarioVendedor)->get('/ventas')->assertSee('CRZ001');
         $this->actingAs($usuarioAjeno)->get('/ventas')->assertDontSee('CRZ001');
 
-        // El dueño puede consultarla pero no editarla ni eliminarla.
+        // El dueño puede consultarla y ahora también editarla/eliminarla.
         $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}")->assertOk();
-        $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}/edit")->assertForbidden();
-        $this->actingAs($usuarioDueno)->delete("/ventas/{$venta->id}")->assertForbidden();
+        $this->actingAs($usuarioDueno)->get("/ventas/{$venta->id}/edit")->assertOk();
 
-        // El listado tampoco le muestra los botones de Editar/Eliminar al dueño.
+        // El listado sí le muestra los botones de Editar/Eliminar al dueño.
         $listadoDueno = $this->actingAs($usuarioDueno)->get('/ventas');
-        $listadoDueno->assertDontSee("/ventas/{$venta->id}/edit", false);
-        $listadoDueno->assertDontSee('name="motivo"', false);
+        $listadoDueno->assertSee("/ventas/{$venta->id}/edit", false);
+        $listadoDueno->assertSee('name="motivo"', false);
 
-        // Quien la vendió sí puede editarla/eliminarla, y el listado se lo muestra.
-        $this->actingAs($usuarioVendedor)->get("/ventas/{$venta->id}/edit")->assertOk();
+        // Quien la vendió ahora solo la ve de forma informativa: no puede editarla ni eliminarla.
+        $this->actingAs($usuarioVendedor)->get("/ventas/{$venta->id}/edit")->assertForbidden();
+        $this->actingAs($usuarioVendedor)->delete("/ventas/{$venta->id}")->assertForbidden();
         $listadoVendedor = $this->actingAs($usuarioVendedor)->get('/ventas');
-        $listadoVendedor->assertSee("/ventas/{$venta->id}/edit", false);
-        $listadoVendedor->assertSee('name="motivo"', false);
+        $listadoVendedor->assertDontSee("/ventas/{$venta->id}/edit", false);
+        $listadoVendedor->assertDontSee('name="motivo"', false);
 
         // El dashboard del dueño también cuenta esta venta cruzada.
         $this->actingAs($usuarioDueno)->get('/dashboard')->assertOk();

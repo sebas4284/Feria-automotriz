@@ -18,7 +18,7 @@ class VentaController extends Controller
 {
     public function index(Request $request)
     {
-        $ventas = Venta::with(['cliente', 'vehiculo', 'comprador', 'concesionarioVende', 'asesorComercial'])
+        $ventas = Venta::with(['cliente', 'vehiculo.concesionario', 'comprador', 'concesionarioVende', 'asesorComercial'])
             ->visibleTo($request->user())
             ->latest()
             ->get();
@@ -35,9 +35,10 @@ class VentaController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('create', Venta::class);
-
         $validated = $request->validate($this->rules());
+
+        $vehiculoSeleccionado = Vehiculo::findOrFail($validated['vehiculo_id']);
+        $this->authorize('create', [Venta::class, $vehiculoSeleccionado]);
 
         $venta = DB::transaction(function () use ($validated, $request) {
             $vehiculo = Vehiculo::lockForUpdate()->findOrFail($validated['vehiculo_id']);
@@ -248,9 +249,18 @@ class VentaController extends Controller
 
     private function formData(?Venta $venta = null): array
     {
+        $user = auth()->user();
+
         $clientes = Cliente::orderBy('nombre')->get();
 
-        $vehiculosQuery = Vehiculo::with('concesionario')->where('estado', 'Disponible');
+        $vehiculosQuery = Vehiculo::with('concesionario')->where(function ($q) use ($user) {
+            $q->where('estado', 'Disponible');
+
+            if (! $user->isAdmin()) {
+                $q->where('concesionario_id', $user->concesionarioIdPropio());
+            }
+        });
+
         if ($venta) {
             $vehiculosQuery->orWhere('id', $venta->vehiculo_id);
         }
