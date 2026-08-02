@@ -280,8 +280,8 @@
         <div class="p-5 border-b border-gray-800">
             <h2 class="text-lg font-semibold">Ranking de concesionarios</h2>
             <p class="text-xs text-gray-500 mt-1">
-                "Vendidas" = autos que vendió este concesionario (propios o de otro). "De su inventario" = autos suyos que vendió otro concesionario (venta cruzada).
-                El total de "Vendidos" que ves en Vehículos para un concesionario dueño es la suma de estas dos columnas: lo que vendió él mismo + lo que vendió otro de su inventario.
+                "Vendidas (como vendedor)" = todo lo que vendió este concesionario, sea su propio auto o el de otro (venta cruzada). "De su inventario" = autos suyos que vendió otro concesionario.
+                <strong class="text-gray-400">"Total vendidos (propios)"</strong> es el que coincide con el "Vendidos" que ves en Vehículos para este concesionario: sus autos vendidos por él mismo + los suyos vendidos por otro.
             </p>
         </div>
 
@@ -294,9 +294,15 @@
                         <p class="text-emerald-400 font-bold text-sm">$ {{ number_format($item['total_valor'], 0, ',', '.') }}</p>
                     </div>
                     <div class="space-y-1 text-xs text-gray-400">
-                        <p>Vendidas: <span class="text-gray-200">{{ $item['vendidas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span></p>
-                        <p>De su inventario: <span class="text-gray-200">{{ $item['cruzadas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['cruzadas_valor'], 0, ',', '.') }})</span></p>
-                        <p>Total autos: <span class="text-gray-200 font-semibold">{{ $item['total_ventas'] }}</span></p>
+                        <p>
+                            Vendidas (como vendedor): <span class="text-gray-200">{{ $item['vendidas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span>
+                            @if($item['vendidas_ajenas'] > 0)
+                                <span class="text-gray-600">— {{ $item['vendidas_propias'] }} propias + {{ $item['vendidas_ajenas'] }} de otro concesionario</span>
+                            @endif
+                        </p>
+                        <p>De su inventario (vendidas por otro): <span class="text-gray-200">{{ $item['cruzadas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['cruzadas_valor'], 0, ',', '.') }})</span></p>
+                        <p>Total vendidos (propios): <span class="text-gray-200 font-semibold">{{ $item['total_propios_vendidos'] }}</span> <span class="text-gray-600">— coincide con "Vendidos" en Vehículos</span></p>
+                        <p>Total ventas (vendió + inventario propio vendido por otro): <span class="text-gray-200 font-semibold">{{ $item['total_ventas'] }}</span></p>
                     </div>
                 </div>
             @empty
@@ -312,7 +318,8 @@
                         <th class="p-4">Concesionario</th>
                         <th class="p-4">Vendidas (como vendedor)</th>
                         <th class="p-4">De su inventario (vendidas por otro)</th>
-                        <th class="p-4">Total autos</th>
+                        <th class="p-4">Total vendidos (propios)</th>
+                        <th class="p-4">Total ventas</th>
                         <th class="p-4">Total $</th>
                     </tr>
                 </thead>
@@ -320,14 +327,23 @@
                     @forelse($rankingConcesionarios as $item)
                         <tr>
                             <td class="p-4 font-medium">{{ $item['nombre'] }}</td>
-                            <td class="p-4">{{ $item['vendidas_ventas'] }} <span class="text-gray-500">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span></td>
+                            <td class="p-4">
+                                {{ $item['vendidas_ventas'] }} <span class="text-gray-500">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span>
+                                @if($item['vendidas_ajenas'] > 0)
+                                    <br><span class="text-xs text-gray-500">{{ $item['vendidas_propias'] }} propias + {{ $item['vendidas_ajenas'] }} de otro concesionario</span>
+                                @endif
+                            </td>
                             <td class="p-4">{{ $item['cruzadas_ventas'] }} <span class="text-gray-500">(${{ number_format($item['cruzadas_valor'], 0, ',', '.') }})</span></td>
-                            <td class="p-4 font-semibold">{{ $item['total_ventas'] }}</td>
+                            <td class="p-4 font-semibold">
+                                {{ $item['total_propios_vendidos'] }}
+                                <br><span class="text-xs text-gray-500 font-normal">= "Vendidos" en Vehículos</span>
+                            </td>
+                            <td class="p-4">{{ $item['total_ventas'] }}</td>
                             <td class="p-4 text-emerald-400 font-semibold">$ {{ number_format($item['total_valor'], 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-gray-500">Sin datos todavía</td>
+                            <td colspan="6" class="p-8 text-center text-gray-500">Sin datos todavía</td>
                         </tr>
                     @endforelse
                 </tbody>

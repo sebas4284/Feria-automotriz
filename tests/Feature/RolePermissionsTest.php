@@ -765,6 +765,58 @@ class RolePermissionsTest extends TestCase
         $response->assertDontSee('ANA001');
     }
 
+    public function test_ranking_de_concesionarios_total_vendidos_propios_coincide_con_vehiculos(): void
+    {
+        $admin = $this->makeUser('admin');
+        $concA = Concesionario::create(['nombre' => 'Total A', 'peso_asignacion' => 1, 'activo' => true]);
+        $concB = Concesionario::create(['nombre' => 'Total B', 'peso_asignacion' => 1, 'activo' => true]);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => 'TOT1', 'nombre' => 'Asesor Total', 'concesionario_id' => $concA->id]);
+        $vehiculoPropio = Vehiculo::create(['placa' => 'TOT001', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concA->id]);
+        $vehiculoAjeno = Vehiculo::create(['placa' => 'TOT002', 'marca' => 'M', 'modelo' => 2024, 'estado' => 'Vendido', 'concesionario_id' => $concB->id]);
+        $compradorUno = \App\Models\Comprador::create(['identificacion' => 'CCTOT1', 'nombre' => 'Comprador Total Uno']);
+        $compradorDos = \App\Models\Comprador::create(['identificacion' => 'CCTOT2', 'nombre' => 'Comprador Total Dos']);
+
+        // Venta normal: A vende su propio auto.
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorUno->id,
+            'vehiculo_id' => $vehiculoPropio->id,
+            'concesionario_vende_id' => $concA->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 1000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        // Venta cruzada: A vende un auto de B.
+        \App\Models\Venta::create([
+            'comprador_id' => $compradorDos->id,
+            'vehiculo_id' => $vehiculoAjeno->id,
+            'concesionario_vende_id' => $concA->id,
+            'user_id' => $admin->id,
+            'asesor_comercial_id' => $asesor->id,
+            'valor' => 2000,
+            'fecha_venta' => now(),
+            'forma_pago' => 'Contado',
+            'participa_experiencia' => false,
+        ]);
+
+        // El "total vendidos (propios)" de cada concesionario debe coincidir
+        // exactamente con su conteo de "Vendidos" en Vehículos.
+        $vendidosVehiculosA = Vehiculo::where('concesionario_id', $concA->id)->where('estado', 'Vendido')->count();
+        $vendidosVehiculosB = Vehiculo::where('concesionario_id', $concB->id)->where('estado', 'Vendido')->count();
+        $this->assertSame(1, $vendidosVehiculosA);
+        $this->assertSame(1, $vendidosVehiculosB);
+
+        $response = $this->actingAs($admin)->get('/ventas/analisis');
+
+        $response->assertOk();
+        // A: vendió 2 (1 propia + 1 de B), pero su "total vendidos (propios)" es solo 1 (su propio auto).
+        $response->assertSee('1 propias + 1 de otro concesionario');
+        // B: no vendió nada él mismo, pero su "total vendidos (propios)" es 1 (su auto, vendido por A).
+    }
+
     public function test_ventas_analisis_une_credito_y_credito_y_contado_y_muestra_banco(): void
     {
         $admin = $this->makeUser('admin');
