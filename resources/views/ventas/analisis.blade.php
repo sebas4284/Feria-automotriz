@@ -323,7 +323,7 @@
                             <td class="p-4">{{ $item['vendidas_ventas'] }} <span class="text-gray-500">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span></td>
                             <td class="p-4 font-semibold">
                                 {{ $item['inventario_ventas'] }} <span class="text-gray-500 font-normal">(${{ number_format($item['inventario_valor'], 0, ',', '.') }})</span>
-                                <br><span class="text-xs text-gray-500 font-normal">= "Vendidos" en Vehículos</span>
+                
                             </td>
                             <td class="p-4">{{ $item['total_ventas'] }}</td>
                             <td class="p-4 text-emerald-400 font-semibold">$ {{ number_format($item['total_valor'], 0, ',', '.') }}</td>

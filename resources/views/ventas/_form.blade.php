@@ -267,7 +267,7 @@ function ventaForm() {
         asesorSeleccionado: {{ Js::from(old('asesor_comercial_id', $venta->asesor_comercial_id ?? '')) }},
         formaPago: {{ Js::from(old('forma_pago', $venta->forma_pago ?? '')) }},
         tieneRetoma: {{ Js::from((bool) old('tiene_retoma', $venta->tiene_retoma ?? false)) }},
-        participaExperiencia: {{ Js::from((bool) old('participa_experiencia', $venta->participa_experiencia ?? false)) }},
+        participaExperiencia: {{ Js::from((bool) old('participa_experiencia', $venta->participa_experiencia ?? true)) }},
 
         init() {
             const v = this.vehiculos.find(v => v.id == this.vehiculoId);

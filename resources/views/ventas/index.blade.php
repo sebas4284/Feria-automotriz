@@ -30,6 +30,12 @@
                     </svg>
                 </a>
             @endif
+            <a href="{{ route('ventas.exportar') }}" title="Descargar Excel"
+                class="w-11 h-11 bg-gray-800 hover:bg-gray-700 rounded-2xl flex items-center justify-center transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+            </a>
             <a href="{{ route('ventas.create') }}"
                 class="w-11 h-11 bg-blue-600 hover:bg-blue-700 rounded-2xl flex items-center justify-center transition">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
@@ -198,6 +204,10 @@
                     Mi análisis
                 </a>
             @endif
+            <a href="{{ route('ventas.exportar') }}"
+                class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
+                Descargar Excel
+            </a>
             @include('partials._boton-crear', ['href' => route('ventas.create'), 'texto' => 'Nueva Venta'])
         </div>
     </div>

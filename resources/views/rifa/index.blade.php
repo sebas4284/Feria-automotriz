@@ -7,9 +7,17 @@
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 
-    <div>
-        <h1 class="text-2xl font-bold">Experiencia</h1>
-        <p class="text-gray-400 text-sm mt-0.5">Participantes registrados para el sorteo</p>
+    <div class="flex items-start justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">Experiencia</h1>
+            <p class="text-gray-400 text-sm mt-0.5">Participantes registrados para el sorteo</p>
+        </div>
+        <a href="{{ route('rifa.exportar') }}" title="Descargar Excel"
+            class="w-11 h-11 bg-gray-800 hover:bg-gray-700 rounded-2xl flex items-center justify-center transition shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+        </a>
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 flex items-center justify-between">
@@ -82,9 +90,15 @@
 {{-- ===================== VISTA DESKTOP ===================== --}}
 <div class="hidden lg:block">
 
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold">Experiencia</h1>
-        <p class="text-gray-400">Participantes registrados para el sorteo ({{ $ventas->count() }} boletas)</p>
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Experiencia</h1>
+            <p class="text-gray-400">Participantes registrados para el sorteo ({{ $ventas->count() }} boletas)</p>
+        </div>
+        <a href="{{ route('rifa.exportar') }}"
+            class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl transition text-sm font-medium">
+            Descargar Excel
+        </a>
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-2xl px-4 py-3 flex items-center justify-between mb-6 max-w-xs">

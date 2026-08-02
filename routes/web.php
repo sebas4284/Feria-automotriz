@@ -63,6 +63,10 @@ Route::get('/ventas/mi-analisis', [VentaController::class, 'analisisPropio'])
     ->name('ventas.mi-analisis')
     ->middleware(['auth', 'role:concesionario']);
 
+Route::get('/ventas/exportar', [VentaController::class, 'exportar'])
+    ->name('ventas.exportar')
+    ->middleware(['auth', 'role:admin,concesionario,aseguradora']);
+
 Route::get('/ventas/{venta}/contrato', [VentaController::class, 'contrato'])
     ->name('ventas.contrato')
     ->middleware(['auth', 'role:admin,concesionario']);
@@ -91,6 +95,10 @@ Route::resource('asesores', AsesorComercialController::class)
 //Rifa / Experiencia
 Route::get('/rifa', [RifaController::class, 'index'])
     ->name('rifa.index')
+    ->middleware(['auth', 'role:admin,staff']);
+
+Route::get('/rifa/exportar', [RifaController::class, 'exportar'])
+    ->name('rifa.exportar')
     ->middleware(['auth', 'role:admin,staff']);
 
 //Turnos de llegada de concesionarios

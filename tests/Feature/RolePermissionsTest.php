@@ -1039,6 +1039,41 @@ class RolePermissionsTest extends TestCase
         $response->assertSee('$ 50.000.000');
     }
 
+    public function test_ventas_exportar_descarga_excel_para_roles_permitidos(): void
+    {
+        \Maatwebsite\Excel\Facades\Excel::fake();
+
+        $admin = $this->makeUser('admin');
+        $conc = Concesionario::create(['nombre' => 'Export Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $concesionarioUser = $this->makeUser('concesionario', $conc);
+        $aseguradora = $this->makeUser('aseguradora');
+        $asesor = AsesorComercial::create(['cedula' => 'EXP1', 'nombre' => 'Asesor Export', 'concesionario_id' => $conc->id]);
+        $asesorUser = $this->makeAsesorUser($asesor);
+
+        $this->actingAs($admin)->get('/ventas/exportar')->assertOk();
+        $this->actingAs($concesionarioUser)->get('/ventas/exportar')->assertOk();
+        $this->actingAs($aseguradora)->get('/ventas/exportar')->assertOk();
+        $this->actingAs($asesorUser)->get('/ventas/exportar')->assertForbidden();
+
+        \Maatwebsite\Excel\Facades\Excel::assertDownloaded('ventas-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function test_rifa_exportar_descarga_excel_solo_para_admin_y_staff(): void
+    {
+        \Maatwebsite\Excel\Facades\Excel::fake();
+
+        $admin = $this->makeUser('admin');
+        $staff = $this->makeUser('staff');
+        $conc = Concesionario::create(['nombre' => 'Rifa Export Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $concesionarioUser = $this->makeUser('concesionario', $conc);
+
+        $this->actingAs($admin)->get('/rifa/exportar')->assertOk();
+        $this->actingAs($staff)->get('/rifa/exportar')->assertOk();
+        $this->actingAs($concesionarioUser)->get('/rifa/exportar')->assertForbidden();
+
+        \Maatwebsite\Excel\Facades\Excel::assertDownloaded('rifa-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
     public function test_aseguradora_ve_todas_las_ventas_pero_no_puede_crear_editar_ni_eliminar(): void
     {
         $concA = Concesionario::create(['nombre' => 'Concesionario A', 'peso_asignacion' => 1, 'activo' => true]);

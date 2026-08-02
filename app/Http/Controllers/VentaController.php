@@ -10,9 +10,11 @@ use App\Models\Concesionario;
 use App\Models\Venta;
 use App\Models\VentaEliminada;
 use App\Models\Vehiculo;
+use App\Exports\VentasExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VentaController extends Controller
 {
@@ -24,6 +26,16 @@ class VentaController extends Controller
             ->get();
 
         return view('ventas.index', compact('ventas'));
+    }
+
+    public function exportar(Request $request)
+    {
+        $ventas = Venta::with(['cliente', 'vehiculo.concesionario', 'comprador', 'concesionarioVende', 'asesorComercial'])
+            ->visibleTo($request->user())
+            ->latest()
+            ->get();
+
+        return Excel::download(new VentasExport($ventas), 'ventas-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function create()
