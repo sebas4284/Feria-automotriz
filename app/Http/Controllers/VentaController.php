@@ -339,8 +339,10 @@ class VentaController extends Controller
     }
 
     /**
-     * Ranking por concesionario: separa "vendidas como vendedor" de "de su
-     * inventario, vendidas por otro concesionario" (venta cruzada).
+     * Ranking por concesionario: "vendidas (como vendedor)" = autos de OTRO
+     * concesionario que este vendió. "De su inventario" = sus propios autos
+     * vendidos, sea por él mismo o por otro — coincide con "Vendidos" en
+     * Vehículos.
      */
     private function rankingPorConcesionario($ventas)
     {
@@ -350,17 +352,16 @@ class VentaController extends Controller
             $duenoId = $venta->vehiculo?->concesionario_id;
             $esPropia = $duenoId && $duenoId === $vendedorId;
 
-            $porConcesionario[$vendedorId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'vendidas_propias' => 0, 'cruzadas_ventas' => 0, 'cruzadas_valor' => 0];
-            $porConcesionario[$vendedorId]['vendidas_ventas']++;
-            $porConcesionario[$vendedorId]['vendidas_valor'] += $venta->valor;
-            if ($esPropia) {
-                $porConcesionario[$vendedorId]['vendidas_propias']++;
+            if (! $esPropia) {
+                $porConcesionario[$vendedorId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'inventario_ventas' => 0, 'inventario_valor' => 0];
+                $porConcesionario[$vendedorId]['vendidas_ventas']++;
+                $porConcesionario[$vendedorId]['vendidas_valor'] += $venta->valor;
             }
 
-            if ($duenoId && $duenoId !== $vendedorId) {
-                $porConcesionario[$duenoId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'vendidas_propias' => 0, 'cruzadas_ventas' => 0, 'cruzadas_valor' => 0];
-                $porConcesionario[$duenoId]['cruzadas_ventas']++;
-                $porConcesionario[$duenoId]['cruzadas_valor'] += $venta->valor;
+            if ($duenoId) {
+                $porConcesionario[$duenoId] ??= ['vendidas_ventas' => 0, 'vendidas_valor' => 0, 'inventario_ventas' => 0, 'inventario_valor' => 0];
+                $porConcesionario[$duenoId]['inventario_ventas']++;
+                $porConcesionario[$duenoId]['inventario_valor'] += $venta->valor;
             }
         }
 
@@ -370,13 +371,10 @@ class VentaController extends Controller
             'nombre' => $nombres[$id] ?? 'Sin concesionario',
             'vendidas_ventas' => $d['vendidas_ventas'],
             'vendidas_valor' => $d['vendidas_valor'],
-            'vendidas_propias' => $d['vendidas_propias'],
-            'vendidas_ajenas' => $d['vendidas_ventas'] - $d['vendidas_propias'],
-            'cruzadas_ventas' => $d['cruzadas_ventas'],
-            'cruzadas_valor' => $d['cruzadas_valor'],
-            'total_ventas' => $d['vendidas_ventas'] + $d['cruzadas_ventas'],
-            'total_valor' => $d['vendidas_valor'] + $d['cruzadas_valor'],
-            'total_propios_vendidos' => $d['vendidas_propias'] + $d['cruzadas_ventas'],
+            'inventario_ventas' => $d['inventario_ventas'],
+            'inventario_valor' => $d['inventario_valor'],
+            'total_ventas' => $d['vendidas_ventas'] + $d['inventario_ventas'],
+            'total_valor' => $d['vendidas_valor'] + $d['inventario_valor'],
         ])->sortByDesc('total_ventas')->values();
     }
 
