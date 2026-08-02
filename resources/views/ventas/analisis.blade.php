@@ -10,19 +10,21 @@
         <p class="text-gray-400 mt-1 text-sm">{{ $esGlobal ? 'Resumen general del evento' : 'Resumen de tus ventas' }}</p>
     </div>
 
-    <form method="GET" class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-wrap items-end gap-3">
-        <div>
+    <form method="GET" class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+        <div class="w-full sm:w-auto">
             <label class="block text-xs text-gray-400 mb-1">Desde</label>
-            <input type="date" name="fecha_desde" value="{{ $fechaDesde }}" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            <input type="date" name="fecha_desde" value="{{ $fechaDesde }}" class="w-full sm:w-auto bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
         </div>
-        <div>
+        <div class="w-full sm:w-auto">
             <label class="block text-xs text-gray-400 mb-1">Hasta</label>
-            <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
+            <input type="date" name="fecha_hasta" value="{{ $fechaHasta }}" class="w-full sm:w-auto bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500">
         </div>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-sm font-medium transition">Filtrar</button>
-        @if($fechaDesde || $fechaHasta)
-            <a href="{{ url()->current() }}" class="text-xs text-gray-400 hover:text-white transition px-1 py-1.5">✕ Limpiar</a>
-        @endif
+        <div class="flex items-center gap-3">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-5 py-1.5 rounded-lg text-sm font-medium transition">Filtrar</button>
+            @if($fechaDesde || $fechaHasta)
+                <a href="{{ url()->current() }}" class="text-xs text-gray-400 hover:text-white transition px-1 py-1.5">✕ Limpiar</a>
+            @endif
+        </div>
     </form>
 
     {{-- KPIs generales --}}
@@ -175,7 +177,27 @@
             <div class="p-5 border-b border-gray-800">
                 <h2 class="text-lg font-semibold">Detalle por forma de pago</h2>
             </div>
-            <div class="overflow-x-auto">
+
+            {{-- Tarjetas (móvil) --}}
+            <div class="lg:hidden divide-y divide-gray-800">
+                @forelse($porFormaPago as $item)
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="font-medium text-sm">{{ $item->forma_pago }}</p>
+                            <p class="text-xs text-gray-400">{{ $valorTotal > 0 ? number_format($item->total_valor / $valorTotal * 100, 1) : 0 }}%</p>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-500">
+                            <p>{{ $item->total_ventas }} ventas</p>
+                            <p class="text-emerald-400 font-semibold">$ {{ number_format($item->total_valor, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-8 text-center text-gray-500">Sin datos todavía</div>
+                @endforelse
+            </div>
+
+            {{-- Tabla (escritorio) --}}
+            <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                         <tr>
@@ -209,7 +231,24 @@
         <div class="p-5 border-b border-gray-800">
             <h2 class="text-lg font-semibold">Créditos por banco</h2>
         </div>
-        <div class="overflow-x-auto">
+
+        {{-- Tarjetas (móvil) --}}
+        <div class="lg:hidden divide-y divide-gray-800">
+            @forelse($porBanco as $item)
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-sm">{{ $item->banco }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ $item->total_ventas }} ventas</p>
+                    </div>
+                    <p class="text-emerald-400 font-semibold text-sm">$ {{ number_format($item->total_valor, 0, ',', '.') }}</p>
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">Sin créditos registrados todavía</div>
+            @endforelse
+        </div>
+
+        {{-- Tabla (escritorio) --}}
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
@@ -242,7 +281,28 @@
             <h2 class="text-lg font-semibold">Ranking de concesionarios</h2>
             <p class="text-xs text-gray-500 mt-1">"Vendidas" = autos que vendió este concesionario. "De su inventario" = autos suyos que vendió otro concesionario (venta cruzada).</p>
         </div>
-        <div class="overflow-x-auto">
+
+        {{-- Tarjetas (móvil) --}}
+        <div class="lg:hidden divide-y divide-gray-800">
+            @forelse($rankingConcesionarios as $item)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="font-semibold text-sm">{{ $item['nombre'] }}</p>
+                        <p class="text-emerald-400 font-bold text-sm">$ {{ number_format($item['total_valor'], 0, ',', '.') }}</p>
+                    </div>
+                    <div class="space-y-1 text-xs text-gray-400">
+                        <p>Vendidas: <span class="text-gray-200">{{ $item['vendidas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['vendidas_valor'], 0, ',', '.') }})</span></p>
+                        <p>De su inventario: <span class="text-gray-200">{{ $item['cruzadas_ventas'] }}</span> <span class="text-gray-600">(${{ number_format($item['cruzadas_valor'], 0, ',', '.') }})</span></p>
+                        <p>Total autos: <span class="text-gray-200 font-semibold">{{ $item['total_ventas'] }}</span></p>
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">Sin datos todavía</div>
+            @endforelse
+        </div>
+
+        {{-- Tabla (escritorio) --}}
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
@@ -278,7 +338,27 @@
         <div class="p-5 border-b border-gray-800">
             <h2 class="text-lg font-semibold">{{ $esGlobal ? 'Ranking de asesores comerciales' : 'Tus asesores comerciales' }}</h2>
         </div>
-        <div class="overflow-x-auto">
+
+        {{-- Tarjetas (móvil) --}}
+        <div class="lg:hidden divide-y divide-gray-800">
+            @forelse($porAsesor as $item)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="font-medium text-sm">{{ $item->asesorComercial->nombre ?? '—' }}</p>
+                        <p class="text-emerald-400 font-semibold text-sm">$ {{ number_format($item->total_valor, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <p>{{ $item->asesorComercial->concesionario->nombre ?? '—' }}</p>
+                        <p>{{ $item->total_ventas }} ventas</p>
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">Sin datos todavía</div>
+            @endforelse
+        </div>
+
+        {{-- Tabla (escritorio) --}}
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
@@ -312,7 +392,29 @@
             <h2 class="text-lg font-semibold">Ventas cruzadas</h2>
             <p class="text-xs text-gray-500 mt-1">Ventas donde el concesionario que vendió el auto no es el dueño del vehículo.</p>
         </div>
-        <div class="overflow-x-auto">
+
+        {{-- Tarjetas (móvil) --}}
+        <div class="lg:hidden divide-y divide-gray-800">
+            @forelse($ventasCruzadas as $venta)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="font-mono text-sm">{{ $venta->vehiculo->placa }}</p>
+                        <p class="text-emerald-400 font-semibold text-sm">$ {{ number_format($venta->valor, 0, ',', '.') }}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-1 gap-x-2 text-xs text-gray-500">
+                        <p class="truncate">Dueño: <span class="text-gray-300">{{ $venta->vehiculo->concesionario->nombre ?? '—' }}</span></p>
+                        <p class="truncate">Vendedor: <span class="text-gray-300">{{ $venta->concesionarioVende->nombre ?? '—' }}</span></p>
+                        <p class="truncate">Comprador: <span class="text-gray-300">{{ $venta->comprador->nombre ?? '—' }}</span></p>
+                        <p class="truncate">Fecha: <span class="text-gray-300">{{ $venta->fecha_venta?->format('d/m/Y') }}</span></p>
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">No hay ventas cruzadas registradas</div>
+            @endforelse
+        </div>
+
+        {{-- Tabla (escritorio) --}}
+        <div class="hidden lg:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="bg-gray-800 text-gray-400 text-sm uppercase">
                     <tr>
