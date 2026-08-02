@@ -23,6 +23,10 @@
                     class="bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl transition font-medium text-sm">
                     Editar
                 </a>
+                <a href="{{ route('ventas.contrato', $venta) }}"
+                    class="bg-gray-800 hover:bg-gray-700 px-4 py-2.5 rounded-xl transition font-medium text-sm">
+                    Generar contrato
+                </a>
             @endcan
             @can('delete', $venta)
                 @include('ventas._eliminar_boton', [

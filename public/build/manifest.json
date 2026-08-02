@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-7qjBrgom.css",
+    "file": "assets/app-Bl6gZEyH.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,9 +9,18 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-G2lqQZpI.js",
+    "file": "assets/app-Ce4pL2aB.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/cedula-scanner.js"
+    ]
+  },
+  "resources/js/cedula-scanner.js": {
+    "file": "assets/cedula-scanner-BYpXRyzR.js",
+    "name": "cedula-scanner",
+    "src": "resources/js/cedula-scanner.js",
+    "isDynamicEntry": true
   }
 }

@@ -14,6 +14,13 @@ class Comprador extends Model
         'telefono',
         'direccion',
         'correo',
+        'tipo_documento',
+        'lugar_expedicion',
+        'fecha_expedicion',
+    ];
+
+    protected $casts = [
+        'fecha_expedicion' => 'date',
     ];
 
     public function ventas()

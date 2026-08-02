@@ -13,5 +13,6 @@ window.pushBanner = pushBanner;
 window.liveSearch = liveSearch;
 window.liveRefresh = liveRefresh;
 window.scrollRestore = scrollRestore;
+window.cargarCedulaScanner = () => import('./cedula-scanner.js');
 
 Alpine.start();

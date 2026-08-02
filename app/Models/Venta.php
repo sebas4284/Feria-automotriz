@@ -27,6 +27,13 @@ class Venta extends Model
         'observaciones',
         'participa_experiencia',
         'detalle_experiencia',
+        'ciudad_firma',
+        'dias_traspaso',
+        'porcentaje_gastos_vendedor',
+        'porcentaje_gastos_comprador',
+        'clausula_penal_smmlv',
+        'testigo_nombre',
+        'testigo_identificacion',
     ];
 
     protected $casts = [

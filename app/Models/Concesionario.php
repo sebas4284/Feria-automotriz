@@ -13,6 +13,7 @@ class Concesionario extends Model
     'sheet_tab_id',
     'nit',
     'ciudad',
+    'direccion',
     'telefono',
     'email',
     'responsable',

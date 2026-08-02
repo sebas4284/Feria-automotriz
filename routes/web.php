@@ -63,6 +63,18 @@ Route::get('/ventas/mi-analisis', [VentaController::class, 'analisisPropio'])
     ->name('ventas.mi-analisis')
     ->middleware(['auth', 'role:concesionario']);
 
+Route::get('/ventas/{venta}/contrato', [VentaController::class, 'contrato'])
+    ->name('ventas.contrato')
+    ->middleware(['auth', 'role:admin,concesionario']);
+
+Route::patch('/ventas/{venta}/contrato', [VentaController::class, 'actualizarContrato'])
+    ->name('ventas.contrato.update')
+    ->middleware(['auth', 'role:admin,concesionario']);
+
+Route::get('/ventas/{venta}/contrato/pdf', [VentaController::class, 'contratoPdf'])
+    ->name('ventas.contrato.pdf')
+    ->middleware(['auth', 'role:admin,concesionario']);
+
 Route::resource('ventas', VentaController::class)
     ->only(['create', 'store', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario']);

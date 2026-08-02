@@ -185,6 +185,56 @@ class VentaController extends Controller
         return view('ventas.eliminadas', compact('eliminadas'));
     }
 
+    public function contrato(Venta $venta)
+    {
+        $this->authorize('update', $venta);
+
+        $venta->load(['comprador', 'vehiculo.concesionario', 'concesionarioVende']);
+
+        return view('ventas.contrato', compact('venta'));
+    }
+
+    public function actualizarContrato(Request $request, Venta $venta)
+    {
+        $this->authorize('update', $venta);
+
+        $validated = $request->validate([
+            'comprador_tipo_documento' => 'required|in:CC,CE,NIT,Pasaporte',
+            'comprador_lugar_expedicion' => 'nullable|string|max:255',
+            'comprador_fecha_expedicion' => 'nullable|date|before_or_equal:today',
+            'ciudad_firma' => 'nullable|string|max:255',
+            'dias_traspaso' => 'nullable|integer|min:0|max:365',
+            'porcentaje_gastos_vendedor' => 'nullable|integer|min:0|max:100',
+            'porcentaje_gastos_comprador' => 'nullable|integer|min:0|max:100',
+            'clausula_penal_smmlv' => 'nullable|numeric|min:0',
+            'testigo_nombre' => 'nullable|string|max:255',
+            'testigo_identificacion' => 'nullable|string|max:50',
+        ]);
+
+        $venta->comprador->update([
+            'tipo_documento' => $validated['comprador_tipo_documento'],
+            'lugar_expedicion' => $validated['comprador_lugar_expedicion'] ?? null,
+            'fecha_expedicion' => $validated['comprador_fecha_expedicion'] ?? null,
+        ]);
+
+        $venta->update(collect($validated)->except([
+            'comprador_tipo_documento', 'comprador_lugar_expedicion', 'comprador_fecha_expedicion',
+        ])->toArray());
+
+        return redirect()
+            ->route('ventas.contrato', $venta)
+            ->with('success', 'Datos del contrato guardados');
+    }
+
+    public function contratoPdf(Venta $venta)
+    {
+        $this->authorize('update', $venta);
+
+        $venta->load(['comprador', 'vehiculo.concesionario', 'concesionarioVende']);
+
+        return view('ventas.contrato-pdf', compact('venta'));
+    }
+
     public function analisis(Request $request)
     {
         $query = $this->aplicarFiltroFecha(Venta::query(), $request);
