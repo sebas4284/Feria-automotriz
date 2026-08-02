@@ -9,7 +9,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Ce4pL2aB.js",
+    "file": "assets/app-Dmq40QOf.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -18,7 +18,7 @@
     ]
   },
   "resources/js/cedula-scanner.js": {
-    "file": "assets/cedula-scanner-BYpXRyzR.js",
+    "file": "assets/cedula-scanner-Bqb1G4ui.js",
     "name": "cedula-scanner",
     "src": "resources/js/cedula-scanner.js",
     "isDynamicEntry": true

@@ -31,7 +31,7 @@
     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
         <h2 class="text-lg font-semibold mb-1">Escanear cédula (reverso)</h2>
         <p class="text-xs text-gray-500 mb-4">
-            Lee el código de barras del reverso de la cédula digital para confirmar que coincide con el comprador registrado. No reemplaza los datos de la venta, solo ayuda a verificar y a completar el tipo de documento.
+            Lee el código de barras del reverso de la cédula (digital nueva o laminada antigua) para confirmar que coincide con el comprador registrado. No reemplaza los datos de la venta, solo ayuda a verificar y a completar el tipo de documento.
         </p>
 
         <button type="button" @click="escaneando ? detenerEscaneo() : iniciarEscaneo()"
@@ -41,16 +41,27 @@
         </button>
 
         <p x-show="errorEscaneo" x-cloak class="text-sm text-red-400 mt-3" x-text="errorEscaneo"></p>
+        <p x-show="avisoSinDeteccion" x-cloak class="text-sm text-amber-400 mt-3">
+            No se detectó ningún código legible. Si tu cédula es del formato antiguo (laminada, sin chip), puede que su código no sea compatible con la cámara/ángulo actual — intenta de nuevo o ingresa los datos manualmente.
+        </p>
 
         <div x-show="escaneando" x-cloak class="mt-4">
             <video x-ref="video" class="w-full max-w-sm rounded-xl border border-gray-700" muted playsinline></video>
         </div>
 
         <div x-show="lecturaTexto" x-cloak class="mt-4 bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <p class="text-sm text-gray-300">
-                Cédula leída: <span class="font-semibold" x-text="(lectura.nombres + ' ' + lectura.apellidos).trim() || '—'"></span>
-                — <span class="font-mono" x-text="lectura.identificacion || '—'"></span>
-            </p>
+            <template x-if="lectura.formato === 'antigua'">
+                <p class="text-sm text-gray-300">
+                    Cédula de formato antiguo detectada — número de documento: <span class="font-mono font-semibold" x-text="lectura.identificacion || '—'"></span>.
+                    El nombre no viene en este código; verifícalo o escríbelo a mano.
+                </p>
+            </template>
+            <template x-if="lectura.formato !== 'antigua'">
+                <p class="text-sm text-gray-300">
+                    Cédula leída: <span class="font-semibold" x-text="(lectura.nombres + ' ' + lectura.apellidos).trim() || '—'"></span>
+                    — <span class="font-mono" x-text="lectura.identificacion || '—'"></span>
+                </p>
+            </template>
             <p class="text-xs mt-1" :class="coincideConComprador ? 'text-emerald-400' : 'text-amber-400'">
                 <span x-show="coincideConComprador">Coincide con el comprador registrado ({{ $venta->comprador->nombre }}).</span>
                 <span x-show="!coincideConComprador">No coincide con el comprador registrado ({{ $venta->comprador->nombre }} — {{ $venta->comprador->identificacion }}). Verifica antes de continuar.</span>
@@ -154,9 +165,11 @@ function contratoForm() {
         compradorIdentificacion: {{ Js::from($venta->comprador->identificacion ?? '') }},
         escaneando: false,
         errorEscaneo: '',
+        avisoSinDeteccion: false,
         lecturaTexto: '',
-        lectura: { nombres: '', apellidos: '', identificacion: '' },
+        lectura: { formato: '', nombres: '', apellidos: '', identificacion: '' },
         controlesEscaneo: null,
+        timeoutSinDeteccion: null,
 
         get coincideConComprador() {
             return this.lectura.identificacion && this.lectura.identificacion === this.compradorIdentificacion;
@@ -164,16 +177,24 @@ function contratoForm() {
 
         async iniciarEscaneo() {
             this.errorEscaneo = '';
+            this.avisoSinDeteccion = false;
             this.escaneando = true;
+
+            this.timeoutSinDeteccion = setTimeout(() => {
+                if (!this.lecturaTexto) {
+                    this.avisoSinDeteccion = true;
+                }
+            }, 8000);
 
             try {
                 const modulo = await window.cargarCedulaScanner();
                 await this.$nextTick();
-                this.controlesEscaneo = await modulo.iniciarEscaneoPdf417(
+                this.controlesEscaneo = await modulo.iniciarEscaneoCedula(
                     this.$refs.video,
-                    (texto) => {
+                    (texto, formato) => {
+                        this.avisoSinDeteccion = false;
                         this.lecturaTexto = texto;
-                        this.lectura = modulo.parsearCedulaPdf417(texto);
+                        this.lectura = modulo.parsearCedula(texto, formato);
                         if (!this.tipoDocumento) {
                             this.tipoDocumento = 'CC';
                         }
@@ -185,6 +206,7 @@ function contratoForm() {
             } catch (error) {
                 this.errorEscaneo = 'No se pudo acceder a la cámara: ' + (error?.message ?? error);
                 this.escaneando = false;
+                clearTimeout(this.timeoutSinDeteccion);
             }
         },
 
@@ -192,6 +214,7 @@ function contratoForm() {
             this.controlesEscaneo?.stop();
             this.controlesEscaneo = null;
             this.escaneando = false;
+            clearTimeout(this.timeoutSinDeteccion);
         },
     };
 }
