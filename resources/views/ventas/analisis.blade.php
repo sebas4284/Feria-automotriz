@@ -279,7 +279,10 @@
     <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden mb-8">
         <div class="p-5 border-b border-gray-800">
             <h2 class="text-lg font-semibold">Ranking de concesionarios</h2>
-            <p class="text-xs text-gray-500 mt-1">"Vendidas" = autos que vendió este concesionario. "De su inventario" = autos suyos que vendió otro concesionario (venta cruzada).</p>
+            <p class="text-xs text-gray-500 mt-1">
+                "Vendidas" = autos que vendió este concesionario (propios o de otro). "De su inventario" = autos suyos que vendió otro concesionario (venta cruzada).
+                El total de "Vendidos" que ves en Vehículos para un concesionario dueño es la suma de estas dos columnas: lo que vendió él mismo + lo que vendió otro de su inventario.
+            </p>
         </div>
 
         {{-- Tarjetas (móvil) --}}
