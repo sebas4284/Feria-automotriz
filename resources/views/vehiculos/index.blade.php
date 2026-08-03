@@ -30,6 +30,12 @@
     </div>
 @endif
 
+@if(session('error'))
+    <div class="mb-4 bg-red-500/10 border border-red-500/30 rounded-2xl px-4 py-3 text-red-400 text-sm">
+        {{ session('error') }}
+    </div>
+@endif
+
 {{-- ===================== VISTA MÓVIL ===================== --}}
 <div class="lg:hidden space-y-5">
 

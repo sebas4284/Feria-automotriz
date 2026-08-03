@@ -47,6 +47,14 @@
 
 @endif
 
+@if (session('error'))
+
+    <div class="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400 text-sm">
+        {{ session('error') }}
+    </div>
+
+@endif
+
 <form
     action="{{ route('vehiculos.update', $vehiculo) }}"
     method="POST"

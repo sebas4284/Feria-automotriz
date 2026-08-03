@@ -432,9 +432,16 @@ class RolePermissionsTest extends TestCase
             'ubicacion' => 'Dentro del área',
         ];
 
-        $this->actingAs($admin)->put("/vehiculos/{$vehiculo->id}", $payload)->assertRedirect();
+        $this->actingAs($admin)->put("/vehiculos/{$vehiculo->id}", $payload)
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Este vehículo tiene una venta registrada; para cambiar su estado primero resuelve la venta desde el módulo de Ventas.');
 
         $this->assertEquals('Vendido', $vehiculo->fresh()->estado);
+
+        // El mensaje debe verse realmente en la pantalla de edición, no solo
+        // quedar en la sesión sin renderizarse.
+        $this->actingAs($admin)->get("/vehiculos/{$vehiculo->id}/edit")
+            ->assertSee('para cambiar su estado primero resuelve la venta desde el módulo de Ventas');
     }
 
     public function test_no_se_puede_eliminar_vehiculo_con_venta_registrada(): void
@@ -460,6 +467,15 @@ class RolePermissionsTest extends TestCase
 
         $this->assertDatabaseHas('vehiculos', ['id' => $vehiculo->id]);
         $this->assertDatabaseHas('ventas', ['vehiculo_id' => $vehiculo->id]);
+
+        // El mensaje de error debe verse realmente en la pantalla a la que
+        // redirige (back(), que en el navegador vuelve al índice de
+        // Vehículos), no solo quedar en la sesión sin renderizarse.
+        $this->actingAs($admin)
+            ->from('/vehiculos')
+            ->followingRedirects()
+            ->delete("/vehiculos/{$vehiculo->id}")
+            ->assertSee('No se puede eliminar: este vehículo tiene una venta registrada');
     }
 
     public function test_vehiculo_estado_invalido_falla_validacion(): void
