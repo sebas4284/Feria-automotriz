@@ -62,15 +62,7 @@ class LeadAssignmentService
      */
     public function redistribuirVencidosSinAsesor(array $nombresConcesionarios, User $por, string $motivo): \Illuminate\Support\Collection
     {
-        $objetivos = Concesionario::where('activo', true)
-            ->whereIn('nombre', $nombresConcesionarios)
-            ->get()
-            ->sortBy(fn (Concesionario $c) => array_search($c->nombre, $nombresConcesionarios))
-            ->values();
-
-        if ($objetivos->isEmpty()) {
-            return collect();
-        }
+        $objetivos = $this->resolverObjetivosONinguno($nombresConcesionarios);
 
         $candidatos = Lead::vencidoOSinAsesor()->oldest('assigned_at')->get();
 
@@ -80,6 +72,42 @@ class LeadAssignmentService
 
             return $lead->fresh();
         });
+    }
+
+    /**
+     * Resuelve cada nombre configurado a exactamente un concesionario activo,
+     * en el mismo orden dado. Si algún nombre no matchea ningún concesionario
+     * activo, o matchea más de uno (nombres duplicados, p. ej. por la
+     * sincronización con el sheet), lanza en vez de repartir con una lista
+     * incompleta o desalineada — así el round-robin nunca colapsa en
+     * silencio a menos destinos de los configurados.
+     */
+    private function resolverObjetivosONinguno(array $nombresConcesionarios): \Illuminate\Support\Collection
+    {
+        $porNombre = Concesionario::where('activo', true)
+            ->whereIn('nombre', $nombresConcesionarios)
+            ->get()
+            ->groupBy('nombre');
+
+        $problemas = [];
+
+        foreach ($nombresConcesionarios as $nombre) {
+            $cantidad = $porNombre->get($nombre, collect())->count();
+
+            if ($cantidad === 0) {
+                $problemas[] = "\"{$nombre}\" (no existe ningún concesionario activo con ese nombre exacto)";
+            } elseif ($cantidad > 1) {
+                $problemas[] = "\"{$nombre}\" ({$cantidad} concesionarios activos coinciden con ese nombre)";
+            }
+        }
+
+        if (! empty($problemas)) {
+            throw new \RuntimeException(
+                'No se pudo redistribuir, revisa en Concesionarios: '.implode('; ', $problemas).'.'
+            );
+        }
+
+        return collect($nombresConcesionarios)->map(fn (string $nombre) => $porNombre->get($nombre)->first())->values();
     }
 
     public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null): void

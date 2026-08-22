@@ -20,6 +20,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl p-4 text-red-400 text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if(auth()->user()->isAdmin())
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -27,6 +33,12 @@
                 <p class="text-3xl font-bold text-red-400">{{ $candidatosCount }}</p>
                 <p class="text-gray-500 text-xs mt-1">
                     De {{ $totalVencidos }} vencidos y {{ $totalSinAsesor }} sin asesor en total (algunos cumplen ambas condiciones, por eso no suman directo).
+                </p>
+                <p class="text-xs mt-2">
+                    Se repartirá entre:
+                    @foreach($resolucionObjetivos as $r)
+                        <span class="{{ $r['cantidad'] === 1 ? 'text-gray-300' : 'text-red-400 font-semibold' }}">{{ $r['nombre'] }}@if($r['cantidad'] === 0) (no encontrado o inactivo) @elseif($r['cantidad'] > 1) ({{ $r['cantidad'] }} duplicados) @endif</span>{{ ! $loop->last ? ', ' : '' }}
+                    @endforeach
                 </p>
             </div>
             <form method="POST" action="{{ route('leads.redistribucion.ejecutar') }}"

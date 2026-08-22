@@ -7,6 +7,7 @@ use App\Models\Concesionario;
 use App\Models\Lead;
 use App\Models\LeadReassignment;
 use App\Models\User;
+use App\Notifications\LeadsRedistribuidos;
 use App\Notifications\NuevoLeadAsignado;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -77,6 +78,52 @@ class LeadRedistributionTest extends TestCase
         $this->assertSame($asesor->id, $sano->fresh()->asesor_comercial_id);
 
         $this->assertSame(8, LeadReassignment::where('motivo', LeadController::REDISTRIBUCION_MOTIVO)->count());
+
+        // Una sola notificación consolidada por concesionario destino, no una por lead
+        // (con 8 leads repartidos esto evita mandar 8+ notificaciones sincrónicas por request).
+        Notification::assertSentTimes(LeadsRedistribuidos::class, 3);
+        Notification::assertSentTimes(NuevoLeadAsignado::class, 0);
+    }
+
+    public function test_redistribution_fails_loudly_and_moves_nothing_when_a_target_concesionario_is_missing_or_inactive(): void
+    {
+        Notification::fake();
+
+        $vfMotors = Concesionario::create(['nombre' => 'VF Motors', 'peso_asignacion' => 1, 'activo' => true]);
+        $auto2 = Concesionario::create(['nombre' => 'Auto 2 SAS', 'peso_asignacion' => 1, 'activo' => true]);
+        // "Puntokar multimarcas SAS" quedó inactivo (p.ej. por un desajuste al sincronizar el sheet).
+        Concesionario::create(['nombre' => 'Puntokar multimarcas SAS', 'peso_asignacion' => 1, 'activo' => false]);
+        $otro = Concesionario::create(['nombre' => 'Otro Concesionario', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = User::factory()->create(['rol' => 'admin']);
+
+        $candidato = Lead::create([
+            'meta_lead_id' => 'candidato',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(100),
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
+
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('Puntokar multimarcas SAS', session('error'));
+        $this->assertSame(0, LeadReassignment::count());
+        $this->assertSame($otro->id, $candidato->fresh()->concesionario_id);
+        Notification::assertNothingSent();
+    }
+
+    public function test_admin_sees_the_redistribution_screen_with_the_resolved_targets_preview(): void
+    {
+        $this->createTargetConcesionarios();
+        $admin = User::factory()->create(['rol' => 'admin']);
+
+        $this->actingAs($admin)->get(route('leads.redistribucion'))
+            ->assertOk()
+            ->assertSee('Se repartirá entre')
+            ->assertSee('VF Motors')
+            ->assertSee('Auto 2 SAS')
+            ->assertSee('Puntokar multimarcas SAS');
     }
 
     public function test_concesionario_user_cannot_execute_redistribution(): void
@@ -108,9 +155,26 @@ class LeadRedistributionTest extends TestCase
             'motivo' => LeadController::REDISTRIBUCION_MOTIVO,
         ]);
 
+        $leadDeAuto2 = Lead::create([
+            'meta_lead_id' => 'l2-para-auto2',
+            'full_name' => 'Lead Para Auto2',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $auto2->id,
+            'assigned_at' => now()->subHours(100),
+        ]);
+
+        \App\Models\LeadReassignment::create([
+            'lead_id' => $leadDeAuto2->id,
+            'from_concesionario_id' => $vfMotors->id,
+            'to_concesionario_id' => $auto2->id,
+            'reassigned_by' => $admin->id,
+            'motivo' => LeadController::REDISTRIBUCION_MOTIVO,
+        ]);
+
         $this->actingAs($vfUser)->get(route('leads.redistribucion'))
             ->assertOk()
-            ->assertSee($lead->full_name ?: $lead->meta_lead_id);
+            ->assertSee($lead->full_name ?: $lead->meta_lead_id)
+            ->assertDontSee('Lead Para Auto2');
     }
 
     private function createTargetConcesionarios(): array

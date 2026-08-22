@@ -75,39 +75,66 @@ class LeadController extends Controller
         $candidatosCount = null;
         $totalVencidos = null;
         $totalSinAsesor = null;
+        $resolucionObjetivos = null;
 
         if ($request->user()->isAdmin()) {
             $candidatosCount = Lead::vencidoOSinAsesor()->count();
             $totalVencidos = Lead::vencido()->count();
             $totalSinAsesor = Lead::whereNull('asesor_comercial_id')->count();
+            $resolucionObjetivos = $this->resolucionObjetivosRedistribucion();
         }
 
-        return view('leads.redistribucion', compact('reassignments', 'candidatosCount', 'totalVencidos', 'totalSinAsesor'));
+        return view('leads.redistribucion', compact(
+            'reassignments', 'candidatosCount', 'totalVencidos', 'totalSinAsesor', 'resolucionObjetivos'
+        ));
     }
 
     public function redistribuirVencidos(Request $request, LeadAssignmentService $service, LeadNotifier $notifier)
     {
         $this->authorize('redistribuirVencidos', Lead::class);
 
-        $leads = $service->redistribuirVencidosSinAsesor(
-            config('leads.redistribution.target_concesionarios'),
-            $request->user(),
-            self::REDISTRIBUCION_MOTIVO
-        );
-
-        foreach ($leads as $lead) {
-            $notifier->notifyConcesionario($lead->concesionario, $lead);
+        try {
+            $leads = $service->redistribuirVencidosSinAsesor(
+                config('leads.redistribution.target_concesionarios'),
+                $request->user(),
+                self::REDISTRIBUCION_MOTIVO
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
         if ($leads->isEmpty()) {
             return back()->with('success', 'No hay leads vencidos sin asesor para redistribuir.');
         }
 
-        $resumen = $leads->countBy(fn (Lead $lead) => $lead->concesionario->nombre)
-            ->map(fn ($cantidad, $nombre) => "{$nombre}: {$cantidad}")
-            ->implode(', ');
+        $resumen = $leads->groupBy('concesionario_id')->map(function ($grupo) use ($notifier) {
+            $concesionario = $grupo->first()->concesionario;
+            $notifier->notifyLoteRedistribuido($concesionario, $grupo->count());
+
+            return "{$concesionario->nombre}: {$grupo->count()}";
+        })->implode(', ');
 
         return back()->with('success', "Se redistribuyeron {$leads->count()} leads ({$resumen}).");
+    }
+
+    /**
+     * Para mostrar en la pantalla, antes de ejecutar nada: qué concesionario
+     * activo matchea (o no) cada nombre configurado ahora mismo, así un
+     * nombre desalineado o inactivo se nota a simple vista antes de repartir.
+     */
+    private function resolucionObjetivosRedistribucion(): \Illuminate\Support\Collection
+    {
+        $nombres = config('leads.redistribution.target_concesionarios');
+
+        $porNombre = Concesionario::where('activo', true)
+            ->whereIn('nombre', $nombres)
+            ->get()
+            ->groupBy('nombre');
+
+        return collect($nombres)->map(fn (string $nombre) => [
+            'nombre' => $nombre,
+            'cantidad' => $porNombre->get($nombre, collect())->count(),
+        ]);
     }
 
     public function show(Lead $lead)
