@@ -48,4 +48,9 @@ class LeadPolicy
 
         return $user->isConcesionario() && $lead->concesionario_id === $user->concesionario_id;
     }
+
+    public function redistribuirVencidos(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

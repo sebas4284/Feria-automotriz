@@ -54,6 +54,33 @@ class LeadAssignmentService
         });
     }
 
+    /**
+     * Reparte en round-robin los leads vencidos y sin asesor de todo el sistema
+     * entre los concesionarios indicados (en el orden dado), sin importar a
+     * cuál concesionario pertenecen actualmente.
+     */
+    public function redistribuirVencidosSinAsesor(array $nombresConcesionarios, User $por, string $motivo): \Illuminate\Support\Collection
+    {
+        $objetivos = Concesionario::where('activo', true)
+            ->whereIn('nombre', $nombresConcesionarios)
+            ->get()
+            ->sortBy(fn (Concesionario $c) => array_search($c->nombre, $nombresConcesionarios))
+            ->values();
+
+        if ($objetivos->isEmpty()) {
+            return collect();
+        }
+
+        $candidatos = Lead::vencido()->whereNull('asesor_comercial_id')->oldest('assigned_at')->get();
+
+        return $candidatos->values()->map(function (Lead $lead, int $i) use ($objetivos, $por, $motivo) {
+            $destino = $objetivos[$i % $objetivos->count()];
+            $this->reassign($lead, $destino, $por, $motivo);
+
+            return $lead->fresh();
+        });
+    }
+
     public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null): void
     {
         DB::transaction(function () use ($lead, $to, $by, $motivo) {

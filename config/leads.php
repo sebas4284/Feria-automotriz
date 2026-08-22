@@ -15,6 +15,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Redistribución de leads vencidos sin asesor
+    |--------------------------------------------------------------------------
+    |
+    | Concesionarios (por nombre, en el orden en que reciben el reparto)
+    | entre los que se distribuyen en round-robin los leads vencidos y sin
+    | asesor de todo el sistema, cuando el admin dispara la redistribución.
+    |
+    */
+    'redistribution' => [
+        'target_concesionarios' => [
+            'VF Motors',
+            'Auto 2 SAS',
+            'Puntokar multimarcas SAS',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Sincronización con Google Sheets
     |--------------------------------------------------------------------------
     */

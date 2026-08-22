@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AsesorComercial;
 use App\Models\Concesionario;
 use App\Models\Lead;
+use App\Models\LeadReassignment;
 use App\Services\LeadAssignmentService;
 use App\Services\LeadNotifier;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
+    public const REDISTRIBUCION_MOTIVO = 'Redistribución: vencido sin asesor';
+
     private function filteredLeadsQuery(Request $request): Builder
     {
         $query = Lead::with(['concesionario', 'asesorComercial'])->visibleTo($request->user())->latest('created_time');
@@ -59,6 +62,46 @@ class LeadController extends Controller
             'leads.index',
             compact('leads', 'totalNuevos', 'totalVencidos', 'totalSinAsesor', 'totalContactados', 'concesionarios', 'asesoresPorConcesionario')
         );
+    }
+
+    public function redistribucion(Request $request)
+    {
+        $reassignments = LeadReassignment::with(['lead.concesionario', 'fromConcesionario', 'toConcesionario', 'reassignedBy'])
+            ->where('motivo', self::REDISTRIBUCION_MOTIVO)
+            ->visibleTo($request->user())
+            ->latest()
+            ->paginate(50);
+
+        $candidatosCount = $request->user()->isAdmin()
+            ? Lead::vencido()->whereNull('asesor_comercial_id')->count()
+            : null;
+
+        return view('leads.redistribucion', compact('reassignments', 'candidatosCount'));
+    }
+
+    public function redistribuirVencidos(Request $request, LeadAssignmentService $service, LeadNotifier $notifier)
+    {
+        $this->authorize('redistribuirVencidos', Lead::class);
+
+        $leads = $service->redistribuirVencidosSinAsesor(
+            config('leads.redistribution.target_concesionarios'),
+            $request->user(),
+            self::REDISTRIBUCION_MOTIVO
+        );
+
+        foreach ($leads as $lead) {
+            $notifier->notifyConcesionario($lead->concesionario, $lead);
+        }
+
+        if ($leads->isEmpty()) {
+            return back()->with('success', 'No hay leads vencidos sin asesor para redistribuir.');
+        }
+
+        $resumen = $leads->countBy(fn (Lead $lead) => $lead->concesionario->nombre)
+            ->map(fn ($cantidad, $nombre) => "{$nombre}: {$cantidad}")
+            ->implode(', ');
+
+        return back()->with('success', "Se redistribuyeron {$leads->count()} leads ({$resumen}).");
     }
 
     public function show(Lead $lead)

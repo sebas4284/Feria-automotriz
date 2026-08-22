@@ -20,6 +20,12 @@
             <h1 class="text-2xl lg:text-3xl font-bold">Leads</h1>
             <p class="text-gray-400 mt-1 text-sm">Leads capturados desde Meta Ads (sincronizados desde el sheet)</p>
         </div>
+        @if(auth()->user()->isAdmin() || auth()->user()->isConcesionario())
+            <a href="{{ route('leads.redistribucion') }}"
+                class="px-3 py-1.5 rounded-xl text-sm bg-gray-800 text-gray-300 hover:text-white transition">
+                Redistribución de leads
+            </a>
+        @endif
     </div>
 
     @if(session('success'))

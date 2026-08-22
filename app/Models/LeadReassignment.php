@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopedToConcesionario;
 use Illuminate\Database\Eloquent\Model;
 
 class LeadReassignment extends Model
 {
+    use ScopedToConcesionario;
+
     protected $fillable = [
         'lead_id',
         'from_concesionario_id',
@@ -13,6 +16,11 @@ class LeadReassignment extends Model
         'reassigned_by',
         'motivo',
     ];
+
+    public function concesionarioColumn(): string
+    {
+        return 'to_concesionario_id';
+    }
 
     public function lead()
     {

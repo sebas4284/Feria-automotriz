@@ -185,6 +185,14 @@ Route::delete('/catalogos/{catalogo}', [CatalogoController::class, 'destroy'])
     ->middleware(['auth', 'role:admin']);
 
 //Leads
+Route::get('leads/redistribucion', [LeadController::class, 'redistribucion'])
+    ->name('leads.redistribucion')
+    ->middleware(['auth', 'role:admin,concesionario']);
+
+Route::post('leads/redistribucion', [LeadController::class, 'redistribuirVencidos'])
+    ->name('leads.redistribucion.ejecutar')
+    ->middleware(['auth', 'role:admin']);
+
 Route::resource('leads', LeadController::class)
     ->only(['index', 'show', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'role:admin,concesionario,asesor']);
