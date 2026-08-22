@@ -15,6 +15,7 @@ class LeadReassignment extends Model
         'to_concesionario_id',
         'reassigned_by',
         'motivo',
+        'lote_id',
     ];
 
     public function concesionarioColumn(): string

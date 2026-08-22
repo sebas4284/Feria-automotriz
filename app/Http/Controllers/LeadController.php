@@ -66,11 +66,22 @@ class LeadController extends Controller
 
     public function redistribucion(Request $request)
     {
-        $reassignments = LeadReassignment::with(['lead.concesionario', 'fromConcesionario', 'toConcesionario', 'reassignedBy'])
-            ->where('motivo', self::REDISTRIBUCION_MOTIVO)
-            ->visibleTo($request->user())
-            ->latest()
-            ->paginate(50);
+        $baseQuery = fn () => LeadReassignment::where('motivo', self::REDISTRIBUCION_MOTIVO)
+            ->visibleTo($request->user());
+
+        // orderByDesc('id') en vez de latest(): created_at solo tiene precisión de
+        // segundo, y un reparto de muchos leads puede insertar varias filas en el
+        // mismo segundo — el id autoincremental sí refleja el orden real de inserción.
+        $ultimoLoteId = $baseQuery()->orderByDesc('id')->value('lote_id');
+
+        $mostrandoHistorial = $request->boolean('historial') || $ultimoLoteId === null;
+
+        $reassignments = $baseQuery()
+            ->with(['lead.concesionario', 'fromConcesionario', 'toConcesionario', 'reassignedBy'])
+            ->when(! $mostrandoHistorial, fn ($query) => $query->where('lote_id', $ultimoLoteId))
+            ->orderByDesc('id')
+            ->paginate(50)
+            ->withQueryString();
 
         $candidatosCount = null;
         $totalVencidos = null;
@@ -85,7 +96,7 @@ class LeadController extends Controller
         }
 
         return view('leads.redistribucion', compact(
-            'reassignments', 'candidatosCount', 'totalVencidos', 'totalSinAsesor', 'resolucionObjetivos'
+            'reassignments', 'candidatosCount', 'totalVencidos', 'totalSinAsesor', 'resolucionObjetivos', 'mostrandoHistorial'
         ));
     }
 

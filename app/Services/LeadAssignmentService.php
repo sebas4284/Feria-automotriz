@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\LeadReassignment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class LeadAssignmentService
 {
@@ -66,9 +67,11 @@ class LeadAssignmentService
 
         $candidatos = Lead::vencidoOSinAsesor()->oldest('assigned_at')->get();
 
-        return $candidatos->values()->map(function (Lead $lead, int $i) use ($objetivos, $por, $motivo) {
+        $loteId = (string) Str::uuid();
+
+        return $candidatos->values()->map(function (Lead $lead, int $i) use ($objetivos, $por, $motivo, $loteId) {
             $destino = $objetivos[$i % $objetivos->count()];
-            $this->reassign($lead, $destino, $por, $motivo);
+            $this->reassign($lead, $destino, $por, $motivo, $loteId);
 
             return $lead->fresh();
         });
@@ -110,15 +113,16 @@ class LeadAssignmentService
         return collect($nombresConcesionarios)->map(fn (string $nombre) => $porNombre->get($nombre)->first())->values();
     }
 
-    public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null): void
+    public function reassign(Lead $lead, Concesionario $to, User $by, ?string $motivo = null, ?string $loteId = null): void
     {
-        DB::transaction(function () use ($lead, $to, $by, $motivo) {
+        DB::transaction(function () use ($lead, $to, $by, $motivo, $loteId) {
             LeadReassignment::create([
                 'lead_id' => $lead->id,
                 'from_concesionario_id' => $lead->concesionario_id,
                 'to_concesionario_id' => $to->id,
                 'reassigned_by' => $by->id,
                 'motivo' => $motivo,
+                'lote_id' => $loteId,
             ]);
 
             $lead->update([

@@ -7,11 +7,28 @@
     <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl lg:text-3xl font-bold">Redistribución de leads</h1>
-            <p class="text-gray-400 mt-1 text-sm">Leads vencidos y sin asesor repartidos entre concesionarios</p>
+            <p class="text-gray-400 mt-1 text-sm">
+                @if($mostrandoHistorial)
+                    Historial completo de leads repartidos entre concesionarios
+                @else
+                    Lo que te tocó en el último reparto
+                @endif
+            </p>
         </div>
-        <a href="{{ route('leads.index') }}" class="px-3 py-1.5 rounded-xl text-sm bg-gray-800 text-gray-300 hover:text-white transition">
-            &larr; Volver a leads
-        </a>
+        <div class="flex gap-2">
+            @if($mostrandoHistorial)
+                <a href="{{ route('leads.redistribucion') }}" class="px-3 py-1.5 rounded-xl text-sm bg-gray-800 text-gray-300 hover:text-white transition">
+                    Ver solo el último reparto
+                </a>
+            @else
+                <a href="{{ route('leads.redistribucion', ['historial' => 1]) }}" class="px-3 py-1.5 rounded-xl text-sm bg-gray-800 text-gray-300 hover:text-white transition">
+                    Ver historial completo
+                </a>
+            @endif
+            <a href="{{ route('leads.index') }}" class="px-3 py-1.5 rounded-xl text-sm bg-gray-800 text-gray-300 hover:text-white transition">
+                &larr; Volver a leads
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -64,21 +81,38 @@
                         <th class="p-4">A</th>
                         <th class="p-4 hidden lg:table-cell">Reasignado por</th>
                         <th class="p-4">Fecha</th>
+                        <th class="p-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($reassignments as $reassignment)
                         <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                             <td class="p-4">{{ $reassignment->lead->full_name ?: ($reassignment->lead->meta_lead_id ?: 'Sin nombre') }}</td>
-                            <td class="p-4 hidden md:table-cell">{{ $reassignment->lead->phone_number ?: '—' }}</td>
+                            <td class="p-4 hidden md:table-cell">
+                                @if($reassignment->lead->phone_number)
+                                    <a href="{{ $reassignment->lead->whatsapp_url }}" target="_blank" rel="noopener" class="text-green-400 hover:text-green-300 hover:underline">{{ $reassignment->lead->phone_number }}</a>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="p-4">{{ $reassignment->fromConcesionario->nombre ?? '—' }}</td>
                             <td class="p-4">{{ $reassignment->toConcesionario->nombre ?? '—' }}</td>
                             <td class="p-4 hidden lg:table-cell">{{ $reassignment->reassignedBy->name ?? '—' }}</td>
                             <td class="p-4 whitespace-nowrap">{{ $reassignment->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="p-4">
+                                <a href="{{ route('leads.show', $reassignment->lead) }}"
+                                    title="Ver lead"
+                                    class="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition inline-flex">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="p-8 text-center text-gray-500">
+                            <td colspan="7" class="p-8 text-center text-gray-500">
                                 Todavía no se ha repartido ningún lead.
                             </td>
                         </tr>

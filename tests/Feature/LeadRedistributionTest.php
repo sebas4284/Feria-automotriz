@@ -126,6 +126,83 @@ class LeadRedistributionTest extends TestCase
             ->assertSee('Puntokar multimarcas SAS');
     }
 
+    public function test_redistribution_screen_shows_only_the_latest_batch_by_default_and_full_history_when_requested(): void
+    {
+        Notification::fake();
+
+        $this->createTargetConcesionarios();
+        $otro = Concesionario::create(['nombre' => 'Otro Concesionario', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = User::factory()->create(['rol' => 'admin']);
+
+        $leadViejo = Lead::create([
+            'meta_lead_id' => 'viejo',
+            'full_name' => 'Lead Viejo',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(300),
+        ]);
+
+        $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
+
+        // Simula que ya le asignaron asesor tras la primera tanda, para que no vuelva a calificar.
+        $leadViejo->refresh();
+        $asesor = \App\Models\AsesorComercial::create([
+            'cedula' => '1',
+            'nombre' => 'Asesor',
+            'concesionario_id' => $leadViejo->concesionario_id,
+        ]);
+        $leadViejo->update(['asesor_comercial_id' => $asesor->id]);
+
+        $leadNuevo = Lead::create([
+            'meta_lead_id' => 'nuevo',
+            'full_name' => 'Lead Nuevo',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(200),
+        ]);
+
+        $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
+
+        $this->actingAs($admin)->get(route('leads.redistribucion'))
+            ->assertOk()
+            ->assertSee('Lead Nuevo')
+            ->assertDontSee('Lead Viejo');
+
+        $this->actingAs($admin)->get(route('leads.redistribucion', ['historial' => 1]))
+            ->assertOk()
+            ->assertSee('Lead Nuevo')
+            ->assertSee('Lead Viejo');
+    }
+
+    public function test_redistribution_row_has_whatsapp_link_and_link_to_lead_show_page(): void
+    {
+        Notification::fake();
+
+        $this->createTargetConcesionarios();
+        $otro = Concesionario::create(['nombre' => 'Otro Concesionario', 'peso_asignacion' => 1, 'activo' => true]);
+        $admin = User::factory()->create(['rol' => 'admin']);
+
+        $lead = Lead::create([
+            'meta_lead_id' => 'con-telefono',
+            'full_name' => 'Cliente Con Telefono',
+            'phone_number' => '+573001234567',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $otro->id,
+            'assigned_at' => now()->subHours(100),
+        ]);
+
+        $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
+
+        $lead->refresh();
+
+        $this->actingAs($admin)->get(route('leads.redistribucion'))
+            ->assertOk()
+            ->assertSee('https://wa.me/573001234567', false)
+            ->assertSee(route('leads.show', $lead), false);
+    }
+
     public function test_concesionario_user_cannot_execute_redistribution(): void
     {
         $this->createTargetConcesionarios();
