@@ -65,6 +65,24 @@ class LeadRedistributionTest extends TestCase
             'assigned_at' => now()->subHour(),
         ]);
 
+        // Ya contactado (o cerrado) pero sin asesor registrado en el sistema:
+        // no debe tocarse aunque "sin asesor" fuera cierto — ya lo está gestionando alguien.
+        $contactadoSinAsesor = Lead::create([
+            'meta_lead_id' => 'contactado-sin-asesor',
+            'estado_gestion' => 'Contactado',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(300),
+        ]);
+
+        $perdidoSinAsesor = Lead::create([
+            'meta_lead_id' => 'perdido-sin-asesor',
+            'estado_gestion' => 'Perdido',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(300),
+        ]);
+
         $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
 
         $candidatos = array_merge($ambos, [$vencidoConAsesor, $recienteSinAsesor]);
@@ -77,12 +95,53 @@ class LeadRedistributionTest extends TestCase
         $this->assertSame($otro->id, $sano->fresh()->concesionario_id);
         $this->assertSame($asesor->id, $sano->fresh()->asesor_comercial_id);
 
+        $this->assertSame($otro->id, $contactadoSinAsesor->fresh()->concesionario_id, 'Contactado sin asesor no debe moverse');
+        $this->assertSame($otro->id, $perdidoSinAsesor->fresh()->concesionario_id, 'Perdido sin asesor no debe moverse');
+
         $this->assertSame(8, LeadReassignment::where('motivo', LeadController::REDISTRIBUCION_MOTIVO)->count());
 
         // Una sola notificación consolidada por concesionario destino, no una por lead
         // (con 8 leads repartidos esto evita mandar 8+ notificaciones sincrónicas por request).
         Notification::assertSentTimes(LeadsRedistribuidos::class, 3);
         Notification::assertSentTimes(NuevoLeadAsignado::class, 0);
+    }
+
+    public function test_redistribution_never_leaves_a_lead_at_its_own_starting_concesionario(): void
+    {
+        Notification::fake();
+
+        [$vfMotors, $auto2, $puntokar] = $this->createTargetConcesionarios();
+        $admin = User::factory()->create(['rol' => 'admin']);
+
+        // Un lead ya ubicado en cada uno de los 3 destinos configurados: el ciclo
+        // round-robin, si no se corrige, podría "reasignarlos" de vuelta a sí mismos.
+        $leadEnVf = Lead::create([
+            'meta_lead_id' => 'en-vf',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $vfMotors->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(100),
+        ]);
+        $leadEnAuto2 = Lead::create([
+            'meta_lead_id' => 'en-auto2',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $auto2->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(99),
+        ]);
+        $leadEnPuntokar = Lead::create([
+            'meta_lead_id' => 'en-puntokar',
+            'estado_gestion' => 'Nuevo',
+            'concesionario_id' => $puntokar->id,
+            'asesor_comercial_id' => null,
+            'assigned_at' => now()->subHours(98),
+        ]);
+
+        $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
+
+        $this->assertNotSame($vfMotors->id, $leadEnVf->fresh()->concesionario_id, 'el lead de VF debió moverse a otro');
+        $this->assertNotSame($auto2->id, $leadEnAuto2->fresh()->concesionario_id, 'el lead de Auto 2 debió moverse a otro');
+        $this->assertNotSame($puntokar->id, $leadEnPuntokar->fresh()->concesionario_id, 'el lead de Puntokar debió moverse a otro');
     }
 
     public function test_redistribution_fails_loudly_and_moves_nothing_when_a_target_concesionario_is_missing_or_inactive(): void

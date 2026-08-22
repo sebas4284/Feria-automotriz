@@ -71,6 +71,14 @@ class LeadAssignmentService
 
         return $candidatos->values()->map(function (Lead $lead, int $i) use ($objetivos, $por, $motivo, $loteId) {
             $destino = $objetivos[$i % $objetivos->count()];
+
+            // Si el turno del round-robin le tocaría al concesionario donde el lead ya
+            // está (p. ej. al re-correr sobre leads que ya quedaron parejos), se pasa al
+            // siguiente del ciclo — "redistribuir" siempre debe mover a otro distinto.
+            if ($destino->id === $lead->concesionario_id) {
+                $destino = $objetivos[($i + 1) % $objetivos->count()];
+            }
+
             $this->reassign($lead, $destino, $por, $motivo, $loteId);
 
             return $lead->fresh();

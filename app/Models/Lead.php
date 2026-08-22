@@ -77,9 +77,10 @@ class Lead extends Model
 
     public function scopeVencidoOSinAsesor(Builder $query): Builder
     {
-        return $query->where(function (Builder $q) {
-            $q->vencido()->orWhereNull('asesor_comercial_id');
-        });
+        return $query->whereIn('estado_gestion', ['Nuevo', 'Asignado'])
+            ->where(function (Builder $q) {
+                $q->vencido()->orWhereNull('asesor_comercial_id');
+            });
     }
 
     public function getVencidoAttribute(): bool
