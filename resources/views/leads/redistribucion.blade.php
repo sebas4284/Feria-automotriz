@@ -23,8 +23,11 @@
     @if(auth()->user()->isAdmin())
         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-                <p class="text-gray-400 text-sm">Leads vencidos y sin asesor listos para repartir</p>
+                <p class="text-gray-400 text-sm">Leads listos para repartir (vencidos o sin asesor)</p>
                 <p class="text-3xl font-bold text-red-400">{{ $candidatosCount }}</p>
+                <p class="text-gray-500 text-xs mt-1">
+                    De {{ $totalVencidos }} vencidos y {{ $totalSinAsesor }} sin asesor en total (algunos cumplen ambas condiciones, por eso no suman directo).
+                </p>
             </div>
             <form method="POST" action="{{ route('leads.redistribucion.ejecutar') }}"
                 onsubmit="return confirm('¿Repartir estos leads entre los concesionarios configurados?')">

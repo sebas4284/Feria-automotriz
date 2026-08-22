@@ -75,6 +75,13 @@ class Lead extends Model
             ->where('assigned_at', '<', now()->subHours((int) config('leads.staleness_hours')));
     }
 
+    public function scopeVencidoOSinAsesor(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->vencido()->orWhereNull('asesor_comercial_id');
+        });
+    }
+
     public function getVencidoAttribute(): bool
     {
         return in_array($this->estado_gestion, ['Nuevo', 'Asignado'], true)

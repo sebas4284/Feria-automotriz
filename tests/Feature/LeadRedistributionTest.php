@@ -16,55 +16,67 @@ class LeadRedistributionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_redistributes_stale_unassigned_leads_evenly_among_target_concesionarios(): void
+    public function test_admin_redistributes_leads_that_are_either_stale_or_unassigned_evenly_among_target_concesionarios(): void
     {
         Notification::fake();
 
         [$vfMotors, $auto2, $puntokar] = $this->createTargetConcesionarios();
         $otro = Concesionario::create(['nombre' => 'Otro Concesionario', 'peso_asignacion' => 1, 'activo' => true]);
         $admin = User::factory()->create(['rol' => 'admin']);
+        $asesor = \App\Models\AsesorComercial::create(['cedula' => '999', 'nombre' => 'Asesor Existente', 'concesionario_id' => $otro->id]);
 
-        $candidatos = [];
+        // Vencidos y sin asesor a la vez: deben moverse.
+        $ambos = [];
         for ($i = 0; $i < 6; $i++) {
-            $candidatos[] = Lead::create([
-                'meta_lead_id' => "candidato-{$i}",
+            $ambos[] = Lead::create([
+                'meta_lead_id' => "ambos-{$i}",
                 'estado_gestion' => 'Nuevo',
                 'concesionario_id' => $otro->id,
                 'asesor_comercial_id' => null,
-                'assigned_at' => now()->subHours(150 - $i),
+                'assigned_at' => now()->subHours(200 - ($i * 10)),
             ]);
         }
 
-        $conAsesor = Lead::create([
-            'meta_lead_id' => 'con-asesor',
+        // Vencido pero con asesor ya asignado: también debe moverse (basta una de las dos condiciones).
+        $vencidoConAsesor = Lead::create([
+            'meta_lead_id' => 'vencido-con-asesor',
             'estado_gestion' => 'Asignado',
             'concesionario_id' => $otro->id,
-            'asesor_comercial_id' => null,
-            'assigned_at' => now()->subHours(200),
+            'asesor_comercial_id' => $asesor->id,
+            'assigned_at' => now()->subHours(140),
         ]);
-        \App\Models\AsesorComercial::create(['cedula' => '999', 'nombre' => 'Asesor Existente', 'concesionario_id' => $otro->id]);
-        $conAsesor->update(['asesor_comercial_id' => \App\Models\AsesorComercial::first()->id]);
 
-        $reciente = Lead::create([
-            'meta_lead_id' => 'reciente',
+        // Sin asesor pero recién asignado (no vencido todavía): también debe moverse.
+        $recienteSinAsesor = Lead::create([
+            'meta_lead_id' => 'reciente-sin-asesor',
             'estado_gestion' => 'Nuevo',
             'concesionario_id' => $otro->id,
             'asesor_comercial_id' => null,
             'assigned_at' => now()->subHour(),
         ]);
 
+        // Ni vencido ni sin asesor: no debe tocarse.
+        $sano = Lead::create([
+            'meta_lead_id' => 'sano',
+            'estado_gestion' => 'Contactado',
+            'concesionario_id' => $otro->id,
+            'asesor_comercial_id' => $asesor->id,
+            'assigned_at' => now()->subHour(),
+        ]);
+
         $this->actingAs($admin)->post(route('leads.redistribucion.ejecutar'));
 
-        $esperado = [$vfMotors->id, $auto2->id, $puntokar->id, $vfMotors->id, $auto2->id, $puntokar->id];
+        $candidatos = array_merge($ambos, [$vencidoConAsesor, $recienteSinAsesor]);
+        $esperado = [$vfMotors->id, $auto2->id, $puntokar->id, $vfMotors->id, $auto2->id, $puntokar->id, $vfMotors->id, $auto2->id];
         foreach ($candidatos as $i => $candidato) {
             $this->assertSame($esperado[$i], $candidato->fresh()->concesionario_id, "candidato {$i}");
-            $this->assertNull($candidato->fresh()->asesor_comercial_id);
+            $this->assertNull($candidato->fresh()->asesor_comercial_id, "candidato {$i} debe quedar sin asesor");
         }
 
-        $this->assertSame($otro->id, $conAsesor->fresh()->concesionario_id);
-        $this->assertSame($otro->id, $reciente->fresh()->concesionario_id);
+        $this->assertSame($otro->id, $sano->fresh()->concesionario_id);
+        $this->assertSame($asesor->id, $sano->fresh()->asesor_comercial_id);
 
-        $this->assertSame(6, LeadReassignment::where('motivo', LeadController::REDISTRIBUCION_MOTIVO)->count());
+        $this->assertSame(8, LeadReassignment::where('motivo', LeadController::REDISTRIBUCION_MOTIVO)->count());
     }
 
     public function test_concesionario_user_cannot_execute_redistribution(): void

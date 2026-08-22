@@ -72,11 +72,17 @@ class LeadController extends Controller
             ->latest()
             ->paginate(50);
 
-        $candidatosCount = $request->user()->isAdmin()
-            ? Lead::vencido()->whereNull('asesor_comercial_id')->count()
-            : null;
+        $candidatosCount = null;
+        $totalVencidos = null;
+        $totalSinAsesor = null;
 
-        return view('leads.redistribucion', compact('reassignments', 'candidatosCount'));
+        if ($request->user()->isAdmin()) {
+            $candidatosCount = Lead::vencidoOSinAsesor()->count();
+            $totalVencidos = Lead::vencido()->count();
+            $totalSinAsesor = Lead::whereNull('asesor_comercial_id')->count();
+        }
+
+        return view('leads.redistribucion', compact('reassignments', 'candidatosCount', 'totalVencidos', 'totalSinAsesor'));
     }
 
     public function redistribuirVencidos(Request $request, LeadAssignmentService $service, LeadNotifier $notifier)
